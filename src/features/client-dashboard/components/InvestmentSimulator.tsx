@@ -43,7 +43,7 @@ export const InvestmentSimulator: React.FC = () => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div className="afic-grid-3" style={{ marginBottom: '1.5rem' }}>
         <div>
           <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Aporte Mensal</label>
           <div style={{ marginTop: '0.25rem' }}>

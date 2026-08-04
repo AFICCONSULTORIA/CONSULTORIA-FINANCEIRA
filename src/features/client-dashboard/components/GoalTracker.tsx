@@ -45,7 +45,7 @@ export const GoalTracker: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="afic-flex-col-mobile">
         <div style={{ flex: 1 }}>
           <MoneyInput 
             value={amount}

@@ -37,7 +37,7 @@ export const BucketCalculator: React.FC = () => {
       </div>
 
       {parsedIncome > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+        <div className="afic-grid-2" style={{ marginTop: '1rem' }}>
           {BUCKET_RATES.map(b => {
             const amount = parsedIncome * b.rate;
             return (

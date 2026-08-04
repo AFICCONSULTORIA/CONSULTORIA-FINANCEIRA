@@ -46,14 +46,14 @@ export const ExpenseTracker: React.FC = () => {
           value={desc} 
           onChange={e => setDesc(e.target.value)} 
         />
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="afic-flex-col-mobile">
           <div style={{ flex: 1 }}>
             <MoneyInput 
               value={amount} 
               onChange={v => setAmount(v)}
             />
           </div>
-          <select value={bucket} onChange={(e: any) => setBucket(e.target.value)} style={{ width: '130px' }}>
+          <select value={bucket} onChange={(e: any) => setBucket(e.target.value)} style={{ padding: '0.75rem 1rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)' }}>
             <option value="leisure">Lazer</option>
             <option value="comfort">Conforto</option>
           </select>

@@ -42,7 +42,7 @@ export const TimeCalculator: React.FC = () => {
             <MoneyInput value={income} onChange={v => setIncome(v)} />
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div className="afic-flex-col-mobile">
           <div style={{ flex: 1 }}>
             <label className="afic-label">Horas trabalhadas por mês</label>
             <input 
