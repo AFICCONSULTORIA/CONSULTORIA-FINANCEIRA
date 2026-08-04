@@ -42,7 +42,7 @@ export const BucketCalculator: React.FC = () => {
             const amount = parsedIncome * b.rate;
             return (
               <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg-input)', borderRadius: 'var(--r-md)', borderLeft: `4px solid ${b.color}` }}>
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{b.label} <small>({b.rate * 100}%)</small></span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{b.label} <small>({Math.round(b.rate * 100)}%)</small></span>
                 <strong style={{ color: 'var(--text-primary)' }}>
                   {amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </strong>
