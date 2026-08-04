@@ -15,7 +15,7 @@ const BUCKET_RATES = [
 export const BucketCalculator: React.FC = () => {
   const [income, setIncome] = useState<string>('');
 
-  const parsedIncome = parseFloat(income.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  const parsedIncome = parseFloat(income.replace(/\./g, '').replace(',', '.')) || 0;
 
   return (
     <Card>

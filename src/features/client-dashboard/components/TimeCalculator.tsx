@@ -8,8 +8,8 @@ export const TimeCalculator: React.FC = () => {
   const [productValue, setProductValue] = useState<string>('');
   const [workHoursPerMonth, setWorkHoursPerMonth] = useState<number>(220); // Padrão CLT
 
-  const parsedIncome = parseFloat(income.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-  const parsedProduct = parseFloat(productValue.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  const parsedIncome = parseFloat(income.replace(/\./g, '').replace(',', '.')) || 0;
+  const parsedProduct = parseFloat(productValue.replace(/\./g, '').replace(',', '.')) || 0;
 
   const calculateTime = () => {
     if (parsedIncome <= 0 || parsedProduct <= 0) return null;
