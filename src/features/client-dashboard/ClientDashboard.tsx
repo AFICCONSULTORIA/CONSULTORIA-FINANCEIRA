@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { TrendingUp, Activity, Target, Loader2 } from 'lucide-react';
+import { TrendingUp, Activity, Target, Loader2, CheckCircle, Circle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import '../../components/ui/ui.css';
@@ -40,26 +40,30 @@ export const ClientDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Puxa perfil financeiro e nome
-      const [profileRes, userRes] = await Promise.all([
+      const [profileRes, userRes, plansRes] = await Promise.all([
         supabase.from('financial_profiles').select('*').eq('user_id', user!.id).single(),
-        supabase.from('users').select('full_name').eq('id', user!.id).single()
+        supabase.from('users').select('full_name').eq('id', user!.id).single(),
+        supabase.from('action_plans').select('*').eq('user_id', user!.id).order('created_at', { ascending: true })
       ]);
 
       if (profileRes.data && userRes.data) {
         const p = profileRes.data;
-        // Cálculos básicos
         const savingRate = p.monthly_income > 0 ? (((p.monthly_income - p.fixed_costs) / p.monthly_income) * 100).toFixed(0) : 0;
         const emergencyFundMonths = p.fixed_costs > 0 ? (p.total_equity / p.fixed_costs).toFixed(1) : 0;
 
-        // Mock buckets temporários se não houver no banco, só para a tela não ficar vazia (ideal é puxar da tabela buckets)
-        const mockChartData = [
-          { name: 'Custo Fixo', value: 50 },
-          { name: 'Conforto', value: 10 },
-          { name: 'Metas', value: 20 },
-          { name: 'Lazer', value: 10 },
-          { name: 'Investimento', value: 10 },
-        ];
+        // Se o consultor salvou buckets customizados, usamos eles
+        let chartData;
+        if (p.buckets && Array.isArray(p.buckets)) {
+          chartData = p.buckets.map((b: any) => ({ name: b.label, value: b.percentage }));
+        } else {
+          chartData = [
+            { name: 'Custo Fixo', value: 50 },
+            { name: 'Conforto', value: 10 },
+            { name: 'Metas', value: 20 },
+            { name: 'Lazer', value: 10 },
+            { name: 'Investimento', value: 10 },
+          ];
+        }
 
         setClientData({
           name: userRes.data.full_name,
@@ -68,14 +72,30 @@ export const ClientDashboard: React.FC = () => {
           monthlyIncome: p.monthly_income || 0,
           savingRate,
           emergencyFundMonths,
-          buckets: mockChartData, // Substituir depois por query real
-          actions: [] // Substituir por tabela action_plans
+          buckets: chartData,
+          isCustomBuckets: !!p.buckets,
+          actions: plansRes.data || []
         });
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleAction = async (action: any) => {
+    const newStatus = action.status === 'pending' ? 'completed' : 'pending';
+    try {
+      const { error } = await supabase.from('action_plans').update({ status: newStatus }).eq('id', action.id);
+      if (!error) {
+        setClientData((prev: any) => ({
+          ...prev,
+          actions: prev.actions.map((a: any) => a.id === action.id ? { ...a, status: newStatus } : a)
+        }));
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -91,7 +111,7 @@ export const ClientDashboard: React.FC = () => {
     return <div className="container" style={{ padding: '2rem' }}>Erro ao carregar dados do painel.</div>;
   }
 
-  const { name, healthScore, status, monthlyIncome, savingRate, emergencyFundMonths, buckets } = clientData;
+  const { name, healthScore, status, monthlyIncome, savingRate, emergencyFundMonths, buckets, isCustomBuckets, actions } = clientData;
   const statusInfo = statusConfig[status] || statusConfig['good'];
 
   return (
@@ -121,7 +141,7 @@ export const ClientDashboard: React.FC = () => {
         <div className="stat-card">
           <span className="afic-metric-label">Renda Mensal</span>
           <span className="afic-metric-value">
-            {monthlyIncome.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
+            {Number(monthlyIncome).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
           </span>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Líquida mensal</p>
         </div>
@@ -144,7 +164,10 @@ export const ClientDashboard: React.FC = () => {
       <div className="dashboard__main anim-fade-up" style={{ animationDelay: '120ms' }}>
         <div className="dash-card dash-card--chart">
           <div className="dash-card__header">
-            <h3 className="dash-card__title"><TrendingUp size={18} /> Alocação Padrão</h3>
+            <h3 className="dash-card__title">
+              <TrendingUp size={18} /> 
+              {isCustomBuckets ? 'Sua Estratégia Recomendada' : 'Alocação Padrão'}
+            </h3>
           </div>
           <div className="bucket-chart">
             <ResponsiveContainer width="100%" height={220}>
@@ -168,13 +191,51 @@ export const ClientDashboard: React.FC = () => {
         </div>
 
         <div className="dashboard__right-col">
-          <div className="dash-card">
+          <div className="dash-card" style={{ height: '100%' }}>
             <div className="dash-card__header">
-              <h3 className="dash-card__title"><Target size={18} /> Aguardando Consultor</h3>
+              <h3 className="dash-card__title"><Target size={18} /> Plano de Ação</h3>
             </div>
-            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              Seu perfil está sob análise. Em breve, seu consultor montará sua estratégia de baldes personalizada e o plano de ação aqui.
-            </div>
+            
+            {actions.length === 0 ? (
+              <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                Seu perfil está sob análise. Em breve, seu consultor montará seu plano de ação aqui.
+              </div>
+            ) : (
+              <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {actions.map((action: any) => (
+                  <div 
+                    key={action.id} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem', 
+                      padding: '1rem', 
+                      background: 'var(--bg-input)', 
+                      borderRadius: 'var(--r-md)',
+                      cursor: 'pointer',
+                      transition: 'background var(--ease-fast)'
+                    }}
+                    onClick={() => handleToggleAction(action)}
+                  >
+                    {action.status === 'completed' ? (
+                      <CheckCircle size={20} color="var(--success)" style={{ flexShrink: 0 }} />
+                    ) : (
+                      <Circle size={20} color="var(--brand-primary)" style={{ flexShrink: 0 }} />
+                    )}
+                    <span style={{ 
+                      color: action.status === 'completed' ? 'var(--text-muted)' : 'var(--text-primary)', 
+                      textDecoration: action.status === 'completed' ? 'line-through' : 'none',
+                      fontWeight: 500,
+                      fontSize: '0.9375rem',
+                      lineHeight: 1.4
+                    }}>
+                      {action.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
           </div>
         </div>
       </div>

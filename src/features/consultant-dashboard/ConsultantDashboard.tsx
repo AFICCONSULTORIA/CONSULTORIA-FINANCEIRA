@@ -87,7 +87,9 @@ export const ConsultantDashboard: React.FC = () => {
           <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Meus Clientes</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Visão geral da carteira de consultoria e status de saúde financeira.</p>
         </div>
-        <Button variant="primary"><Plus size={18} /> Novo Cliente</Button>
+        <Button variant="primary" onClick={() => alert('Para adicionar um novo cliente, envie o link do sistema para ele se cadastrar, ou crie uma conta manualmente acessando a página de registro sem estar logado.')}>
+          <Plus size={18} /> Novo Cliente
+        </Button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
