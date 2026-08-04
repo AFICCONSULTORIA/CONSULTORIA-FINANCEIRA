@@ -1,6 +1,7 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
 
 const SIDEBAR_LINKS = [
@@ -14,6 +15,13 @@ const SIDEBAR_LINKS = [
 
 export const Sidebar: React.FC = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <aside className="sidebar">
@@ -43,10 +51,10 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       <div className="sidebar__footer">
-        <NavLink to="/" className="sidebar__link sidebar__link--danger">
+        <button onClick={handleLogout} className="sidebar__link sidebar__link--danger" style={{ border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', background: 'transparent' }}>
           <LogOut size={20} />
           <span>Sair</span>
-        </NavLink>
+        </button>
       </div>
     </aside>
   );
