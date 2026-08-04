@@ -4,6 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 export const Settings: React.FC = () => {
   const { user } = useAuth();
@@ -37,10 +38,10 @@ export const Settings: React.FC = () => {
     try {
       const { error } = await supabase.from('users').update({ full_name: name }).eq('id', user!.id);
       if (error) throw error;
-      alert('Perfil atualizado com sucesso!');
+      toast.success('Perfil atualizado com sucesso!');
     } catch (err) {
       console.error(err);
-      alert('Erro ao atualizar perfil.');
+      toast.error('Erro ao atualizar perfil.');
     } finally {
       setSaving(false);
     }
@@ -68,10 +69,10 @@ export const Settings: React.FC = () => {
           <div style={{ padding: '0.75rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--brand-primary)', borderRadius: 'var(--r-md)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <User size={18} /> Meu Perfil
           </div>
-          <div style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => alert('Configurações de notificação em breve.')}>
+          <div style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => toast('Configurações de notificação em breve.', { icon: '🔔' })}>
             <Bell size={18} /> Notificações
           </div>
-          <div style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => alert('Alteração de senha em breve.')}>
+          <div style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => toast('Alteração de senha em breve.', { icon: '🔒' })}>
             <Shield size={18} /> Segurança
           </div>
         </div>
@@ -108,7 +109,7 @@ export const Settings: React.FC = () => {
                 <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--bg-app)', border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{name.charAt(0) || '?'}</span>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => alert('Upload de foto em breve.')}>Fazer Upload</Button>
+                <Button variant="outline" size="sm" onClick={() => toast('Upload de foto em breve.', { icon: '🖼️' })}>Fazer Upload</Button>
               </div>
             </div>
           </div>

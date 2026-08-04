@@ -4,6 +4,7 @@ import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Tr
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 interface ActionPlan {
   id: string;
@@ -84,7 +85,7 @@ export const ClientDiagnostic: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
-      alert('Erro ao adicionar tarefa.');
+      toast.error('Erro ao adicionar tarefa.');
     }
   };
 
@@ -121,10 +122,10 @@ export const ClientDiagnostic: React.FC = () => {
     try {
       const { error } = await supabase.from('financial_profiles').update({ buckets }).eq('user_id', id);
       if (error) throw error;
-      alert('Estratégia salva com sucesso! O cliente já pode ver a nova distribuição.');
+      toast.success('Estratégia salva com sucesso! O cliente já pode ver a nova distribuição.');
     } catch (e) {
       console.error(e);
-      alert('Erro ao salvar estratégia.');
+      toast.error('Erro ao salvar estratégia.');
     } finally {
       setSavingPlan(false);
     }
@@ -311,7 +312,7 @@ export const ClientDiagnostic: React.FC = () => {
                 Baseado nos dados informados. 
               </p>
             </div>
-            <Button variant="ghost" fullWidth style={{ marginTop: '1rem' }} onClick={() => alert('Em breve: Ajuste fino do Score')}>
+            <Button variant="ghost" fullWidth style={{ marginTop: '1rem' }} onClick={() => toast('Em breve: Ajuste fino do Score', { icon: '🚧' })}>
               Recalcular Score Manual
             </Button>
           </Card>
