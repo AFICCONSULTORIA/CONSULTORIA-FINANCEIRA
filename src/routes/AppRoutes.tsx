@@ -14,6 +14,7 @@ import { Settings } from '../features/consultant-dashboard/Settings';
 import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import { PrivateRoute } from './PrivateRoute';
+import { AdminDashboard } from '../features/admin-dashboard/AdminDashboard';
 
 // Ferramentas interativas
 import { BucketCalculator } from '../features/client-dashboard/components/BucketCalculator';
@@ -49,6 +50,13 @@ export const AppRoutes: React.FC = () => (
       <Route path="/register" element={<Register />} />
       
       <Route path="/onboarding" element={<RootLayout><ClientOnboarding /></RootLayout>} />
+      
+      {/* ── Rotas Protegidas do Admin ── */}
+      <Route path="/admin" element={
+        <PrivateRoute allowedRole="admin">
+          <AdminDashboard />
+        </PrivateRoute>
+      } />
       
       {/* ── Rotas com Sidebar do Consultor (Protegidas) ── */}
       <Route path="/consultor" element={

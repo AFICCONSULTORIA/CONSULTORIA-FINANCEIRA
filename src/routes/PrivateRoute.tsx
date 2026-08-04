@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
-  allowedRole?: 'client' | 'consultant';
+  allowedRole?: 'client' | 'consultant' | 'admin';
 }
 
 export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRole }) => {
@@ -20,13 +20,13 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRol
   }
 
   if (!user) {
-    // Usuário não autenticado
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRole && role && role !== allowedRole) {
-    // Autenticado, mas com papel incorreto. Redireciona para o painel correto
-    return <Navigate to={role === 'consultant' ? '/consultor' : '/client'} replace />;
+    if (role === 'admin') return <Navigate to="/admin" replace />;
+    if (role === 'consultant') return <Navigate to="/consultor" replace />;
+    return <Navigate to="/client" replace />;
   }
 
   return <>{children}</>;

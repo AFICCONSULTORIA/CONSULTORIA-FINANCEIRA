@@ -36,7 +36,9 @@ export const Login: React.FC = () => {
         .eq('id', data.user.id)
         .single();
         
-      if (userData?.role === 'consultant') {
+      if (userData?.role === 'admin') {
+        navigate('/admin');
+      } else if (userData?.role === 'consultant') {
         navigate('/consultor');
       } else {
         navigate('/client');

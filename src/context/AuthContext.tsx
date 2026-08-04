@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  role: 'client' | 'consultant' | null;
+  role: 'client' | 'consultant' | 'admin' | null;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -16,7 +16,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<'client' | 'consultant' | null>(null);
+  const [role, setRole] = useState<'client' | 'consultant' | 'admin' | null>(null);
 
   useEffect(() => {
     // Busca a sessão inicial

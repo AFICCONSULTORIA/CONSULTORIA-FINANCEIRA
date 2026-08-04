@@ -8,7 +8,6 @@ export const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'client' | 'consultant'>('client');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -38,16 +37,14 @@ export const Register: React.FC = () => {
         .insert({
           id: authData.user.id,
           full_name: name,
-          role: role
+          role: 'client'
         });
 
       if (dbError) {
         console.error("Erro ao criar perfil:", dbError);
         setError("Conta criada, mas houve um erro ao salvar o perfil.");
       } else {
-        // Redireciona
-        if (role === 'consultant') navigate('/consultor');
-        else navigate('/onboarding');
+        navigate('/onboarding');
       }
     }
     
@@ -73,21 +70,6 @@ export const Register: React.FC = () => {
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
-            <div 
-              onClick={() => setRole('client')}
-              style={{ flex: 1, padding: '0.75rem', textAlign: 'center', border: `1px solid ${role === 'client' ? 'var(--brand-primary)' : 'var(--border-color)'}`, borderRadius: 'var(--r-md)', cursor: 'pointer', background: role === 'client' ? 'rgba(16, 185, 129, 0.1)' : 'transparent', color: role === 'client' ? 'var(--brand-primary-light)' : 'var(--text-secondary)', fontWeight: role === 'client' ? 600 : 400 }}
-            >
-              Sou Cliente
-            </div>
-            <div 
-              onClick={() => setRole('consultant')}
-              style={{ flex: 1, padding: '0.75rem', textAlign: 'center', border: `1px solid ${role === 'consultant' ? 'var(--info)' : 'var(--border-color)'}`, borderRadius: 'var(--r-md)', cursor: 'pointer', background: role === 'consultant' ? 'rgba(96, 165, 250, 0.1)' : 'transparent', color: role === 'consultant' ? 'var(--info)' : 'var(--text-secondary)', fontWeight: role === 'consultant' ? 600 : 400 }}
-            >
-              Sou Consultor
-            </div>
-          </div>
-
           <div>
             <label className="afic-label">Nome Completo</label>
             <input 
