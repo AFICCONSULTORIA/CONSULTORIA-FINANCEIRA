@@ -33,6 +33,10 @@ export const ConsultantDashboard: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
+  // Delete Confirmation State
+  const [clientToDelete, setClientToDelete] = useState<{ id: string, name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     fetchClients();
   }, []);
@@ -92,18 +96,22 @@ export const ConsultantDashboard: React.FC = () => {
     }
   };
 
-  const handleDeleteClient = async (clientId: string, clientName: string) => {
-    if (!window.confirm(`Tem certeza que deseja excluir o cliente ${clientName}? Essa ação removerá o perfil, lançamentos e metas dele.`)) return;
+  const confirmDeleteClient = async () => {
+    if (!clientToDelete) return;
+    setDeleting(true);
     
     try {
-      const { error } = await supabase.from('users').delete().eq('id', clientId);
+      const { error } = await supabase.from('users').delete().eq('id', clientToDelete.id);
       if (error) throw error;
       
       toast.success('Cliente removido com sucesso.');
-      setClients(clients.filter(c => c.id !== clientId));
+      setClients(clients.filter(c => c.id !== clientToDelete.id));
+      setClientToDelete(null);
     } catch (err) {
       console.error(err);
       toast.error('Erro ao excluir cliente. Verifique suas permissões.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -226,7 +234,7 @@ export const ConsultantDashboard: React.FC = () => {
                         Análise <ArrowRight size={16} />
                       </Button>
                       <button 
-                        onClick={() => handleDeleteClient(client.id, client.full_name)}
+                        onClick={() => setClientToDelete({ id: client.id, name: client.full_name })}
                         style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '0.5rem', opacity: 0.7 }}
                         title="Excluir Cliente"
                       >
@@ -283,6 +291,31 @@ export const ConsultantDashboard: React.FC = () => {
                 {creating ? 'Cadastrando...' : 'Criar Cliente'}
               </Button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {clientToDelete && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="anim-fade-up" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--r-xl)', width: '100%', maxWidth: '400px', border: '1px solid var(--danger)', position: 'relative', textAlign: 'center' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+              <Trash2 size={28} color="var(--danger)" />
+            </div>
+            
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Excluir Cliente?</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.95rem' }}>
+              Tem certeza que deseja excluir <strong>{clientToDelete.name}</strong>? Essa ação é permanente e removerá todos os dados, metas e lançamentos vinculados.
+            </p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <Button variant="outline" onClick={() => setClientToDelete(null)} disabled={deleting}>
+                Cancelar
+              </Button>
+              <Button onClick={confirmDeleteClient} disabled={deleting} style={{ background: 'var(--danger)', color: '#fff', border: 'none' }}>
+                {deleting ? 'Excluindo...' : 'Sim, Excluir'}
+              </Button>
+            </div>
           </div>
         </div>
       )}
