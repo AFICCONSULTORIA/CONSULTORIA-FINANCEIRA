@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Activity, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, Plus, Activity, ArrowRight, Loader2, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 
@@ -23,6 +23,14 @@ export const ConsultantDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPassword, setNewClientPassword] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   useEffect(() => {
     fetchClients();
@@ -49,6 +57,37 @@ export const ConsultantDashboard: React.FC = () => {
       console.error('Erro ao buscar clientes', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    setModalMessage('');
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: newClientEmail,
+        password: newClientPassword,
+        options: {
+          data: {
+            full_name: newClientName,
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      setModalMessage('Cliente criado com sucesso! Devido a regras de segurança, o sistema deslogou você. Você será redirecionado para o login em 3 segundos.');
+      
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 3500);
+      
+    } catch (err: any) {
+      setModalMessage(`Erro: ${err.message}`);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -87,7 +126,7 @@ export const ConsultantDashboard: React.FC = () => {
           <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Meus Clientes</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Visão geral da carteira de consultoria e status de saúde financeira.</p>
         </div>
-        <Button variant="primary" onClick={() => alert('Para adicionar um novo cliente, envie o link do sistema para ele se cadastrar, ou crie uma conta manualmente acessando a página de registro sem estar logado.')}>
+        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
           <Plus size={18} /> Novo Cliente
         </Button>
       </div>
@@ -189,6 +228,45 @@ export const ConsultantDashboard: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {isModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="anim-fade-up" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--r-xl)', width: '100%', maxWidth: '450px', border: '1px solid var(--border-color)', position: 'relative' }}>
+            <button onClick={() => !creating && setIsModalOpen(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem' }}>Cadastrar Novo Cliente</h2>
+            
+            <form onSubmit={handleCreateClient} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label className="afic-label">Nome Completo</label>
+                <input type="text" required value={newClientName} onChange={e => setNewClientName(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label className="afic-label">E-mail</label>
+                <input type="email" required value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label className="afic-label">Senha Inicial</label>
+                <input type="password" required minLength={6} value={newClientPassword} onChange={e => setNewClientPassword(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)' }} />
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Mínimo 6 caracteres.</p>
+              </div>
+
+              {modalMessage && (
+                <div style={{ padding: '0.75rem', background: 'var(--bg-input)', borderRadius: 'var(--r-md)', fontSize: '0.875rem', color: modalMessage.includes('Erro') ? 'var(--danger)' : 'var(--success)' }}>
+                  {modalMessage}
+                </div>
+              )}
+
+              <Button type="submit" fullWidth disabled={creating} style={{ marginTop: '1rem' }}>
+                {creating ? 'Cadastrando...' : 'Criar Cliente'}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
