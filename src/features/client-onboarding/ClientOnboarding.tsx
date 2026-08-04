@@ -94,7 +94,7 @@ export const ClientOnboarding: React.FC = () => {
 
     } catch (err: any) {
       console.error(err);
-      setError("Erro ao salvar os dados. Verifique sua conexão e tente novamente.");
+      setError(`Erro do Banco: ${err.message || err.toString()}`);
     } finally {
       setLoading(false);
     }
