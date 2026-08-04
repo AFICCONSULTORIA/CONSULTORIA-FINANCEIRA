@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Send, User, Receipt, CreditCard, PiggyBank, Star, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, User, Receipt, CreditCard, PiggyBank, Star, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -19,6 +19,7 @@ export const ClientOnboarding: React.FC = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     income: '', extraIncome: '', dependents: '0',
@@ -85,12 +86,15 @@ export const ClientOnboarding: React.FC = () => {
 
       if (userError) throw userError;
 
-      // 3. Redirecionar (o PrivateRoute pegará a mudança ao recarregar, mas forçaremos via window.location ou navigate se o AuthContext escutar)
-      window.location.href = '/client'; // Hard reload para atualizar context
+      // 3. Status de Sucesso e Redirecionar
+      setSuccess(true);
+      setTimeout(() => {
+        window.location.href = '/client';
+      }, 2500);
 
     } catch (err: any) {
       console.error(err);
-      setError("Erro ao salvar os dados. Tente novamente.");
+      setError("Erro ao salvar os dados. Verifique sua conexão e tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -116,8 +120,37 @@ export const ClientOnboarding: React.FC = () => {
   };
 
   return (
-    <div className="onboard container">
-      <div className="onboard__track">
+    <>
+      {(success || error) && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 9999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}>
+          <div className="anim-fade-up" style={{ textAlign: 'center', background: 'var(--bg-card)', padding: '3rem', borderRadius: 'var(--r-xl)', border: `1px solid ${error ? 'var(--danger)' : 'var(--success)'}`, boxShadow: `0 10px 40px ${error ? 'var(--danger)' : 'var(--success)'}20`, maxWidth: '500px', width: '90%' }}>
+            {error ? (
+              <AlertTriangle size={64} color="var(--danger)" style={{ margin: '0 auto 1.5rem auto' }} />
+            ) : (
+              <CheckCircle size={64} color="var(--success)" style={{ margin: '0 auto 1.5rem auto' }} />
+            )}
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+              {error ? 'Ops, algo deu errado' : 'Tudo Pronto!'}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', whiteSpace: 'pre-line' }}>
+              {error ? error : 'Seu perfil financeiro foi criado com sucesso.\nVocê está sendo redirecionado para o seu painel...'}
+            </p>
+            
+            {error ? (
+              <button className="afic-btn afic-btn--primary" style={{ marginTop: '2rem', width: '100%' }} onClick={() => setError(null)}>
+                Voltar e Tentar Novamente
+              </button>
+            ) : (
+              <div style={{ marginTop: '2rem' }}>
+                 <Loader2 className="anim-spin" size={24} color="var(--success)" style={{ margin: '0 auto' }} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="onboard container" style={{ filter: (success || error) ? 'blur(4px)' : 'none', pointerEvents: (success || error) ? 'none' : 'auto' }}>
+        <div className="onboard__track">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const done    = s.id < step;
@@ -171,7 +204,6 @@ export const ClientOnboarding: React.FC = () => {
         <hr className="afic-divider" />
 
         <div className="onboard__form-body">
-          {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
           
           {step === 1 && (
             <div className="onboard__grid">
@@ -315,6 +347,7 @@ export const ClientOnboarding: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
