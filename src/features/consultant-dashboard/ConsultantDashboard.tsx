@@ -1,39 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Activity, ArrowRight } from 'lucide-react';
+import { Search, Plus, Activity, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { mockClient } from '../../services/mockData'; // Usando o mock existente para popular a lista
+import { supabase } from '../../lib/supabase';
 
-const mockClients = [
-  { ...mockClient, id: '1' },
-  { 
-    id: '2', 
-    name: 'Maria Silva', 
-    email: 'maria@example.com', 
-    financialData: { 
-      ...mockClient.financialData, 
-      healthScore: { score: 45, status: 'attention', metrics: { savingRate: 5, emergencyFundMonths: 1 } }
-    }
-  },
-  { 
-    id: '3', 
-    name: 'Carlos Santos', 
-    email: 'carlos@example.com', 
-    financialData: { 
-      ...mockClient.financialData, 
-      healthScore: { score: 92, status: 'excellent', metrics: { savingRate: 25, emergencyFundMonths: 8 } }
-    }
-  }
-];
-
-const statusColors = {
+const statusColors: Record<string, string> = {
   excellent: 'var(--success)',
   good: '#60A5FA',
   attention: 'var(--warning)',
   critical: 'var(--danger)'
 };
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   excellent: 'Excelente',
   good: 'Bom',
   attention: 'Atenção',
@@ -43,11 +21,63 @@ const statusLabels = {
 export const ConsultantDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredClients = mockClients.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.email.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          id, 
+          full_name,
+          financial_profiles (
+            health_score,
+            status
+          )
+        `)
+        .eq('role', 'client');
+        
+      if (data && !error) {
+        setClients(data);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar clientes', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredClients = clients.filter(c => 
+    c.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalClients = clients.length;
+  let totalScore = 0;
+  let attentionCount = 0;
+  
+  clients.forEach(c => {
+    const profile = c.financial_profiles?.[0] || c.financial_profiles; // array or object depending on relation
+    const profData = Array.isArray(profile) ? profile[0] : profile;
+    if (profData) {
+      totalScore += profData.health_score || 0;
+      if (['attention', 'critical'].includes(profData.status)) attentionCount++;
+    }
+  });
+
+  const avgScore = totalClients > 0 ? Math.round(totalScore / totalClients) : 0;
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 className="anim-spin" size={40} color="var(--brand-primary)" />
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '3rem 2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -63,19 +93,15 @@ export const ConsultantDashboard: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         <div className="stat-card" style={{ background: 'var(--bg-card)' }}>
           <span className="afic-metric-label">Total de Clientes</span>
-          <span className="afic-metric-value">{mockClients.length}</span>
+          <span className="afic-metric-value">{totalClients}</span>
         </div>
         <div className="stat-card" style={{ background: 'var(--bg-card)' }}>
           <span className="afic-metric-label">Score Médio da Carteira</span>
-          <span className="afic-metric-value text-brand">
-            {Math.round(mockClients.reduce((acc, curr) => acc + curr.financialData.healthScore.score, 0) / mockClients.length)}
-          </span>
+          <span className="afic-metric-value text-brand">{avgScore}</span>
         </div>
         <div className="stat-card" style={{ background: 'var(--bg-card)' }}>
           <span className="afic-metric-label">Atenção Requerida</span>
-          <span className="afic-metric-value" style={{ color: 'var(--warning)' }}>
-            {mockClients.filter(c => ['attention', 'critical'].includes(c.financialData.healthScore.status)).length}
-          </span>
+          <span className="afic-metric-value" style={{ color: 'var(--warning)' }}>{attentionCount}</span>
         </div>
       </div>
 
@@ -85,7 +111,7 @@ export const ConsultantDashboard: React.FC = () => {
             <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 
-              placeholder="Buscar cliente por nome ou e-mail..." 
+              placeholder="Buscar cliente por nome..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ paddingLeft: '2.5rem', width: '100%' }}
@@ -104,28 +130,31 @@ export const ConsultantDashboard: React.FC = () => {
           </thead>
           <tbody>
             {filteredClients.map((client) => {
-              const score = client.financialData.healthScore;
-              const statusColor = statusColors[score.status as keyof typeof statusColors];
-              const statusLabel = statusLabels[score.status as keyof typeof statusLabels];
+              const p = Array.isArray(client.financial_profiles) ? client.financial_profiles[0] : client.financial_profiles;
+              const score = p?.health_score || 0;
+              const statusStr = p?.status || 'good';
+              
+              const statusColor = statusColors[statusStr] || statusColors['good'];
+              const statusLabel = statusLabels[statusStr] || statusLabels['good'];
 
               return (
                 <tr key={client.id} style={{ borderTop: '1px solid var(--border-color)', transition: 'background var(--ease-fast)' }} className="table-row-hover">
                   <td style={{ padding: '1rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-                        {client.name.charAt(0)}
+                        {client.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{client.name}</p>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{client.email}</p>
+                        <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{client.full_name}</p>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Cliente</p>
                       </div>
                     </div>
                   </td>
                   <td style={{ padding: '1rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.1rem', fontWeight: 700, color: statusColor }}>{score.score}</span>
+                      <span style={{ fontSize: '1.1rem', fontWeight: 700, color: statusColor }}>{score}</span>
                       <div style={{ width: '60px', height: '6px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${score.score}%`, height: '100%', background: statusColor }} />
+                        <div style={{ width: `${score}%`, height: '100%', background: statusColor }} />
                       </div>
                     </div>
                   </td>

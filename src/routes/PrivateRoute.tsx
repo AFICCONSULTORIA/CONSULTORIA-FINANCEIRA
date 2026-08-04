@@ -6,10 +6,17 @@ import { Loader2 } from 'lucide-react';
 interface PrivateRouteProps {
   children: React.ReactNode;
   allowedRole?: 'client' | 'consultant' | 'admin';
+  requireOnboarding?: boolean;
+  redirectIfOnboarded?: boolean;
 }
 
-export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRole }) => {
-  const { user, loading, role } = useAuth();
+export const PrivateRoute: React.FC<PrivateRouteProps> = ({ 
+  children, 
+  allowedRole, 
+  requireOnboarding = false, 
+  redirectIfOnboarded = false 
+}) => {
+  const { user, loading, role, hasCompletedOnboarding } = useAuth();
 
   if (loading) {
     return (
@@ -27,6 +34,15 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRol
     if (role === 'admin') return <Navigate to="/admin" replace />;
     if (role === 'consultant') return <Navigate to="/consultor" replace />;
     return <Navigate to="/client" replace />;
+  }
+
+  if (role === 'client') {
+    if (requireOnboarding && !hasCompletedOnboarding) {
+      return <Navigate to="/onboarding" replace />;
+    }
+    if (redirectIfOnboarded && hasCompletedOnboarding) {
+      return <Navigate to="/client" replace />;
+    }
   }
 
   return <>{children}</>;

@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   role: 'client' | 'consultant' | 'admin' | null;
+  hasCompletedOnboarding: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -17,6 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<'client' | 'consultant' | 'admin' | null>(null);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   useEffect(() => {
     // Busca a sessão inicial
@@ -24,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserData(session.user.id);
       } else {
         setLoading(false);
       }
@@ -35,9 +37,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserData(session.user.id);
       } else {
         setRole(null);
+        setHasCompletedOnboarding(false);
         setLoading(false);
       }
     });
@@ -45,16 +48,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserData = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('role')
+        .select('role, has_completed_onboarding')
         .eq('id', userId)
         .single();
         
       if (data && !error) {
         setRole(data.role);
+        setHasCompletedOnboarding(data.has_completed_onboarding || false);
       }
     } catch (err) {
       console.error("Erro ao buscar papel do usuário", err);
@@ -68,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, role }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, role, hasCompletedOnboarding }}>
       {children}
     </AuthContext.Provider>
   );

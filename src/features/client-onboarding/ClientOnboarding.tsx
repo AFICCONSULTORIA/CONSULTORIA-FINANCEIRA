@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Send, User, Receipt, CreditCard, PiggyBank, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, User, Receipt, CreditCard, PiggyBank, Star, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
+
 import '../../components/ui/ui.css';
 import './ClientOnboarding.css';
 
@@ -12,14 +15,84 @@ const STEPS = [
 ];
 
 export const ClientOnboarding: React.FC = () => {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
+    income: '0', extraIncome: '0', dependents: '0',
+    housing: '0', food: '0', health: '0', transport: '0', bills: '0', leisure: '0',
+    debtImovel: '0', debtVeiculo: '0', debtPessoal: '0', debtCartao: '0', debtOutros: '0',
+    equityCC: '0', equityRendaFixa: '0', equityRV: '0', equityImoveis: '0', equityVeiculos: '0',
+    goalShort: '', goalShortValue: '0',
+    goalMedium: '', goalMediumValue: '0',
+    goalLong: '', motivation: ''
+  });
+
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const total = STEPS.length;
   const current = STEPS[step - 1];
   const StepIcon = current.icon;
 
+  const handleSubmit = async () => {
+    if (!user) return;
+    setLoading(true);
+    setError(null);
+
+    // Soma básica
+    const parse = (val: string) => parseFloat(val || '0');
+    const monthlyIncome = parse(formData.income) + parse(formData.extraIncome);
+    const fixedCosts = parse(formData.housing) + parse(formData.food) + parse(formData.health) + parse(formData.transport) + parse(formData.bills) + parse(formData.leisure);
+    const totalDebt = parse(formData.debtImovel) + parse(formData.debtVeiculo) + parse(formData.debtPessoal) + parse(formData.debtCartao) + parse(formData.debtOutros);
+    const totalEquity = parse(formData.equityCC) + parse(formData.equityRendaFixa) + parse(formData.equityRV) + parse(formData.equityImoveis) + parse(formData.equityVeiculos);
+    
+    // Status simplificado
+    let status = 'good';
+    if (fixedCosts > monthlyIncome * 0.8) status = 'attention';
+    if (fixedCosts + totalDebt > monthlyIncome) status = 'critical';
+
+    try {
+      // 1. Salvar na tabela financial_profiles
+      const { error: profileError } = await supabase.from('financial_profiles').insert({
+        user_id: user.id,
+        monthly_income: monthlyIncome,
+        fixed_costs: fixedCosts,
+        total_debt: totalDebt,
+        total_equity: totalEquity,
+        health_score: 80, // mock base
+        status: status,
+        goal_short: formData.goalShort,
+        goal_medium: formData.goalMedium,
+        goal_long: formData.goalLong
+      });
+
+      if (profileError) throw profileError;
+
+      // 2. Atualizar user para has_completed_onboarding = true
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ has_completed_onboarding: true })
+        .eq('id', user.id);
+
+      if (userError) throw userError;
+
+      // 3. Redirecionar (o PrivateRoute pegará a mudança ao recarregar, mas forçaremos via window.location ou navigate se o AuthContext escutar)
+      window.location.href = '/client'; // Hard reload para atualizar context
+
+    } catch (err: any) {
+      console.error(err);
+      setError("Erro ao salvar os dados. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="onboard container">
-      {/* Progress track */}
       <div className="onboard__track">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
@@ -48,7 +121,6 @@ export const ClientOnboarding: React.FC = () => {
         })}
       </div>
 
-      {/* Mobile progress bar */}
       <div className="onboard__mobile-progress">
         <div className="onboard__mobile-bar">
           <div className="onboard__mobile-fill" style={{ width: `${((step) / total) * 100}%` }} />
@@ -56,7 +128,6 @@ export const ClientOnboarding: React.FC = () => {
         <span>Passo {step} de {total}</span>
       </div>
 
-      {/* Form Card */}
       <div className="onboard__card anim-fade-up">
         <div className="onboard__card-header">
           <div className="onboard__icon-wrap" style={{ background: `${current.color}20`, border: `1px solid ${current.color}40` }}>
@@ -71,35 +142,86 @@ export const ClientOnboarding: React.FC = () => {
         <hr className="afic-divider" />
 
         <div className="onboard__form-body">
-          {step === 1 && <StepPerfil />}
-          {step === 2 && <StepCustos />}
-          {step === 3 && <StepEndividamento />}
-          {step === 4 && <StepPatrimonio />}
-          {step === 5 && <StepSonhos />}
+          {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
+          
+          {step === 1 && (
+            <div className="onboard__grid">
+              <Field label="Renda Principal Líquida (mensal)" hint="Salário já descontado impostos">
+                <MoneyInput value={formData.income} onChange={(v) => handleChange('income', v)} />
+              </Field>
+              <Field label="Rendas Extras (média mensal)">
+                <MoneyInput value={formData.extraIncome} onChange={(v) => handleChange('extraIncome', v)} />
+              </Field>
+              <Field label="Dependentes financeiros">
+                <select value={formData.dependents} onChange={e => handleChange('dependents', e.target.value)}>
+                  <option>0</option><option>1</option><option>2</option><option>3</option><option>4+</option>
+                </select>
+              </Field>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="onboard__grid">
+              <Field label="Moradia (aluguel ou prestação)"><MoneyInput value={formData.housing} onChange={(v) => handleChange('housing', v)} /></Field>
+              <Field label="Alimentação (mercado + refeições)"><MoneyInput value={formData.food} onChange={(v) => handleChange('food', v)} /></Field>
+              <Field label="Saúde (plano + medicamentos)"><MoneyInput value={formData.health} onChange={(v) => handleChange('health', v)} /></Field>
+              <Field label="Transporte (combustível, uber)"><MoneyInput value={formData.transport} onChange={(v) => handleChange('transport', v)} /></Field>
+              <Field label="Contas de Consumo (luz, água, internet)"><MoneyInput value={formData.bills} onChange={(v) => handleChange('bills', v)} /></Field>
+              <Field label="Lazer & Estilo de Vida"><MoneyInput value={formData.leisure} onChange={(v) => handleChange('leisure', v)} /></Field>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="onboard__grid">
+              <Field label="Financiamento Imóvel (parcela/mês)"><MoneyInput value={formData.debtImovel} onChange={(v) => handleChange('debtImovel', v)} /></Field>
+              <Field label="Financiamento Veículo (parcela/mês)"><MoneyInput value={formData.debtVeiculo} onChange={(v) => handleChange('debtVeiculo', v)} /></Field>
+              <Field label="Empréstimos Pessoais (parcela/mês)"><MoneyInput value={formData.debtPessoal} onChange={(v) => handleChange('debtPessoal', v)} /></Field>
+              <Field label="Cartão de Crédito Rotativo"><MoneyInput value={formData.debtCartao} onChange={(v) => handleChange('debtCartao', v)} /></Field>
+              <Field label="Cheque Especial ou outras dívidas"><MoneyInput value={formData.debtOutros} onChange={(v) => handleChange('debtOutros', v)} /></Field>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="onboard__grid">
+              <Field label="Dinheiro em Conta / Poupança"><MoneyInput value={formData.equityCC} onChange={(v) => handleChange('equityCC', v)} /></Field>
+              <Field label="Tesouro Direto / Renda Fixa"><MoneyInput value={formData.equityRendaFixa} onChange={(v) => handleChange('equityRendaFixa', v)} /></Field>
+              <Field label="Ações / FIIs / Fundos"><MoneyInput value={formData.equityRV} onChange={(v) => handleChange('equityRV', v)} /></Field>
+              <Field label="Imóveis quitados (valor)"><MoneyInput value={formData.equityImoveis} onChange={(v) => handleChange('equityImoveis', v)} /></Field>
+              <Field label="Veículos quitados (valor)"><MoneyInput value={formData.equityVeiculos} onChange={(v) => handleChange('equityVeiculos', v)} /></Field>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div className="onboard__grid">
+              <Field label="Objetivo de Curto Prazo (até 1 ano)">
+                <input type="text" placeholder="Ex: Quitar o cartão" value={formData.goalShort} onChange={e => handleChange('goalShort', e.target.value)} />
+              </Field>
+              <Field label="Valor necessário"><MoneyInput value={formData.goalShortValue} onChange={(v) => handleChange('goalShortValue', v)} /></Field>
+              <Field label="Objetivo de Médio Prazo (1 a 5 anos)">
+                <input type="text" placeholder="Ex: Trocar de carro" value={formData.goalMedium} onChange={e => handleChange('goalMedium', e.target.value)} />
+              </Field>
+              <Field label="Valor necessário"><MoneyInput value={formData.goalMediumValue} onChange={(v) => handleChange('goalMediumValue', v)} /></Field>
+              <Field label="O que te motiva?">
+                <textarea rows={3} value={formData.motivation} onChange={e => handleChange('motivation', e.target.value)} />
+              </Field>
+            </div>
+          )}
         </div>
 
-        {/* Footer navigation */}
         <div className="onboard__footer">
-          <button
-            className="afic-btn afic-btn--ghost"
-            onClick={() => setStep(s => Math.max(1, s - 1))}
-            disabled={step === 1}
-          >
+          <button className="afic-btn afic-btn--ghost" onClick={() => setStep(s => Math.max(1, s - 1))} disabled={step === 1 || loading}>
             <ChevronLeft size={18} /> Voltar
           </button>
 
           <span className="onboard__pager">{step} / {total}</span>
 
           {step < total ? (
-            <button
-              className="afic-btn afic-btn--primary"
-              onClick={() => setStep(s => Math.min(total, s + 1))}
-            >
+            <button className="afic-btn afic-btn--primary" onClick={() => setStep(s => Math.min(total, s + 1))}>
               Próximo <ChevronRight size={18} />
             </button>
           ) : (
-            <button className="afic-btn afic-btn--primary" onClick={() => alert('Diagnóstico enviado com sucesso!')}>
-              <Send size={16} /> Enviar ao Consultor
+            <button className="afic-btn afic-btn--primary" onClick={handleSubmit} disabled={loading}>
+              {loading ? <Loader2 className="anim-spin" size={16} /> : <><Send size={16} /> Enviar ao Consultor</>}
             </button>
           )}
         </div>
@@ -107,8 +229,6 @@ export const ClientOnboarding: React.FC = () => {
     </div>
   );
 };
-
-/* ── Step Forms ── */
 
 const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode }> = ({ label, hint, children }) => (
   <div className="onboard__field">
@@ -118,78 +238,15 @@ const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode 
   </div>
 );
 
-const MoneyInput: React.FC<{ placeholder?: string }> = ({ placeholder = '0' }) => (
+const MoneyInput: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => (
   <div className="onboard__money-wrap">
     <span className="onboard__money-prefix">R$</span>
-    <input type="number" placeholder={placeholder} min="0" className="onboard__money-input" />
-  </div>
-);
-
-const StepPerfil = () => (
-  <div className="onboard__grid">
-    <Field label="Nome Completo"><input type="text" placeholder="Ex: João da Silva" /></Field>
-    <Field label="E-mail"><input type="email" placeholder="seuemail@exemplo.com" /></Field>
-    <Field label="Renda Principal Líquida (mensal)" hint="Salário, pró-labore ou renda principal já descontado impostos">
-      <MoneyInput />
-    </Field>
-    <Field label="Rendas Extras (média mensal)" hint="Freelances, aluguéis, comissões, etc.">
-      <MoneyInput />
-    </Field>
-    <Field label="Dependentes financeiros" hint="Filhos, pais ou cônjuge que dependem da sua renda">
-      <select><option>0</option><option>1</option><option>2</option><option>3</option><option>4+</option></select>
-    </Field>
-  </div>
-);
-
-const StepCustos = () => (
-  <div className="onboard__grid">
-    <Field label="Moradia (aluguel ou prestação)"><MoneyInput /></Field>
-    <Field label="Alimentação (mercado + refeições)"><MoneyInput /></Field>
-    <Field label="Saúde (plano + medicamentos)"><MoneyInput /></Field>
-    <Field label="Transporte (combustível, uber, VT)"><MoneyInput /></Field>
-    <Field label="Contas de Consumo (luz, água, internet, cel.)" hint="Some todas as contas básicas"><MoneyInput /></Field>
-    <Field label="Lazer & Estilo de Vida" hint="Assinaturas, academia, delivery, entretenimento"><MoneyInput /></Field>
-  </div>
-);
-
-const StepEndividamento = () => (
-  <div className="onboard__grid">
-    <Field label="Financiamento Imóvel (parcela/mês)"><MoneyInput /></Field>
-    <Field label="Financiamento Veículo (parcela/mês)"><MoneyInput /></Field>
-    <Field label="Empréstimos Pessoais (parcela/mês)"><MoneyInput /></Field>
-    <Field label="Cartão de Crédito Rotativo / Fatura Mínima" hint="Caso esteja pagando apenas o mínimo"><MoneyInput /></Field>
-    <Field label="Cheque Especial ou outras dívidas"><MoneyInput /></Field>
-    <Field label="Observações sobre as dívidas" hint="Mencione taxas altas ou urgências">
-      <textarea rows={3} placeholder="Ex: Cartão com 12% a.m., precisa ser quitado com prioridade..." />
-    </Field>
-  </div>
-);
-
-const StepPatrimonio = () => (
-  <div className="onboard__grid">
-    <Field label="Dinheiro em Conta Corrente / Poupança"><MoneyInput /></Field>
-    <Field label="Tesouro Direto / CDB / Renda Fixa"><MoneyInput /></Field>
-    <Field label="Ações / FIIs / Fundos de Investimento"><MoneyInput /></Field>
-    <Field label="Imóveis quitados (valor estimado)" hint="Não incluir o que ainda está financiado"><MoneyInput /></Field>
-    <Field label="Veículos quitados (valor de mercado)"><MoneyInput /></Field>
-  </div>
-);
-
-const StepSonhos = () => (
-  <div className="onboard__grid">
-    <Field label="Objetivo de Curto Prazo (até 1 ano)" hint="O que você precisa resolver logo?">
-      <input type="text" placeholder="Ex: Quitar o cartão de crédito" />
-    </Field>
-    <Field label="Valor necessário para esse objetivo"><MoneyInput /></Field>
-    <Field label="Objetivo de Médio Prazo (1 a 5 anos)" hint="Seus próximos grandes projetos de vida">
-      <input type="text" placeholder="Ex: Trocar de carro, fazer uma viagem" />
-    </Field>
-    <Field label="Valor necessário para esse objetivo"><MoneyInput /></Field>
-    <Field label="Objetivo de Longo Prazo (5+ anos)" hint="Sua grande visão de futuro financeiro">
-      <input type="text" placeholder="Ex: Aposentadoria antecipada, casa própria" />
-    </Field>
-    <Field label="O que te motivaria a manter a disciplina financeira?">
-      <textarea rows={3} placeholder="Descreva com suas palavras o estilo de vida que você busca..." />
-    </Field>
+    <input 
+      type="number" 
+      value={value} 
+      onChange={(e) => onChange(e.target.value)} 
+      min="0" 
+      className="onboard__money-input" 
+    />
   </div>
 );

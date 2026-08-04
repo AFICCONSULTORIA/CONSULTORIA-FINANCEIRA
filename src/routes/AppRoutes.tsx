@@ -49,7 +49,11 @@ export const AppRoutes: React.FC = () => (
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       
-      <Route path="/onboarding" element={<RootLayout><ClientOnboarding /></RootLayout>} />
+      <Route path="/onboarding" element={
+        <PrivateRoute allowedRole="client" redirectIfOnboarded>
+          <RootLayout><ClientOnboarding /></RootLayout>
+        </PrivateRoute>
+      } />
       
       {/* ── Rotas Protegidas do Admin ── */}
       <Route path="/admin" element={
@@ -72,7 +76,7 @@ export const AppRoutes: React.FC = () => (
 
       {/* ── Rotas com Sidebar do Cliente (Protegidas) ── */}
       <Route path="/client" element={
-        <PrivateRoute allowedRole="client">
+        <PrivateRoute allowedRole="client" requireOnboarding>
           <ClientLayout />
         </PrivateRoute>
       }>
