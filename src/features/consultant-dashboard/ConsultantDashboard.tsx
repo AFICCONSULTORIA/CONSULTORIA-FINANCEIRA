@@ -66,7 +66,7 @@ export const ConsultantDashboard: React.FC = () => {
     setModalMessage('');
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: newClientEmail,
         password: newClientPassword,
         options: {
