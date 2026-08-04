@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Activity, ArrowRight, Loader2, X } from 'lucide-react';
+import { Search, Plus, Activity, ArrowRight, Loader2, X, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 const statusColors: Record<string, string> = {
   excellent: 'var(--success)',
@@ -91,6 +92,21 @@ export const ConsultantDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteClient = async (clientId: string, clientName: string) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o cliente ${clientName}? Essa ação removerá o perfil, lançamentos e metas dele.`)) return;
+    
+    try {
+      const { error } = await supabase.from('users').delete().eq('id', clientId);
+      if (error) throw error;
+      
+      toast.success('Cliente removido com sucesso.');
+      setClients(clients.filter(c => c.id !== clientId));
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao excluir cliente. Verifique suas permissões.');
+    }
+  };
+
   const filteredClients = clients.filter(c => 
     c.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -161,12 +177,12 @@ export const ConsultantDashboard: React.FC = () => {
         </div>
 
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Cliente</th>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Health Score</th>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Status</th>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Ações</th>
+          <thead style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', textAlign: 'left', fontSize: '0.875rem' }}>
+            <tr>
+              <th style={{ padding: '1rem', fontWeight: 600 }}>Nome Completo</th>
+              <th style={{ padding: '1rem', fontWeight: 600 }}>Score</th>
+              <th style={{ padding: '1rem', fontWeight: 600 }}>Status</th>
+              <th style={{ padding: '1rem', fontWeight: 600, textAlign: 'right' }}>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -204,15 +220,19 @@ export const ConsultantDashboard: React.FC = () => {
                       <Activity size={12} /> {statusLabel}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => navigate(`/consultor/client/${client.id}`)}
-                      style={{ fontSize: '0.875rem' }}
-                    >
-                      Analisar <ArrowRight size={16} />
-                    </Button>
+                  <td style={{ padding: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/consultor/client/${client.id}`)}>
+                        Análise <ArrowRight size={16} />
+                      </Button>
+                      <button 
+                        onClick={() => handleDeleteClient(client.id, client.full_name)}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '0.5rem', opacity: 0.7 }}
+                        title="Excluir Cliente"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
