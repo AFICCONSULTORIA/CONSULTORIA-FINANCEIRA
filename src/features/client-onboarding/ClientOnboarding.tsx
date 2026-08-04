@@ -63,7 +63,7 @@ export const ClientOnboarding: React.FC = () => {
 
     try {
       // 1. Salvar na tabela financial_profiles
-      const { error: profileError } = await supabase.from('financial_profiles').insert({
+      const { error: profileError } = await supabase.from('financial_profiles').upsert({
         user_id: user.id,
         monthly_income: monthlyIncome,
         fixed_costs: fixedCosts,
