@@ -1,0 +1,123 @@
+@import './styles/variables.css';
+
+/* ============================================================
+   AFIC-Consultoria - Global Styles
+   ============================================================ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  line-height: 1.6;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+  /* Ambient background mesh */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 10% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 55%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+a { color: var(--brand-primary); text-decoration: none; }
+a:hover { color: var(--brand-primary-light); }
+
+button { cursor: pointer; font-family: var(--font-primary); }
+
+img, svg { display: block; }
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ---- Inputs & Select ---- */
+input, select, textarea {
+  font-family: var(--font-primary);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  width: 100%;
+  outline: none;
+  transition: border-color var(--ease-std), box-shadow var(--ease-std), background var(--ease-std);
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--brand-primary);
+  background: rgba(16, 185, 129, 0.05);
+  box-shadow: 0 0 0 3px var(--brand-glow-sm);
+}
+
+/* ---- Utility Classes ---- */
+.text-brand   { color: var(--brand-primary); }
+.text-muted   { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.font-display { font-family: var(--font-display); }
+
+.gradient-text {
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border-color);
+}
+
+.glass-solid {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-color);
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--sp-6);
+}
+
+.table-row-hover:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ---- Animate on load ---- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: var(--shadow-brand); }
+  50%       { box-shadow: 0 0 40px rgba(16, 185, 129, 0.5); }
+}
+
+.anim-fade-up  { animation: fadeUp 0.55s ease both; }
+.anim-fade-in  { animation: fadeIn 0.4s ease both; }

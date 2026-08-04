@@ -1,0 +1,88 @@
+/* ============================================================
+   Sidebar Styles
+   ============================================================ */
+.sidebar {
+  width: 260px;
+  background: var(--bg-card-solid);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar__header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+.sidebar__logo strong {
+  font-weight: 800;
+}
+
+.sidebar__nav {
+  padding: 1.5rem 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--ease-std);
+}
+
+.sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.sidebar__link--active {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--brand-primary-light);
+  font-weight: 600;
+}
+
+.sidebar__footer {
+  padding: 1.5rem 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.sidebar__link--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+  }
+  .sidebar__logo span {
+    display: none;
+  }
+  .sidebar__link span {
+    display: none;
+  }
+  .sidebar__link {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+}
