@@ -150,6 +150,17 @@
   margin-bottom: var(--sp-2);
 }
 
+input, select, textarea, button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Ensure all select options have good contrast in dark mode */
+select option {
+  background-color: var(--bg-card-solid, #1e293b);
+  color: #f8fafc;
+}
+
 /* ---- Stat Metric ---- */
 .afic-metric-value {
   font-family: var(--font-display);

@@ -97,6 +97,12 @@
   border-color: var(--brand-primary);
 }
 
+/* Ensure dropdown options are readable regardless of browser defaults */
+select.tx-search-input option {
+  background-color: var(--bg-card-solid, #1e293b);
+  color: #f8fafc;
+}
+
 .tx-pills {
   display: flex;
   background: var(--bg-input);
