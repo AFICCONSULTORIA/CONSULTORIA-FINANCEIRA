@@ -21,12 +21,12 @@ export const ClientOnboarding: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    income: '0', extraIncome: '0', dependents: '0',
-    housing: '0', food: '0', health: '0', transport: '0', bills: '0', leisure: '0',
-    debtImovel: '0', debtVeiculo: '0', debtPessoal: '0', debtCartao: '0', debtOutros: '0',
-    equityCC: '0', equityRendaFixa: '0', equityRV: '0', equityImoveis: '0', equityVeiculos: '0',
-    goalShort: '', goalShortValue: '0',
-    goalMedium: '', goalMediumValue: '0',
+    income: '', extraIncome: '', dependents: '0',
+    housing: '', food: '', health: '', transport: '', bills: '', leisure: '',
+    debtImovel: '', debtVeiculo: '', debtPessoal: '', debtCartao: '', debtOutros: '',
+    equityCC: '', equityRendaFixa: '', equityRV: '', equityImoveis: '', equityVeiculos: '',
+    goalShort: '', goalShortValue: '',
+    goalMedium: '', goalMediumValue: '',
     goalLong: '', motivation: ''
   });
 
@@ -43,8 +43,13 @@ export const ClientOnboarding: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    // Soma básica
-    const parse = (val: string) => parseFloat(val || '0');
+    // Soma básica com conversão da máscara
+    const parse = (val: string) => {
+      if (!val) return 0;
+      const clean = val.replace(/\./g, '').replace(',', '.');
+      return parseFloat(clean) || 0;
+    };
+    
     const monthlyIncome = parse(formData.income) + parse(formData.extraIncome);
     const fixedCosts = parse(formData.housing) + parse(formData.food) + parse(formData.health) + parse(formData.transport) + parse(formData.bills) + parse(formData.leisure);
     const totalDebt = parse(formData.debtImovel) + parse(formData.debtVeiculo) + parse(formData.debtPessoal) + parse(formData.debtCartao) + parse(formData.debtOutros);
@@ -238,15 +243,34 @@ const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode 
   </div>
 );
 
-const MoneyInput: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => (
-  <div className="onboard__money-wrap">
-    <span className="onboard__money-prefix">R$</span>
-    <input 
-      type="number" 
-      value={value} 
-      onChange={(e) => onChange(e.target.value)} 
-      min="0" 
-      className="onboard__money-input" 
-    />
-  </div>
-);
+const MoneyInput: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    // Remove tudo que não for dígito
+    val = val.replace(/\D/g, '');
+    
+    if (!val) {
+      onChange('');
+      return;
+    }
+
+    // Transforma em float com duas casas (ex: "1250" -> 12.50)
+    const numberValue = parseInt(val, 10) / 100;
+    // Formata no padrão pt-BR
+    const formatted = numberValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    onChange(formatted);
+  };
+
+  return (
+    <div className="onboard__money-wrap">
+      <span className="onboard__money-prefix">R$</span>
+      <input 
+        type="text" 
+        value={value} 
+        onChange={handleChange} 
+        placeholder="0,00" 
+        className="onboard__money-input" 
+      />
+    </div>
+  );
+};
