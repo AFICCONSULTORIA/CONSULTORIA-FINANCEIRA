@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { MoneyInput } from '../../../components/ui/MoneyInput';
+import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../context/AuthContext';
 
 export const TimeCalculator: React.FC = () => {
+  const { user } = useAuth();
   const [income, setIncome] = useState<string>('');
   const [productValue, setProductValue] = useState<string>('');
   const [workHoursPerMonth, setWorkHoursPerMonth] = useState<number>(220); // Padrão CLT
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase.from('financial_profiles').select('monthly_income').eq('user_id', user.id).single();
+      if (data && data.monthly_income > 0) {
+        setIncome(data.monthly_income.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const parsedIncome = parseFloat(income.replace(/\./g, '').replace(',', '.')) || 0;
   const parsedProduct = parseFloat(productValue.replace(/\./g, '').replace(',', '.')) || 0;

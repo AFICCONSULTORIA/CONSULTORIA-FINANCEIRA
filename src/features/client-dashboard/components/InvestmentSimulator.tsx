@@ -1,19 +1,35 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { MoneyInput } from '../../../components/ui/MoneyInput';
+import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../context/AuthContext';
 
 export const InvestmentSimulator: React.FC = () => {
+  const { user } = useAuth();
+  const [principalStr, setPrincipalStr] = useState('0,00');
   const [monthlyContributionStr, setMonthlyContributionStr] = useState('500,00');
   const [years, setYears] = useState<number>(10);
   const [annualRate, setAnnualRate] = useState<number>(10); // 10% a.a.
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase.from('financial_profiles').select('total_equity').eq('user_id', user.id).single();
+      if (data && data.total_equity > 0) {
+        setPrincipalStr(data.total_equity.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
   const data = useMemo(() => {
+    const principal = parseFloat(principalStr.replace(/\./g, '').replace(',', '.')) || 0;
     const monthlyContribution = parseFloat(monthlyContributionStr.replace(/\./g, '').replace(',', '.')) || 0;
     const monthlyRate = Math.pow(1 + annualRate / 100, 1 / 12) - 1;
     const months = years * 12;
-    let balance = 0;
+    let balance = principal;
     const arr = [];
 
     for (let m = 1; m <= months; m++) {
