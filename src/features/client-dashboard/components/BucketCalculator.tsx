@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
+import { MoneyInput } from '../../../components/ui/MoneyInput';
 
 const BUCKET_RATES = [
   { id: 'fixed', label: 'Custos Fixos', rate: 0.55, color: '#64748B' },
@@ -27,12 +28,10 @@ export const BucketCalculator: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
         <div style={{ flex: 1 }}>
-          <input 
-            type="text" 
-            placeholder="R$ 0,00" 
+          <MoneyInput 
             value={income}
-            onChange={(e) => setIncome(e.target.value)}
-            style={{ fontSize: '1.1rem', padding: '0.75rem 1rem' }}
+            onChange={(v) => setIncome(v)}
+            placeholder="0,00"
           />
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Send, User, Receipt, CreditCard, PiggyBank, Star, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { MoneyInput } from '../../components/ui/MoneyInput';
 
 import '../../components/ui/ui.css';
 import './ClientOnboarding.css';
@@ -359,35 +360,3 @@ const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode 
     {hint && <span className="onboard__hint">{hint}</span>}
   </div>
 );
-
-const MoneyInput: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    // Remove tudo que não for dígito
-    val = val.replace(/\D/g, '');
-    
-    if (!val) {
-      onChange('');
-      return;
-    }
-
-    // Transforma em float com duas casas (ex: "1250" -> 12.50)
-    const numberValue = parseInt(val, 10) / 100;
-    // Formata no padrão pt-BR
-    const formatted = numberValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    onChange(formatted);
-  };
-
-  return (
-    <div className="onboard__money-wrap">
-      <span className="onboard__money-prefix">R$</span>
-      <input 
-        type="text" 
-        value={value} 
-        onChange={handleChange} 
-        placeholder="0,00" 
-        className="onboard__money-input" 
-      />
-    </div>
-  );
-};

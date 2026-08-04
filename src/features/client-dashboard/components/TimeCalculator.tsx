@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
+import { MoneyInput } from '../../../components/ui/MoneyInput';
 
 export const TimeCalculator: React.FC = () => {
   const [income, setIncome] = useState<string>('');
@@ -37,12 +38,9 @@ export const TimeCalculator: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
           <label className="afic-label">Sua Renda Mensal Líquida (R$)</label>
-          <input 
-            type="text" 
-            placeholder="Ex: 5000,00" 
-            value={income}
-            onChange={(e) => setIncome(e.target.value)}
-          />
+          <div style={{ marginTop: '0.25rem' }}>
+            <MoneyInput value={income} onChange={v => setIncome(v)} />
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <div style={{ flex: 1 }}>
@@ -57,12 +55,9 @@ export const TimeCalculator: React.FC = () => {
         </div>
         <div>
           <label className="afic-label">Valor do Produto/Serviço (R$)</label>
-          <input 
-            type="text" 
-            placeholder="Ex: 4500,00 (Um iPhone)" 
-            value={productValue}
-            onChange={(e) => setProductValue(e.target.value)}
-          />
+          <div style={{ marginTop: '0.25rem' }}>
+            <MoneyInput value={productValue} onChange={v => setProductValue(v)} />
+          </div>
         </div>
       </div>
 

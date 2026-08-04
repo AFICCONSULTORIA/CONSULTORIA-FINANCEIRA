@@ -1,34 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
+import { MoneyInput } from '../../../components/ui/MoneyInput';
 
 export const InvestmentSimulator: React.FC = () => {
-  const [monthlyContribution, setMonthlyContribution] = useState<number>(500);
+  const [monthlyContributionStr, setMonthlyContributionStr] = useState('500,00');
   const [years, setYears] = useState<number>(10);
   const [annualRate, setAnnualRate] = useState<number>(10); // 10% a.a.
 
-  const calculateGrowth = () => {
-    const data = [];
-    let currentBalance = 0;
-    const monthlyRate = (annualRate / 100) / 12;
+  const data = useMemo(() => {
+    const monthlyContribution = parseFloat(monthlyContributionStr.replace(/\./g, '').replace(',', '.')) || 0;
+    const monthlyRate = Math.pow(1 + annualRate / 100, 1 / 12) - 1;
     const months = years * 12;
+    let balance = 0;
+    const arr = [];
 
     for (let m = 1; m <= months; m++) {
-      currentBalance = (currentBalance + monthlyContribution) * (1 + monthlyRate);
+      balance = (balance + monthlyContribution) * (1 + monthlyRate);
       if (m % 12 === 0) {
-        data.push({
+        arr.push({
           year: `Ano ${m / 12}`,
-          total: Math.round(currentBalance),
+          value: Math.round(balance),
           invested: monthlyContribution * m
         });
       }
     }
-    return data;
-  };
+    return arr;
+  }, [monthlyContributionStr, years, annualRate]);
 
-  const data = calculateGrowth();
-  const finalValue = data.length > 0 ? data[data.length - 1].total : 0;
+  const finalValue = data.length > 0 ? data[data.length - 1].value : 0;
+  const monthlyContribution = parseFloat(monthlyContributionStr.replace(/\./g, '').replace(',', '.')) || 0;
   const totalInvested = monthlyContribution * years * 12;
   const totalInterest = finalValue - totalInvested;
 
@@ -43,8 +45,10 @@ export const InvestmentSimulator: React.FC = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
-          <label className="afic-label">Aporte Mensal (R$)</label>
-          <input type="number" value={monthlyContribution} onChange={e => setMonthlyContribution(Number(e.target.value))} />
+          <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Aporte Mensal</label>
+          <div style={{ marginTop: '0.25rem' }}>
+            <MoneyInput value={monthlyContributionStr} onChange={v => setMonthlyContributionStr(v)} />
+          </div>
         </div>
         <div>
           <label className="afic-label">Prazo (Anos)</label>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingBag, Plus } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
+import { MoneyInput } from '../../../components/ui/MoneyInput';
 
 interface Expense {
   id: string;
@@ -21,7 +22,7 @@ export const ExpenseTracker: React.FC = () => {
 
   const handleAdd = () => {
     if (!desc || !amount) return;
-    const numAmount = parseFloat(amount.replace(',', '.'));
+    const numAmount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
     if (isNaN(numAmount)) return;
     
     setExpenses([{ id: Date.now().toString(), desc, amount: numAmount, bucket }, ...expenses]);
@@ -46,13 +47,12 @@ export const ExpenseTracker: React.FC = () => {
           onChange={e => setDesc(e.target.value)} 
         />
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input 
-            type="number" 
-            placeholder="R$ 0,00" 
-            value={amount} 
-            onChange={e => setAmount(e.target.value)}
-            style={{ flex: 1 }}
-          />
+          <div style={{ flex: 1 }}>
+            <MoneyInput 
+              value={amount} 
+              onChange={v => setAmount(v)}
+            />
+          </div>
           <select value={bucket} onChange={(e: any) => setBucket(e.target.value)} style={{ width: '130px' }}>
             <option value="leisure">Lazer</option>
             <option value="comfort">Conforto</option>

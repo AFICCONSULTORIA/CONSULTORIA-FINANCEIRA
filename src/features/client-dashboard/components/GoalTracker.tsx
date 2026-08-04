@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
-import { Target, ArrowUpCircle } from 'lucide-react';
+import { Target, Plus } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
+import { MoneyInput } from '../../../components/ui/MoneyInput';
 
 export const GoalTracker: React.FC = () => {
   const [goalName] = useState('Viagem Europa');
   const [targetAmount] = useState(15000);
   const [currentAmount, setCurrentAmount] = useState(4500);
-  const [deposit, setDeposit] = useState('');
+  const [amount, setAmount] = useState('');
 
   const progress = (currentAmount / targetAmount) * 100;
 
-  const handleDeposit = () => {
-    const amount = parseFloat(deposit.replace(',', '.'));
-    if (!isNaN(amount) && amount > 0) {
-      setCurrentAmount(c => Math.min(c + amount, targetAmount));
-      setDeposit('');
+  const handleAdd = () => {
+    const numAmount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
+    if (numAmount && numAmount > 0) {
+      setCurrentAmount(prev => Math.min(prev + numAmount, targetAmount));
+      setAmount('');
     }
   };
 
@@ -45,14 +46,13 @@ export const GoalTracker: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <input 
-          type="number" 
-          placeholder="Valor do aporte (R$)" 
-          value={deposit}
-          onChange={e => setDeposit(e.target.value)}
-          style={{ flex: 1 }}
-        />
-        <Button onClick={handleDeposit}><ArrowUpCircle size={16} /> Aportar</Button>
+        <div style={{ flex: 1 }}>
+          <MoneyInput 
+            value={amount}
+            onChange={v => setAmount(v)}
+          />
+        </div>
+        <Button onClick={handleAdd}><Plus size={16} /> Adicionar</Button>
       </div>
     </Card>
   );

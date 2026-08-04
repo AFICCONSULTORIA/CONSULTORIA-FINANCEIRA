@@ -165,3 +165,32 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+/* ---- Money Input ---- */
+.money-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.money-input-prefix {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  pointer-events: none;
+}
+.money-input-field {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  font-size: 1rem;
+  transition: border-color var(--ease-std), box-shadow var(--ease-std);
+}
+.money-input-field:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
