@@ -31,8 +31,8 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   }
 
   if (allowedRole && role && role !== allowedRole) {
-    if (allowedRole === 'consultant' && role === 'admin') {
-      // Admin tem passe livre nas telas de consultor
+    if (role === 'admin') {
+      // Admin tem passe livre em TODAS as rotas do sistema
     } else {
       if (role === 'admin') return <Navigate to="/admin" replace />;
       if (role === 'consultant') return <Navigate to="/consultor" replace />;

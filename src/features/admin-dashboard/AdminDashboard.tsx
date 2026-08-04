@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Shield, Plus, Users, Search, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Plus, Users, Search, Loader2, LayoutDashboard, Briefcase } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
@@ -7,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export const AdminDashboard: React.FC = () => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -67,6 +69,33 @@ export const AdminDashboard: React.FC = () => {
           
           <Button variant="outline" onClick={signOut}>Sair</Button>
         </header>
+
+        {/* Atalhos Rápidos para o Admin */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+          <Card style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => navigate('/consultor')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ background: 'var(--bg-app)', padding: '0.75rem', borderRadius: '50%' }}>
+                <Briefcase size={24} color="var(--brand-primary)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Painel do Consultor</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Gerenciar clientes e relatórios</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => navigate('/client')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ background: 'var(--bg-app)', padding: '0.75rem', borderRadius: '50%' }}>
+                <LayoutDashboard size={24} color="var(--info)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Visão do Cliente</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Ver como o cliente enxerga o app</p>
+              </div>
+            </div>
+          </Card>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '2rem' }}>
           
