@@ -259,6 +259,15 @@ export const ClientOnboarding: React.FC = () => {
                 />
               </Field>
               <Field label="Valor necessário"><MoneyInput value={formData.goalMediumValue} onChange={(v) => handleChange('goalMediumValue', v)} /></Field>
+              <Field label="Objetivo de Longo Prazo (Acima de 5 anos)">
+                <input 
+                  type="text" 
+                  placeholder="Ex: Aposentadoria, Liberdade Financeira" 
+                  value={formData.goalLong} 
+                  onChange={e => handleChange('goalLong', e.target.value)} 
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}
+                />
+              </Field>
               <Field label="O que te motiva?">
                 <textarea 
                   rows={3} 
