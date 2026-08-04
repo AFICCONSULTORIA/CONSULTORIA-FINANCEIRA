@@ -96,6 +96,25 @@ export const ClientOnboarding: React.FC = () => {
     }
   };
 
+  const isStepValid = (currentStep: number) => {
+    switch (currentStep) {
+      case 1:
+        return formData.income !== '' && formData.extraIncome !== '' && formData.dependents !== '';
+      case 2:
+        return formData.housing !== '' && formData.food !== '' && formData.health !== '' && formData.transport !== '' && formData.bills !== '' && formData.leisure !== '';
+      case 3:
+        return formData.debtImovel !== '' && formData.debtVeiculo !== '' && formData.debtPessoal !== '' && formData.debtCartao !== '' && formData.debtOutros !== '';
+      case 4:
+        return formData.equityCC !== '' && formData.equityRendaFixa !== '' && formData.equityRV !== '' && formData.equityImoveis !== '' && formData.equityVeiculos !== '';
+      case 5:
+        return formData.goalShort.trim() !== '' && formData.goalShortValue !== '' && 
+               formData.goalMedium.trim() !== '' && formData.goalMediumValue !== '' && 
+               formData.goalLong.trim() !== '' && formData.motivation.trim() !== '';
+      default:
+        return true;
+    }
+  };
+
   return (
     <div className="onboard container">
       <div className="onboard__track">
@@ -103,12 +122,17 @@ export const ClientOnboarding: React.FC = () => {
           const Icon = s.icon;
           const done    = s.id < step;
           const active  = s.id === step;
+          const canClick = s.id <= step; // Só permite clicar em passos anteriores ou no atual
+          
           return (
             <React.Fragment key={s.id}>
               <button
-                className={`onboard__step-btn ${done ? 'done' : ''} ${active ? 'active' : ''}`}
-                style={{ '--step-color': s.color } as React.CSSProperties}
-                onClick={() => setStep(s.id)}
+                className={`onboard__step-btn ${done ? 'done' : ''} ${active ? 'active' : ''} ${!canClick ? 'disabled' : ''}`}
+                style={{ '--step-color': s.color, opacity: canClick ? 1 : 0.5, cursor: canClick ? 'pointer' : 'not-allowed' } as React.CSSProperties}
+                onClick={() => {
+                  if (canClick) setStep(s.id);
+                }}
+                disabled={!canClick}
                 title={s.title}
               >
                 <span className="onboard__step-num">
@@ -221,13 +245,29 @@ export const ClientOnboarding: React.FC = () => {
           <span className="onboard__pager">{step} / {total}</span>
 
           {step < total ? (
-            <button className="afic-btn afic-btn--primary" onClick={() => setStep(s => Math.min(total, s + 1))}>
-              Próximo <ChevronRight size={18} />
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+              <button 
+                className="afic-btn afic-btn--primary" 
+                onClick={() => setStep(s => Math.min(total, s + 1))}
+                disabled={!isStepValid(step)}
+                style={{ opacity: !isStepValid(step) ? 0.5 : 1, cursor: !isStepValid(step) ? 'not-allowed' : 'pointer' }}
+              >
+                Próximo <ChevronRight size={18} />
+              </button>
+              {!isStepValid(step) && <span style={{ fontSize: '0.75rem', color: 'var(--danger)' }}>Preencha todos os campos (use 0 se não houver)</span>}
+            </div>
           ) : (
-            <button className="afic-btn afic-btn--primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? <Loader2 className="anim-spin" size={16} /> : <><Send size={16} /> Enviar ao Consultor</>}
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+              <button 
+                className="afic-btn afic-btn--primary" 
+                onClick={handleSubmit} 
+                disabled={loading || !isStepValid(step)}
+                style={{ opacity: (!isStepValid(step) || loading) ? 0.5 : 1, cursor: (!isStepValid(step) || loading) ? 'not-allowed' : 'pointer' }}
+              >
+                {loading ? <Loader2 className="anim-spin" size={16} /> : <><Send size={16} /> Enviar ao Consultor</>}
+              </button>
+              {!isStepValid(step) && <span style={{ fontSize: '0.75rem', color: 'var(--danger)' }}>Preencha todos os campos</span>}
+            </div>
           )}
         </div>
       </div>
