@@ -73,7 +73,8 @@ export const ClientOnboarding: React.FC = () => {
         status: status,
         goal_short: formData.goalShort,
         goal_medium: formData.goalMedium,
-        goal_long: formData.goalLong
+        goal_long: formData.goalLong,
+        raw_onboarding_data: formData
       });
 
       if (profileError) throw profileError;
