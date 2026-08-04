@@ -182,8 +182,25 @@ export const ClientOnboarding: React.FC = () => {
                 <MoneyInput value={formData.extraIncome} onChange={(v) => handleChange('extraIncome', v)} />
               </Field>
               <Field label="Dependentes financeiros">
-                <select value={formData.dependents} onChange={e => handleChange('dependents', e.target.value)}>
-                  <option>0</option><option>1</option><option>2</option><option>3</option><option>4+</option>
+                <select 
+                  value={formData.dependents} 
+                  onChange={e => handleChange('dependents', e.target.value)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.75rem', 
+                    borderRadius: 'var(--r-md)', 
+                    border: '1px solid var(--border-color)', 
+                    background: 'var(--bg-input)', 
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <option value="0" style={{ background: 'var(--bg-app)' }}>0</option>
+                  <option value="1" style={{ background: 'var(--bg-app)' }}>1</option>
+                  <option value="2" style={{ background: 'var(--bg-app)' }}>2</option>
+                  <option value="3" style={{ background: 'var(--bg-app)' }}>3</option>
+                  <option value="4+" style={{ background: 'var(--bg-app)' }}>4+</option>
                 </select>
               </Field>
             </div>
@@ -223,15 +240,32 @@ export const ClientOnboarding: React.FC = () => {
           {step === 5 && (
             <div className="onboard__grid">
               <Field label="Objetivo de Curto Prazo (até 1 ano)">
-                <input type="text" placeholder="Ex: Quitar o cartão" value={formData.goalShort} onChange={e => handleChange('goalShort', e.target.value)} />
+                <input 
+                  type="text" 
+                  placeholder="Ex: Quitar o cartão" 
+                  value={formData.goalShort} 
+                  onChange={e => handleChange('goalShort', e.target.value)} 
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}
+                />
               </Field>
               <Field label="Valor necessário"><MoneyInput value={formData.goalShortValue} onChange={(v) => handleChange('goalShortValue', v)} /></Field>
               <Field label="Objetivo de Médio Prazo (1 a 5 anos)">
-                <input type="text" placeholder="Ex: Trocar de carro" value={formData.goalMedium} onChange={e => handleChange('goalMedium', e.target.value)} />
+                <input 
+                  type="text" 
+                  placeholder="Ex: Trocar de carro" 
+                  value={formData.goalMedium} 
+                  onChange={e => handleChange('goalMedium', e.target.value)} 
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}
+                />
               </Field>
               <Field label="Valor necessário"><MoneyInput value={formData.goalMediumValue} onChange={(v) => handleChange('goalMediumValue', v)} /></Field>
               <Field label="O que te motiva?">
-                <textarea rows={3} value={formData.motivation} onChange={e => handleChange('motivation', e.target.value)} />
+                <textarea 
+                  rows={3} 
+                  value={formData.motivation} 
+                  onChange={e => handleChange('motivation', e.target.value)} 
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none', resize: 'vertical' }}
+                />
               </Field>
             </div>
           )}
