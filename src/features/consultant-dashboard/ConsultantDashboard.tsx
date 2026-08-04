@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, MoreVertical, Activity, ArrowRight } from 'lucide-react';
+import { Search, Plus, Activity, ArrowRight } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { mockClient } from '../../services/mockData'; // Usando o mock existente para popular a lista
 

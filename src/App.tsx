@@ -1,11 +1,12 @@
-import React from 'react';
 import { AppRoutes } from './routes/AppRoutes';
-import './index.css';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
     <div className="app-container" data-theme="dark">
-      <AppRoutes />
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </div>
   );
 }

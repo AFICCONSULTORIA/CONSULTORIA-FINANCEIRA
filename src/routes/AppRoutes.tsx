@@ -11,6 +11,10 @@ import { ClientDiagnostic } from '../features/consultant-dashboard/ClientDiagnos
 import { Reports } from '../features/consultant-dashboard/Reports';
 import { Settings } from '../features/consultant-dashboard/Settings';
 
+import { Login } from '../pages/auth/Login';
+import { Register } from '../pages/auth/Register';
+import { PrivateRoute } from './PrivateRoute';
+
 // Ferramentas interativas
 import { BucketCalculator } from '../features/client-dashboard/components/BucketCalculator';
 import { ExpenseTracker } from '../features/client-dashboard/components/ExpenseTracker';
@@ -39,17 +43,31 @@ export const AppRoutes: React.FC = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<RootLayout><Home /></RootLayout>} />
+      
+      {/* ── Rotas de Autenticação ── */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
       <Route path="/onboarding" element={<RootLayout><ClientOnboarding /></RootLayout>} />
-      {/* ── Rotas com Sidebar do Consultor ── */}
-      <Route path="/consultor" element={<ConsultantLayout />}>
+      
+      {/* ── Rotas com Sidebar do Consultor (Protegidas) ── */}
+      <Route path="/consultor" element={
+        <PrivateRoute allowedRole="consultant">
+          <ConsultantLayout />
+        </PrivateRoute>
+      }>
         <Route index element={<ConsultantDashboard />} />
         <Route path="client/:id" element={<ClientDiagnostic />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 
-      {/* ── Rotas com Sidebar do Cliente ── */}
-      <Route path="/client" element={<ClientLayout />}>
+      {/* ── Rotas com Sidebar do Cliente (Protegidas) ── */}
+      <Route path="/client" element={
+        <PrivateRoute allowedRole="client">
+          <ClientLayout />
+        </PrivateRoute>
+      }>
         <Route index element={<ClientDashboard />} />
         <Route path="calculator" element={<ToolWrapper><BucketCalculator /></ToolWrapper>} />
         <Route path="time-calculator" element={<ToolWrapper><TimeCalculator /></ToolWrapper>} />

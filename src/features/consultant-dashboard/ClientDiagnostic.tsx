@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit3, CheckCircle, Target, Shield, AlertTriangle, User } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -7,7 +7,6 @@ import { mockClient } from '../../services/mockData';
 
 // Em um cenário real, faríamos um fetch() buscando pelo ID
 export const ClientDiagnostic: React.FC = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
   const [clientData] = useState(mockClient); // Mock
   const { financialData: fd } = clientData;

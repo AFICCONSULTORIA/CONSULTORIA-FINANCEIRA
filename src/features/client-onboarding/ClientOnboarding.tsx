@@ -16,7 +16,6 @@ export const ClientOnboarding: React.FC = () => {
   const total = STEPS.length;
   const current = STEPS[step - 1];
   const StepIcon = current.icon;
-  const progress = ((step - 1) / (total - 1)) * 100;
 
   return (
     <div className="onboard container">
@@ -119,10 +118,10 @@ const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode 
   </div>
 );
 
-const MoneyInput: React.FC<{ placeholder?: string }> = ({ placeholder = 'R$ 0,00' }) => (
+const MoneyInput: React.FC<{ placeholder?: string }> = ({ placeholder = '0' }) => (
   <div className="onboard__money-wrap">
     <span className="onboard__money-prefix">R$</span>
-    <input type="number" placeholder="0" min="0" className="onboard__money-input" />
+    <input type="number" placeholder={placeholder} min="0" className="onboard__money-input" />
   </div>
 );
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
 
 const BUCKET_RATES = [
   { id: 'fixed', label: 'Custos Fixos', rate: 0.55, color: '#64748B' },

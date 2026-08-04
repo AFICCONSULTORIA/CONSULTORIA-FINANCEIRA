@@ -32,7 +32,7 @@ export const ClientDashboard: React.FC = () => {
   const status = statusConfig[health.status];
   const chartData = data.buckets.map(b => ({ name: b.label, value: b.percentage }));
 
-  const scoreAngle = (health.score / 100) * 180;
+
 
   return (
     <div className="dashboard container">

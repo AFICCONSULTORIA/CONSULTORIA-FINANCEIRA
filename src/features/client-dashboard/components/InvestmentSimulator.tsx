@@ -63,7 +63,7 @@ export const InvestmentSimulator: React.FC = () => {
             <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
             <Tooltip 
               contentStyle={{ background: 'var(--bg-card-solid)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
-              formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
             />
             <Line type="monotone" dataKey="total" name="Patrimônio Total" stroke="var(--brand-primary)" strokeWidth={3} dot={false} />
             <Line type="monotone" dataKey="invested" name="Valor Investido" stroke="var(--text-muted)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
