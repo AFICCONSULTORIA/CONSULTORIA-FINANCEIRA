@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Trash2, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { TransactionManager } from '../client-dashboard/components/TransactionManager';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -262,6 +263,13 @@ export const ClientDiagnostic: React.FC = () => {
                 ))
               )}
             </div>
+          </Card>
+
+          <Card>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+              Lançamentos Financeiros do Cliente
+            </h3>
+            <TransactionManager targetUserId={id} />
           </Card>
         </div>
 

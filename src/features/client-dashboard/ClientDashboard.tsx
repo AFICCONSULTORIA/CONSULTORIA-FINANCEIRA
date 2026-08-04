@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } 
 import { TrendingUp, Activity, Target, Loader2, CheckCircle, Circle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { TransactionManager } from './components/TransactionManager';
 import '../../components/ui/ui.css';
 import './ClientDashboard.css';
 
@@ -238,6 +239,14 @@ export const ClientDashboard: React.FC = () => {
             
           </div>
         </div>
+      </div>
+
+      {/* Seção de Lançamentos Diários */}
+      <div className="anim-fade-up" style={{ animationDelay: '180ms' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-primary)' }}>
+          Seus Lançamentos Financeiros
+        </h2>
+        <TransactionManager />
       </div>
     </div>
   );

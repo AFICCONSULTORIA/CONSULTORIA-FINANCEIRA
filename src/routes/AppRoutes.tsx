@@ -18,10 +18,10 @@ import { AdminDashboard } from '../features/admin-dashboard/AdminDashboard';
 
 // Ferramentas interativas
 import { BucketCalculator } from '../features/client-dashboard/components/BucketCalculator';
-import { ExpenseTracker } from '../features/client-dashboard/components/ExpenseTracker';
 import { GoalTracker } from '../features/client-dashboard/components/GoalTracker';
 import { InvestmentSimulator } from '../features/client-dashboard/components/InvestmentSimulator';
 import { TimeCalculator } from '../features/client-dashboard/components/TimeCalculator';
+import { TransactionManager } from '../features/client-dashboard/components/TransactionManager';
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
@@ -83,7 +83,7 @@ export const AppRoutes: React.FC = () => (
         <Route index element={<ClientDashboard />} />
         <Route path="calculator" element={<ToolWrapper><BucketCalculator /></ToolWrapper>} />
         <Route path="time-calculator" element={<ToolWrapper><TimeCalculator /></ToolWrapper>} />
-        <Route path="expenses" element={<ToolWrapper><ExpenseTracker /></ToolWrapper>} />
+        <Route path="expenses" element={<div className="container" style={{ padding: '2rem 1.5rem' }}><TransactionManager /></div>} />
         <Route path="goals" element={<ToolWrapper><GoalTracker /></ToolWrapper>} />
         <Route path="simulator" element={<ToolWrapper><InvestmentSimulator /></ToolWrapper>} />
       </Route>
