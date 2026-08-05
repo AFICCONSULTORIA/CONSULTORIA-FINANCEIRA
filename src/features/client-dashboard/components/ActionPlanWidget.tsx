@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { CheckCircle, Circle, ChevronDown, ChevronUp, AlertCircle, TrendingUp, Lightbulb, Calendar } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { supabase } from '../../../lib/supabase';
 
 interface Action {
   id: string;

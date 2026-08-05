@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { TrendingUp, Activity, Target, Loader2, CheckCircle, Circle } from 'lucide-react';
+import { TrendingUp, Activity, Target, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { TransactionManager } from './components/TransactionManager';
