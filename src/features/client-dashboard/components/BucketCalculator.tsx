@@ -86,9 +86,9 @@ export const BucketCalculator: React.FC = () => {
     return buckets.reduce((acc, b) => acc + (Number(b.percentage) || 0), 0);
   }, [buckets]);
 
-  const handlePercentageChange = (id: string, newPct: number) => {
+  const handlePercentageChange = (id: string, newPercentage: number) => {
     setIsSimulatingCustom(true);
-    setBuckets(prev => prev.map(b => b.id === id ? { ...b, percentage: Math.max(0, Math.min(100, newPct)) } : b));
+    setBuckets(prev => prev.map(b => b.id === id ? { ...b, percentage: newPercentage } : b));
   };
 
   const handleResetPercentages = () => {

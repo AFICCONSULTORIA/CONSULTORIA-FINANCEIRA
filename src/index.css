@@ -69,31 +69,36 @@ input:not([type="range"]):focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px var(--brand-glow-sm);
 }
 
-/* ---- Range Input ---- */
+/* ---- Range Slider ---- */
 input[type="range"] {
   -webkit-appearance: none;
-  appearance: none;
   width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--r-full);
+  background: transparent;
+  touch-action: pan-y; /* Prevent page swipe while dragging */
+}
+input[type="range"]:focus {
   outline: none;
-  transition: background var(--ease-fast);
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.1);
+  border-radius: var(--r-full);
 }
 input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
+  height: 24px;
+  width: 24px;
   border-radius: 50%;
   background: currentColor;
   cursor: pointer;
-  border: 2px solid var(--bg-app);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
-  transition: transform var(--ease-fast);
+  -webkit-appearance: none;
+  margin-top: -8px;
+  box-shadow: 0 0 0 3px var(--bg-card), 0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
 }
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.15);
 }
 input[type="range"]::-moz-range-thumb {
   width: 16px;
