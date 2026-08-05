@@ -365,7 +365,7 @@ select.tx-search-input option {
     align-items: center;
     justify-content: center;
     position: fixed;
-    bottom: 4.5rem;
+    bottom: 5.5rem;
     right: 1.25rem;
     width: 56px;
     height: 56px;
@@ -375,7 +375,7 @@ select.tx-search-input option {
     box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
     border: none;
     cursor: pointer;
-    z-index: 998;
+    z-index: 9988;
     transition: transform var(--ease-fast);
   }
 

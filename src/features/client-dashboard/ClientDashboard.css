@@ -38,8 +38,13 @@
 
 @media (max-width: 640px) {
   .dashboard {
-    padding: 1.25rem 1rem 5rem;
+    padding: 1.25rem 1rem 7rem;
     gap: 1.25rem;
+  }
+
+  .dashboard__name {
+    font-size: 1.5rem;
+    line-height: 1.25;
   }
 
   .dashboard__stats {
