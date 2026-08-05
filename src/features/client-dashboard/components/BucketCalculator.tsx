@@ -226,7 +226,7 @@ export const BucketCalculator: React.FC = () => {
           </Card>
 
           {/* Cards de cada Balde */}
-          <div className="afic-grid-2">
+          <div className="afic-grid-3">
             {buckets.map((b) => {
               const Icon = BUCKET_ICONS[b.id] || Calculator;
               const amount = parsedIncome * (b.percentage / 100);
