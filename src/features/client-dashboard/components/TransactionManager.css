@@ -322,6 +322,11 @@ select.tx-search-input option {
   color: var(--success);
 }
 
+/* Hide FAB on desktop by default */
+.tx-fab {
+  display: none;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 768px) {
   .tx-summary {
