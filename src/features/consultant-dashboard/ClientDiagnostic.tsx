@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Trash2, X, Edit2, Save } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { TransactionManager } from '../client-dashboard/components/TransactionManager';
@@ -47,6 +47,13 @@ export const ClientDiagnostic: React.FC = () => {
   const [newTaskCategory, setNewTaskCategory] = useState<'urgent'|'organization'|'growth'>('organization');
   const [newTaskDate, setNewTaskDate] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
+  
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskDesc, setEditTaskDesc] = useState('');
+  const [editTaskCategory, setEditTaskCategory] = useState<'urgent'|'organization'|'growth'>('organization');
+  const [editTaskDate, setEditTaskDate] = useState('');
+  
   const [buckets, setBuckets] = useState<Bucket[]>(DEFAULT_BUCKETS);
 
   const [isRawDataModalOpen, setIsRawDataModalOpen] = useState(false);
@@ -132,8 +139,56 @@ export const ClientDiagnostic: React.FC = () => {
     }
   };
 
+  const handleEditClick = (task: ActionPlan) => {
+    setEditingTaskId(task.id);
+    setEditTaskTitle(task.title);
+    setEditTaskDesc(task.description || '');
+    setEditTaskCategory(task.category || 'organization');
+    setEditTaskDate(task.due_date ? task.due_date.split('T')[0] : '');
+  };
+
+  const handleUpdateTask = async () => {
+    if (!editTaskTitle.trim() || !editingTaskId) return;
+    try {
+      const { error } = await supabase.from('action_plans').update({
+        title: editTaskTitle.trim(),
+        description: editTaskDesc.trim() || null,
+        category: editTaskCategory,
+        due_date: editTaskDate || null
+      }).eq('id', editingTaskId);
+      
+      if (!error) {
+        setActionPlans(actionPlans.map(t => t.id === editingTaskId ? {
+          ...t, 
+          title: editTaskTitle.trim(),
+          description: editTaskDesc.trim() || null,
+          category: editTaskCategory,
+          due_date: editTaskDate || null
+        } : t));
+        setEditingTaskId(null);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao atualizar tarefa.');
+    }
+  };
+
   const handleBucketChange = (type: string, value: number) => {
     setBuckets(buckets.map(b => b.type === type ? { ...b, percentage: value } : b));
+  };
+
+  const handleResetDiagnostic = async () => {
+    if (!id) return;
+    if (!window.confirm('Tem certeza? Isso fará com que o cliente tenha que preencher o diagnóstico novamente na próxima vez que acessar o painel.')) return;
+    
+    try {
+      const { error } = await supabase.from('users').update({ has_completed_onboarding: false }).eq('id', id);
+      if (error) throw error;
+      toast.success('Diagnóstico redefinido com sucesso! O cliente preencherá novamente no próximo acesso.');
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao redefinir diagnóstico. Verifique as permissões (RLS).');
+    }
   };
 
   const handleSaveBuckets = async () => {
@@ -269,6 +324,10 @@ export const ClientDiagnostic: React.FC = () => {
                 Ver Detalhamento Completo (Lançamentos)
               </Button>
             )}
+
+            <Button variant="outline" fullWidth onClick={handleResetDiagnostic} style={{ marginTop: '0.75rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}>
+              Redefinir Diagnóstico (Liberar para o cliente refazer)
+            </Button>
           </Card>
 
           <Card>
@@ -335,35 +394,69 @@ export const ClientDiagnostic: React.FC = () => {
                 <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>Nenhuma tarefa criada para este cliente ainda. Adicione as primeiras ações do planejamento.</p>
               ) : (
                 actionPlans.map(task => (
-                  <div key={task.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-input)', borderRadius: 'var(--r-md)' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', flex: 1 }} onClick={() => handleToggleTask(task.id, task.status)}>
-                      <div style={{ marginTop: '0.125rem' }}>
-                        {task.status === 'completed' ? (
-                          <CheckCircle size={20} color="var(--success)" />
-                        ) : (
-                          <Circle size={20} color="var(--brand-primary)" />
-                        )}
+                  editingTaskId === task.id ? (
+                    <div key={task.id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--bg-app)', padding: '1.25rem', borderRadius: 'var(--r-md)', border: '1px solid var(--brand-primary-light)' }}>
+                      <div>
+                        <label className="afic-label">Título da Tarefa *</label>
+                        <input type="text" value={editTaskTitle} onChange={e => setEditTaskTitle(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }} />
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                          {task.category === 'urgent' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}>URGENTE</span>}
-                          {task.category === 'organization' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}>ORGANIZAÇÃO</span>}
-                          {task.category === 'growth' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>CRESCIMENTO</span>}
-                        </div>
-                        <span style={{ color: task.status === 'completed' ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.status === 'completed' ? 'line-through' : 'none', fontWeight: 600, display: 'block' }}>
-                          {task.title}
-                        </span>
-                        {task.description && (
-                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {task.description}
-                          </p>
-                        )}
+                      <div>
+                        <label className="afic-label">Categoria / Prioridade</label>
+                        <select value={editTaskCategory} onChange={e => setEditTaskCategory(e.target.value as any)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}>
+                          <option value="urgent">🔴 Prioridade Alta (Urgente)</option>
+                          <option value="organization">🟡 Curto Prazo (Organização)</option>
+                          <option value="growth">🟢 Longo Prazo (Crescimento)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="afic-label">Como Fazer (Dica do Consultor)</label>
+                        <textarea value={editTaskDesc} onChange={e => setEditTaskDesc(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none', resize: 'vertical', minHeight: '80px' }} />
+                      </div>
+                      <div>
+                        <label className="afic-label">Data Limite Sugerida (Opcional)</label>
+                        <input type="date" value={editTaskDate} onChange={e => setEditTaskDate(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <Button variant="outline" onClick={() => setEditingTaskId(null)}>Cancelar</Button>
+                        <Button onClick={handleUpdateTask}>Salvar Edição</Button>
                       </div>
                     </div>
-                    <button onClick={() => handleDeleteTask(task.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', opacity: 0.7, padding: '0.5rem', marginLeft: '1rem' }}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                  ) : (
+                    <div key={task.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-input)', borderRadius: 'var(--r-md)' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', flex: 1 }} onClick={() => handleToggleTask(task.id, task.status)}>
+                        <div style={{ marginTop: '0.125rem' }}>
+                          {task.status === 'completed' ? (
+                            <CheckCircle size={20} color="var(--success)" />
+                          ) : (
+                            <Circle size={20} color="var(--brand-primary)" />
+                          )}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                            {task.category === 'urgent' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}>URGENTE</span>}
+                            {task.category === 'organization' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}>ORGANIZAÇÃO</span>}
+                            {task.category === 'growth' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>CRESCIMENTO</span>}
+                          </div>
+                          <span style={{ color: task.status === 'completed' ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.status === 'completed' ? 'line-through' : 'none', fontWeight: 600, display: 'block' }}>
+                            {task.title}
+                          </span>
+                          {task.description && (
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {task.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <button onClick={() => handleEditClick(task)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '0.5rem' }}>
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => handleDeleteTask(task.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', opacity: 0.7, padding: '0.5rem' }}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )
                 ))
               )}
             </div>
@@ -373,7 +466,7 @@ export const ClientDiagnostic: React.FC = () => {
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
               Lançamentos Financeiros do Cliente
             </h3>
-            <TransactionManager targetUserId={id} readOnly />
+            <TransactionManager targetUserId={id} />
           </Card>
 
           <Card>

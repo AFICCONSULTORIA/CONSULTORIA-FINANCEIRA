@@ -257,11 +257,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
     });
   }, [transactions, filterType, filterStatus, searchQuery]);
 
-  // Totals Calculation
   const totals = useMemo(() => {
     let income = 0;
     let expense = 0;
-    transactions.forEach(t => {
+    filteredTransactions.forEach(t => {
       if (t.type === 'income') income += Number(t.amount);
       if (t.type === 'expense') expense += Number(t.amount);
     });
@@ -270,7 +269,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
       expense,
       balance: income - expense
     };
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   return (
     <div className="tx-manager">
