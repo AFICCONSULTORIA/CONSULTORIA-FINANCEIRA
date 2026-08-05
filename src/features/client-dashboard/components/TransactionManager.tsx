@@ -47,6 +47,17 @@ const CATEGORIES = [
   'Outros'
 ];
 
+const QUICK_CATEGORIES = [
+  'Alimentação',
+  'Transporte',
+  'Moradia',
+  'Lazer',
+  'Custo Fixo',
+  'Conforto',
+  'Investimento',
+  'Outros'
+];
+
 const PAYMENT_METHODS = [
   'Pix',
   'Cartão de Crédito',
@@ -508,36 +519,51 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                 />
               </div>
 
-              <div className="afic-grid-2">
-                {/* Categoria */}
-                <div>
-                  <label className="afic-label">Categoria / Balde</label>
-                  <select 
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  >
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+              {/* Categoria com Atalhos Rápidos */}
+              <div>
+                <label className="afic-label" style={{ marginBottom: '0.375rem', display: 'block' }}>
+                  Categoria / Balde *
+                </label>
+                <div className="tx-category-chips">
+                  {QUICK_CATEGORIES.map(cat => {
+                    const isSelected = formCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        className={`tx-chip ${isSelected ? 'tx-chip--active' : ''}`}
+                        onClick={() => setFormCategory(cat)}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
                 </div>
+                <select 
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  className="tx-search-input"
+                  style={{ width: '100%', marginTop: '0.375rem' }}
+                >
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
 
-                {/* Forma de Pagamento */}
-                <div>
-                  <label className="afic-label">Forma de Pagamento</label>
-                  <select 
-                    value={formMethod}
-                    onChange={(e) => setFormMethod(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  >
-                    {PAYMENT_METHODS.map(pm => (
-                      <option key={pm} value={pm}>{pm}</option>
-                    ))}
-                  </select>
-                </div>
+              {/* Forma de Pagamento */}
+              <div>
+                <label className="afic-label">Forma de Pagamento</label>
+                <select 
+                  value={formMethod}
+                  onChange={(e) => setFormMethod(e.target.value)}
+                  className="tx-search-input"
+                  style={{ width: '100%' }}
+                >
+                  {PAYMENT_METHODS.map(pm => (
+                    <option key={pm} value={pm}>{pm}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="afic-grid-2">
