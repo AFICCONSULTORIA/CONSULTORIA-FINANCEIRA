@@ -6,21 +6,16 @@ import './BottomNav.css';
 const navItems = [
   { to: '/client', label: 'Início', icon: Home },
   { to: '/client/expenses', label: 'Lançamentos', icon: Receipt },
-  { to: '/calculator', label: 'Baldes', icon: Calculator },
-  { to: '/goals', label: 'Metas', icon: Target },
-  { to: '/simulator', label: 'Simulador', icon: TrendingUp },
+  { to: '/client/calculator', label: 'Baldes', icon: Calculator },
+  { to: '/client/goals', label: 'Metas', icon: Target },
+  { to: '/client/simulator', label: 'Simulador', icon: TrendingUp },
 ];
 
 export const BottomNav: React.FC = () => {
   const location = useLocation();
 
   // Show bottom nav only on client routes (not consultant or login)
-  const isClientRoute = 
-    location.pathname.startsWith('/client') || 
-    location.pathname === '/calculator' || 
-    location.pathname === '/goals' || 
-    location.pathname === '/simulator' ||
-    location.pathname === '/time-calculator';
+  const isClientRoute = location.pathname.startsWith('/client');
 
   if (!isClientRoute) return null;
 
