@@ -4,6 +4,7 @@ import { Search, Plus, Activity, ArrowRight, Loader2, X, Trash2 } from 'lucide-r
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { calculateHealthScore } from '../../utils/scoreCalculator';
 
 const statusColors: Record<string, string> = {
   excellent: 'var(--success)',
@@ -24,6 +25,7 @@ export const ConsultantDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -115,6 +117,40 @@ export const ConsultantDashboard: React.FC = () => {
     }
   };
 
+  const handleSyncScores = async () => {
+    setSyncing(true);
+    try {
+      const { data: profiles, error: fetchErr } = await supabase.from('financial_profiles').select('*');
+      if (fetchErr) throw fetchErr;
+
+      if (profiles && profiles.length > 0) {
+        let successCount = 0;
+        for (const p of profiles) {
+          const newScore = calculateHealthScore(
+            p.monthly_income || 0,
+            p.fixed_costs || 0,
+            p.total_debt || 0,
+            p.total_equity || 0
+          );
+          const { data } = await supabase.from('financial_profiles').update({ health_score: newScore }).eq('id', p.id).select();
+          if (data && data.length > 0) successCount++;
+        }
+        
+        if (successCount === 0) {
+           throw new Error('Nenhum score foi atualizado. Verifique as políticas de segurança (RLS) do Supabase.');
+        }
+        
+        toast.success(`Scores de ${successCount} clientes atualizados com a nova regra!`);
+        fetchClients(); // recarrega a tela
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao sincronizar scores.');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const filteredClients = clients.filter(c => 
     c.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -150,9 +186,14 @@ export const ConsultantDashboard: React.FC = () => {
           <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Meus Clientes</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Visão geral da carteira de consultoria e status de saúde financeira.</p>
         </div>
-        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-          <Plus size={18} /> Novo Cliente
-        </Button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <Button variant="outline" onClick={handleSyncScores} disabled={syncing}>
+            {syncing ? <Loader2 className="anim-spin" size={18} /> : <Activity size={18} />} Recalcular Todos
+          </Button>
+          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+            <Plus size={18} /> Novo Cliente
+          </Button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>

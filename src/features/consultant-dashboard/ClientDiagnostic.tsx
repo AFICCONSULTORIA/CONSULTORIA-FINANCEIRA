@@ -7,6 +7,7 @@ import { TransactionManager } from '../client-dashboard/components/TransactionMa
 import { GoalTracker } from '../client-dashboard/components/GoalTracker';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { calculateHealthScore } from '../../utils/scoreCalculator';
 
 interface ActionPlan {
   id: string;
@@ -43,6 +44,9 @@ export const ClientDiagnostic: React.FC = () => {
   const [buckets, setBuckets] = useState<Bucket[]>(DEFAULT_BUCKETS);
 
   const [isRawDataModalOpen, setIsRawDataModalOpen] = useState(false);
+  const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
+  const [manualScore, setManualScore] = useState<number>(0);
+  const [savingScore, setSavingScore] = useState(false);
 
   useEffect(() => {
     if (id) fetchClientData(id);
@@ -124,14 +128,51 @@ export const ClientDiagnostic: React.FC = () => {
     if (!id) return;
     setSavingPlan(true);
     try {
-      const { error } = await supabase.from('financial_profiles').update({ buckets }).eq('user_id', id);
+      const { data, error } = await supabase.from('financial_profiles').update({ buckets }).eq('user_id', id).select();
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Acesso bloqueado pelas políticas de segurança (RLS) do Supabase.');
       toast.success('Estratégia salva com sucesso! O cliente já pode ver a nova distribuição.');
     } catch (e) {
       console.error(e);
       toast.error('Erro ao salvar estratégia.');
     } finally {
       setSavingPlan(false);
+    }
+  };
+
+  const handleOpenScoreModal = () => {
+    setManualScore(profile.health_score || 0);
+    setIsScoreModalOpen(true);
+  };
+
+  const handleAutoCalculateScore = () => {
+    if (!profile) return;
+    const score = calculateHealthScore(
+      profile.monthly_income || 0,
+      profile.fixed_costs || 0,
+      profile.total_debt || 0,
+      profile.total_equity || 0
+    );
+    setManualScore(score);
+    toast.success('Score auto-calculado com base nos dados!');
+  };
+
+  const handleSaveScore = async () => {
+    if (!id) return;
+    setSavingScore(true);
+    try {
+      const { data, error } = await supabase.from('financial_profiles').update({ health_score: manualScore }).eq('user_id', id).select();
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Acesso bloqueado pelas políticas de segurança (RLS) do Supabase.');
+      
+      setProfile({ ...profile, health_score: manualScore });
+      setIsScoreModalOpen(false);
+      toast.success('Health Score atualizado com sucesso!');
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao atualizar score.');
+    } finally {
+      setSavingScore(false);
     }
   };
 
@@ -333,7 +374,7 @@ export const ClientDiagnostic: React.FC = () => {
                 Baseado nos dados informados. 
               </p>
             </div>
-            <Button variant="ghost" fullWidth style={{ marginTop: '1rem' }} onClick={() => toast('Em breve: Ajuste fino do Score', { icon: '🚧' })}>
+            <Button variant="ghost" fullWidth style={{ marginTop: '1rem' }} onClick={handleOpenScoreModal}>
               Recalcular Score Manual
             </Button>
           </Card>
@@ -412,6 +453,41 @@ export const ClientDiagnostic: React.FC = () => {
 
             <div style={{ marginTop: '3rem' }}>
               <Button onClick={() => setIsRawDataModalOpen(false)} fullWidth>Fechar Detalhamento</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Ajuste de Score */}
+      {isScoreModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
+          <div className="anim-fade-up" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--r-xl)', width: '100%', maxWidth: '400px', border: '1px solid var(--border-color)', position: 'relative' }}>
+            <button onClick={() => setIsScoreModalOpen(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Ajuste de Score</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Defina o Health Score ideal para o momento deste cliente.</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ fontSize: '4rem', fontWeight: 900, color: 'var(--brand-primary-light)', lineHeight: 1 }}>{manualScore}</div>
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={manualScore} 
+                onChange={e => setManualScore(parseInt(e.target.value))}
+                style={{ width: '100%', marginTop: '1rem', cursor: 'pointer' }} 
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <Button variant="outline" fullWidth onClick={handleAutoCalculateScore}>
+                Auto-Calcular pelo Perfil
+              </Button>
+              <Button fullWidth onClick={handleSaveScore} disabled={savingScore}>
+                {savingScore ? 'Salvando...' : 'Salvar Novo Score'}
+              </Button>
             </div>
           </div>
         </div>

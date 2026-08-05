@@ -6,6 +6,7 @@ import { MoneyInput } from '../../components/ui/MoneyInput';
 
 import '../../components/ui/ui.css';
 import './ClientOnboarding.css';
+import { calculateHealthScore } from '../../utils/scoreCalculator';
 
 const STEPS = [
   { id: 1, icon: User,       color: '#10B981', title: 'Perfil & Renda',              subtitle: 'Vamos começar conhecendo você e sua renda.' },
@@ -62,6 +63,8 @@ export const ClientOnboarding: React.FC = () => {
     if (fixedCosts > monthlyIncome * 0.8) status = 'attention';
     if (fixedCosts + totalDebt > monthlyIncome) status = 'critical';
 
+    const calculatedScore = calculateHealthScore(monthlyIncome, fixedCosts, totalDebt, totalEquity);
+
     try {
       // 1. Salvar na tabela financial_profiles
       const { error: profileError } = await supabase.from('financial_profiles').upsert({
@@ -70,7 +73,7 @@ export const ClientOnboarding: React.FC = () => {
         fixed_costs: fixedCosts,
         total_debt: totalDebt,
         total_equity: totalEquity,
-        health_score: 80, // mock base
+        health_score: calculatedScore,
         status: status,
         goal_short: formData.goalShort,
         goal_medium: formData.goalMedium,

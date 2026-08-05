@@ -64,6 +64,53 @@ export const GoalTracker: React.FC<GoalTrackerProps> = ({ targetUserId, readOnly
     }
   };
 
+  const importFromDiagnostic = async () => {
+    setLoading(true);
+    try {
+      const { data: profile, error } = await supabase.from('financial_profiles').select('raw_onboarding_data').eq('user_id', effectiveUserId).single();
+      if (error) throw error;
+      
+      const raw = profile?.raw_onboarding_data;
+      if (!raw) {
+        toast.error('Nenhum dado de diagnóstico encontrado.');
+        setLoading(false);
+        return;
+      }
+
+      const parseMoney = (val: string) => {
+        if (!val) return 0;
+        return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0;
+      };
+
+      const newGoals = [];
+      if (raw.goalShort && raw.goalShort.trim() !== '') {
+        newGoals.push({ user_id: effectiveUserId, title: raw.goalShort, target_amount: parseMoney(raw.goalShortValue), current_amount: 0 });
+      }
+      if (raw.goalMedium && raw.goalMedium.trim() !== '') {
+        newGoals.push({ user_id: effectiveUserId, title: raw.goalMedium, target_amount: parseMoney(raw.goalMediumValue), current_amount: 0 });
+      }
+      if (raw.goalLong && raw.goalLong.trim() !== '') {
+        newGoals.push({ user_id: effectiveUserId, title: raw.goalLong, target_amount: 0, current_amount: 0 });
+      }
+
+      if (newGoals.length === 0) {
+        toast.error('Nenhuma meta encontrada no diagnóstico.');
+        setLoading(false);
+        return;
+      }
+
+      const { error: insertErr } = await supabase.from('client_goals').insert(newGoals);
+      if (insertErr) throw insertErr;
+
+      toast.success('Metas importadas com sucesso!');
+      fetchGoals();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message?.includes('security policy') ? 'Erro de Permissão (RLS): O consultor precisa ter permissão no banco para inserir metas.' : 'Erro ao importar metas.');
+      setLoading(false);
+    }
+  };
+
   const openCreateModal = () => {
     setEditingGoal(null);
     setFormTitle('');
@@ -118,9 +165,9 @@ export const GoalTracker: React.FC<GoalTrackerProps> = ({ targetUserId, readOnly
 
       setIsModalOpen(false);
       fetchGoals();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Erro ao salvar a meta.');
+      toast.error(err.message?.includes('security policy') ? 'Erro de Permissão (RLS): Você não tem permissão para editar metas.' : 'Erro ao salvar a meta.');
     } finally {
       setSubmitting(false);
     }
@@ -133,9 +180,9 @@ export const GoalTracker: React.FC<GoalTrackerProps> = ({ targetUserId, readOnly
       if (error) throw error;
       toast.success('Meta excluída!');
       setGoals(prev => prev.filter(g => g.id !== id));
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Erro ao excluir meta.');
+      toast.error(err.message?.includes('security policy') ? 'Erro de Permissão (RLS)' : 'Erro ao excluir meta.');
     }
   };
 
@@ -167,10 +214,21 @@ export const GoalTracker: React.FC<GoalTrackerProps> = ({ targetUserId, readOnly
           <p style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-primary)' }}>
             Nenhuma meta cadastrada.
           </p>
-          {!readOnly && (
-            <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              Clique em "Nova Meta" para criar seu primeiro sonho!
-            </p>
+          {!readOnly ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
+              <p style={{ fontSize: '0.875rem' }}>
+                Clique em "Nova Meta" para criar seu primeiro sonho ou puxe do seu diagnóstico inicial!
+              </p>
+              <Button variant="outline" onClick={importFromDiagnostic}>
+                Importar Metas do Diagnóstico
+              </Button>
+            </div>
+          ) : (
+            <div style={{ marginTop: '1rem' }}>
+              <Button variant="outline" onClick={importFromDiagnostic}>
+                Importar Metas do Diagnóstico
+              </Button>
+            </div>
           )}
         </Card>
       ) : (
