@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Trash2, X, Edit2, Save } from 'lucide-react';
+import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Trash2, X, Edit2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { TransactionManager } from '../client-dashboard/components/TransactionManager';
@@ -161,9 +161,9 @@ export const ClientDiagnostic: React.FC = () => {
         setActionPlans(actionPlans.map(t => t.id === editingTaskId ? {
           ...t, 
           title: editTaskTitle.trim(),
-          description: editTaskDesc.trim() || null,
+          description: editTaskDesc.trim() || undefined,
           category: editTaskCategory,
-          due_date: editTaskDate || null
+          due_date: editTaskDate || undefined
         } : t));
         setEditingTaskId(null);
       }
