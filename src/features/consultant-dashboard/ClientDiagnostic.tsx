@@ -12,6 +12,9 @@ import { calculateHealthScore } from '../../utils/scoreCalculator';
 interface ActionPlan {
   id: string;
   title: string;
+  description?: string;
+  category?: 'urgent' | 'organization' | 'growth';
+  due_date?: string;
   status: 'pending' | 'completed';
 }
 
@@ -40,6 +43,9 @@ export const ClientDiagnostic: React.FC = () => {
 
   const [actionPlans, setActionPlans] = useState<ActionPlan[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDesc, setNewTaskDesc] = useState('');
+  const [newTaskCategory, setNewTaskCategory] = useState<'urgent'|'organization'|'growth'>('organization');
+  const [newTaskDate, setNewTaskDate] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [buckets, setBuckets] = useState<Bucket[]>(DEFAULT_BUCKETS);
 
@@ -83,12 +89,18 @@ export const ClientDiagnostic: React.FC = () => {
       const { data, error } = await supabase.from('action_plans').insert({
         user_id: id,
         title: newTaskTitle.trim(),
+        description: newTaskDesc.trim() || null,
+        category: newTaskCategory,
+        due_date: newTaskDate || null,
         status: 'pending'
       }).select().single();
       
       if (data && !error) {
         setActionPlans([...actionPlans, data]);
         setNewTaskTitle('');
+        setNewTaskDesc('');
+        setNewTaskCategory('organization');
+        setNewTaskDate('');
         setIsAddingTask(false);
       }
     } catch (e) {
@@ -269,16 +281,51 @@ export const ClientDiagnostic: React.FC = () => {
             </div>
 
             {isAddingTask && (
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                <input 
-                  type="text" 
-                  value={newTaskTitle} 
-                  onChange={e => setNewTaskTitle(e.target.value)} 
-                  placeholder="Descreva a tarefa..."
-                  style={{ flex: 1, padding: '0.5rem 1rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}
-                  onKeyDown={e => e.key === 'Enter' && handleAddTask()}
-                />
-                <Button onClick={handleAddTask}>Adicionar</Button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', background: 'var(--bg-app)', padding: '1.25rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)' }}>
+                <div>
+                  <label className="afic-label">Título da Tarefa *</label>
+                  <input 
+                    type="text" 
+                    value={newTaskTitle} 
+                    onChange={e => setNewTaskTitle(e.target.value)} 
+                    placeholder="Ex: Cancelar assinatura X"
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label className="afic-label">Categoria / Prioridade</label>
+                  <select 
+                    value={newTaskCategory}
+                    onChange={e => setNewTaskCategory(e.target.value as any)}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}
+                  >
+                    <option value="urgent">🔴 Prioridade Alta (Urgente)</option>
+                    <option value="organization">🟡 Curto Prazo (Organização)</option>
+                    <option value="growth">🟢 Longo Prazo (Crescimento)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="afic-label">Como Fazer (Dica do Consultor)</label>
+                  <textarea 
+                    value={newTaskDesc}
+                    onChange={e => setNewTaskDesc(e.target.value)}
+                    placeholder="Instruções detalhadas de como o cliente deve executar esta ação..."
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none', resize: 'vertical', minHeight: '80px' }}
+                  />
+                </div>
+                <div>
+                  <label className="afic-label">Data Limite Sugerida (Opcional)</label>
+                  <input 
+                    type="date" 
+                    value={newTaskDate} 
+                    onChange={e => setNewTaskDate(e.target.value)} 
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <Button variant="outline" onClick={() => setIsAddingTask(false)}>Cancelar</Button>
+                  <Button onClick={handleAddTask}>Salvar Tarefa</Button>
+                </div>
               </div>
             )}
             
@@ -287,18 +334,32 @@ export const ClientDiagnostic: React.FC = () => {
                 <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>Nenhuma tarefa criada para este cliente ainda. Adicione as primeiras ações do planejamento.</p>
               ) : (
                 actionPlans.map(task => (
-                  <div key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-input)', borderRadius: 'var(--r-md)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }} onClick={() => handleToggleTask(task.id, task.status)}>
-                      {task.status === 'completed' ? (
-                        <CheckCircle size={20} color="var(--success)" />
-                      ) : (
-                        <Circle size={20} color="var(--text-muted)" />
-                      )}
-                      <span style={{ color: task.status === 'completed' ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.status === 'completed' ? 'line-through' : 'none', fontWeight: 500 }}>
-                        {task.title}
-                      </span>
+                  <div key={task.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-input)', borderRadius: 'var(--r-md)' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', flex: 1 }} onClick={() => handleToggleTask(task.id, task.status)}>
+                      <div style={{ marginTop: '0.125rem' }}>
+                        {task.status === 'completed' ? (
+                          <CheckCircle size={20} color="var(--success)" />
+                        ) : (
+                          <Circle size={20} color="var(--brand-primary)" />
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          {task.category === 'urgent' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}>URGENTE</span>}
+                          {task.category === 'organization' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}>ORGANIZAÇÃO</span>}
+                          {task.category === 'growth' && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>CRESCIMENTO</span>}
+                        </div>
+                        <span style={{ color: task.status === 'completed' ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.status === 'completed' ? 'line-through' : 'none', fontWeight: 600, display: 'block' }}>
+                          {task.title}
+                        </span>
+                        {task.description && (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {task.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <button onClick={() => handleDeleteTask(task.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', opacity: 0.7, padding: '0.5rem' }}>
+                    <button onClick={() => handleDeleteTask(task.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', opacity: 0.7, padding: '0.5rem', marginLeft: '1rem' }}>
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -315,7 +376,7 @@ export const ClientDiagnostic: React.FC = () => {
           </Card>
 
           <Card>
-            <GoalTracker targetUserId={id} readOnly />
+            <GoalTracker targetUserId={id} />
           </Card>
         </div>
 

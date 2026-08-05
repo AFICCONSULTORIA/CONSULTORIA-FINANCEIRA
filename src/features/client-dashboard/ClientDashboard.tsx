@@ -4,6 +4,7 @@ import { TrendingUp, Activity, Target, Loader2, CheckCircle, Circle } from 'luci
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { TransactionManager } from './components/TransactionManager';
+import { ActionPlanWidget } from './components/ActionPlanWidget';
 import '../../components/ui/ui.css';
 import './ClientDashboard.css';
 
@@ -202,38 +203,8 @@ export const ClientDashboard: React.FC = () => {
                 Seu perfil está sob análise. Em breve, seu consultor montará seu plano de ação aqui.
               </div>
             ) : (
-              <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {actions.map((action: any) => (
-                  <div 
-                    key={action.id} 
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.75rem', 
-                      padding: '1rem', 
-                      background: 'var(--bg-input)', 
-                      borderRadius: 'var(--r-md)',
-                      cursor: 'pointer',
-                      transition: 'background var(--ease-fast)'
-                    }}
-                    onClick={() => handleToggleAction(action)}
-                  >
-                    {action.status === 'completed' ? (
-                      <CheckCircle size={20} color="var(--success)" style={{ flexShrink: 0 }} />
-                    ) : (
-                      <Circle size={20} color="var(--brand-primary)" style={{ flexShrink: 0 }} />
-                    )}
-                    <span style={{ 
-                      color: action.status === 'completed' ? 'var(--text-muted)' : 'var(--text-primary)', 
-                      textDecoration: action.status === 'completed' ? 'line-through' : 'none',
-                      fontWeight: 500,
-                      fontSize: '0.9375rem',
-                      lineHeight: 1.4
-                    }}>
-                      {action.title}
-                    </span>
-                  </div>
-                ))}
+              <div style={{ padding: '1.25rem' }}>
+                <ActionPlanWidget actions={actions} onActionToggle={handleToggleAction} />
               </div>
             )}
             

@@ -138,7 +138,7 @@ export const GoalTracker: React.FC<GoalTrackerProps> = ({ targetUserId, readOnly
     const targetNum = parseFloat(formTarget.replace(/\./g, '').replace(',', '.'));
     const currentNum = parseFloat(formCurrent.replace(/\./g, '').replace(',', '.')) || 0;
 
-    if (isNaN(targetNum) || targetNum <= 0) {
+    if (isNaN(targetNum) || targetNum < 0) {
       toast.error('Informe um valor de meta válido.');
       return;
     }
@@ -260,19 +260,29 @@ export const GoalTracker: React.FC<GoalTrackerProps> = ({ targetUserId, readOnly
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-primary)', letterSpacing: '-0.02em' }}>
-                    {progress.toFixed(1)}%
-                  </span>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                    de {Number(goal.target_amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
-                  </span>
+                  {goal.target_amount > 0 ? (
+                    <>
+                      <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-primary)', letterSpacing: '-0.02em' }}>
+                        {progress.toFixed(1)}%
+                      </span>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                        de {Number(goal.target_amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
+                      </span>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                      Valor a Definir
+                    </span>
+                  )}
                 </div>
 
-                <div className="afic-progress" style={{ height: '8px', marginBottom: '1rem' }}>
-                  <div className="afic-progress__bar" style={{ width: `${progress}%`, background: 'var(--grad-brand)' }} />
-                </div>
+                {goal.target_amount > 0 && (
+                  <div className="afic-progress" style={{ height: '8px', marginBottom: '1rem' }}>
+                    <div className="afic-progress__bar" style={{ width: `${progress}%`, background: 'var(--grad-brand)' }} />
+                  </div>
+                )}
 
-                <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-input)', padding: '0.75rem', borderRadius: 'var(--r-md)', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-input)', padding: '0.75rem', borderRadius: 'var(--r-md)', textAlign: 'center', marginTop: goal.target_amount === 0 ? '1rem' : '0' }}>
                   Acumulado: <strong>{Number(goal.current_amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
                 </div>
               </Card>
