@@ -622,6 +622,17 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
           </div>
         </div>
       )}
+
+      {/* Floating Action Button (Mobile) */}
+      {!readOnly && (
+        <button 
+          className="tx-fab" 
+          onClick={openCreateModal}
+          aria-label="Novo Lançamento"
+        >
+          <Plus size={28} />
+        </button>
+      )}
     </div>
   );
 };

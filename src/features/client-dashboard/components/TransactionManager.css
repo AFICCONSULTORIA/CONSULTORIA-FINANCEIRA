@@ -354,4 +354,44 @@ select.tx-search-input option {
     border-top: 1px solid var(--border-color);
     padding-top: 0.625rem;
   }
+
+  .tx-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 4.5rem;
+    right: 1.25rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--grad-brand);
+    color: white;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    border: none;
+    cursor: pointer;
+    z-index: 998;
+    transition: transform var(--ease-fast);
+  }
+
+  .tx-fab:active {
+    transform: scale(0.92);
+  }
+
+  .tx-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .tx-modal {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-height: 85vh;
+    animation: slideUpModal 0.3s ease forwards;
+  }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
