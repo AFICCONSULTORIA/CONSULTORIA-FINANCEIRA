@@ -238,7 +238,7 @@ export const BucketCalculator: React.FC = () => {
                     borderLeft: `4px solid ${b.color}`,
                     display: 'flex',
                     flexDirection: 'column',
-                    justify: 'space-between',
+                    justifyContent: 'space-between',
                     gap: '1rem',
                     transition: 'all var(--ease-std)'
                   }}
@@ -254,7 +254,7 @@ export const BucketCalculator: React.FC = () => {
                           borderRadius: 'var(--r-md)',
                           display: 'flex',
                           alignItems: 'center',
-                          justify: 'center'
+                          justifyContent: 'center'
                         }}>
                           <Icon size={18} />
                         </div>
