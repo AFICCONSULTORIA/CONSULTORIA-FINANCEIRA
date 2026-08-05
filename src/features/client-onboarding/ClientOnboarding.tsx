@@ -6,7 +6,7 @@ import { MoneyInput } from '../../components/ui/MoneyInput';
 
 import '../../components/ui/ui.css';
 import './ClientOnboarding.css';
-import { calculateHealthScore } from '../../utils/scoreCalculator';
+import { calculateHealthScore, getScoreStatus } from '../../utils/scoreCalculator';
 
 const STEPS = [
   { id: 1, icon: User,       color: '#10B981', title: 'Perfil & Renda',              subtitle: 'Vamos começar conhecendo você e sua renda.' },
@@ -58,12 +58,8 @@ export const ClientOnboarding: React.FC = () => {
     const totalDebt = parse(formData.debtImovel) + parse(formData.debtVeiculo) + parse(formData.debtPessoal) + parse(formData.debtCartao) + parse(formData.debtOutros);
     const totalEquity = parse(formData.equityCC) + parse(formData.equityRendaFixa) + parse(formData.equityRV) + parse(formData.equityImoveis) + parse(formData.equityVeiculos);
     
-    // Status simplificado
-    let status = 'good';
-    if (fixedCosts > monthlyIncome * 0.8) status = 'attention';
-    if (fixedCosts + totalDebt > monthlyIncome) status = 'critical';
-
     const calculatedScore = calculateHealthScore(monthlyIncome, fixedCosts, totalDebt, totalEquity);
+    const calculatedStatus = getScoreStatus(calculatedScore);
 
     try {
       // 1. Salvar na tabela financial_profiles
@@ -74,7 +70,7 @@ export const ClientOnboarding: React.FC = () => {
         total_debt: totalDebt,
         total_equity: totalEquity,
         health_score: calculatedScore,
-        status: status,
+        status: calculatedStatus,
         goal_short: formData.goalShort,
         goal_medium: formData.goalMedium,
         goal_long: formData.goalLong,

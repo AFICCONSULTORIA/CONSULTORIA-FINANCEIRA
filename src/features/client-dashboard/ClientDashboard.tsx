@@ -69,7 +69,7 @@ export const ClientDashboard: React.FC = () => {
 
         setClientData({
           name: userRes.data.full_name,
-          healthScore: p.health_score || 75,
+          healthScore: p.health_score !== undefined && p.health_score !== null ? p.health_score : 75,
           status: p.status || 'good',
           monthlyIncome: p.monthly_income || 0,
           savingRate,

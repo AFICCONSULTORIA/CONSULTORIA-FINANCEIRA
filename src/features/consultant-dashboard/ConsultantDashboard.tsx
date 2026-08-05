@@ -4,7 +4,7 @@ import { Search, Plus, Activity, ArrowRight, Loader2, X, Trash2 } from 'lucide-r
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
-import { calculateHealthScore } from '../../utils/scoreCalculator';
+import { calculateHealthScore, getScoreStatus } from '../../utils/scoreCalculator';
 
 const statusColors: Record<string, string> = {
   excellent: 'var(--success)',
@@ -132,7 +132,8 @@ export const ConsultantDashboard: React.FC = () => {
             p.total_debt || 0,
             p.total_equity || 0
           );
-          const { data } = await supabase.from('financial_profiles').update({ health_score: newScore }).eq('id', p.id).select();
+          const newStatus = getScoreStatus(newScore);
+          const { data } = await supabase.from('financial_profiles').update({ health_score: newScore, status: newStatus }).eq('id', p.id).select();
           if (data && data.length > 0) successCount++;
         }
         

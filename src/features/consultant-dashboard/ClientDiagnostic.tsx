@@ -7,7 +7,7 @@ import { TransactionManager } from '../client-dashboard/components/TransactionMa
 import { GoalTracker } from '../client-dashboard/components/GoalTracker';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
-import { calculateHealthScore } from '../../utils/scoreCalculator';
+import { calculateHealthScore, getScoreStatus } from '../../utils/scoreCalculator';
 
 interface ActionPlan {
   id: string;
@@ -173,13 +173,14 @@ export const ClientDiagnostic: React.FC = () => {
     if (!id) return;
     setSavingScore(true);
     try {
-      const { data, error } = await supabase.from('financial_profiles').update({ health_score: manualScore }).eq('user_id', id).select();
+      const newStatus = getScoreStatus(manualScore);
+      const { data, error } = await supabase.from('financial_profiles').update({ health_score: manualScore, status: newStatus }).eq('user_id', id).select();
       if (error) throw error;
       if (!data || data.length === 0) throw new Error('Acesso bloqueado pelas políticas de segurança (RLS) do Supabase.');
       
-      setProfile({ ...profile, health_score: manualScore });
+      setProfile({ ...profile, health_score: manualScore, status: newStatus });
       setIsScoreModalOpen(false);
-      toast.success('Health Score atualizado com sucesso!');
+      toast.success('Health Score e Status atualizados com sucesso!');
     } catch (e) {
       console.error(e);
       toast.error('Erro ao atualizar score.');
