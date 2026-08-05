@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { TrendingUp, Menu, X } from 'lucide-react';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import './Navbar.css';
 
 const navLinks = [
@@ -43,9 +44,12 @@ export const Navbar: React.FC = () => {
           ))}
         </nav>
 
-        <button className="navbar__burger" onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <ThemeToggle />
+          <button className="navbar__burger" onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
     </header>
   );

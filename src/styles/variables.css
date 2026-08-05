@@ -84,3 +84,28 @@
   --ease-std:  250ms ease;
   --ease-slow: 400ms ease;
 }
+
+/* ============================================================
+   Light Theme Override
+   ============================================================ */
+[data-theme='light'] {
+  --bg-app:              #F8FAFC;
+  --bg-surface:          #FFFFFF;
+  --bg-card:             rgba(255, 255, 255, 0.7);
+  --bg-card-hover:       rgba(255, 255, 255, 0.9);
+  --bg-card-solid:       #FFFFFF;
+  --bg-input:            #FFFFFF;
+  
+  --text-primary:        #0F172A;
+  --text-secondary:      #475569;
+  --text-muted:          #94A3B8;
+  
+  --border-color:        #E2E8F0;
+  --border-hover:        #CBD5E1;
+  --border-brand:        rgba(16, 185, 129, 0.4);
+
+  --shadow-sm:           0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:           0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg:           0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --shadow-glow:         0 0 40px rgba(16, 185, 129, 0.08);
+}

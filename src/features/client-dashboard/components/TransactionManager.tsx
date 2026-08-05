@@ -75,10 +75,15 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+  const [startMonth, setStartMonth] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [endMonth, setEndMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [previousBalance, setPreviousBalance] = useState<number>(0);
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,23 +107,36 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
   const [txToDelete, setTxToDelete] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Suggestions for Description (sessionStorage)
+  const [recentDescriptions, setRecentDescriptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('recent_tx_descriptions');
+    if (saved) {
+      try {
+        setRecentDescriptions(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
   useEffect(() => {
     if (effectiveUserId) {
       fetchTransactions();
     }
-  }, [effectiveUserId, selectedMonth]);
+  }, [effectiveUserId, startMonth, endMonth]);
 
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      // Filtrar pelo mês selecionado
-      const [year, month] = selectedMonth.split('-');
-      const startDate = `${year}-${month}-01`;
+      // Filtrar pelo período selecionado
+      const [startYear, startM] = startMonth.split('-');
+      const startDate = `${startYear}-${startM}-01`;
       
-      // Último dia do mês
-      const lastDay = new Date(Number(year), Number(month), 0).getDate();
-      const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+      const [endYear, endM] = endMonth.split('-');
+      const lastDay = new Date(Number(endYear), Number(endM), 0).getDate();
+      const endDate = `${endYear}-${endM}-${String(lastDay).padStart(2, '0')}`;
 
+      // 1. Buscar transações do período
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
@@ -129,6 +147,25 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
       if (error) throw error;
       setTransactions(data || []);
+
+      // 2. Buscar transações ANTERIORES para o saldo acumulado
+      const { data: prevData, error: prevError } = await supabase
+        .from('transactions')
+        .select('type, amount')
+        .eq('user_id', effectiveUserId)
+        .lt('date', startDate);
+        
+      if (prevError) throw prevError;
+      
+      let prevBal = 0;
+      if (prevData) {
+        prevData.forEach(t => {
+          if (t.type === 'income') prevBal += Number(t.amount);
+          if (t.type === 'expense') prevBal -= Number(t.amount);
+        });
+      }
+      setPreviousBalance(prevBal);
+
     } catch (err) {
       console.error('Erro ao buscar transações:', err);
       toast.error('Erro ao carregar lançamentos.');
@@ -210,6 +247,14 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
         toast.success('Lançamento adicionado com sucesso!');
       }
 
+      // Save to recent descriptions
+      const desc = formDesc.trim();
+      setRecentDescriptions(prev => {
+        const updated = [desc, ...prev.filter(d => d !== desc)].slice(0, 10);
+        sessionStorage.setItem('recent_tx_descriptions', JSON.stringify(updated));
+        return updated;
+      });
+
       setIsModalOpen(false);
       fetchTransactions();
     } catch (err) {
@@ -267,9 +312,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
     return {
       income,
       expense,
-      balance: income - expense
+      periodBalance: income - expense,
+      totalBalance: previousBalance + income - expense
     };
-  }, [filteredTransactions]);
+  }, [filteredTransactions, previousBalance]);
 
   return (
     <div className="tx-manager">
@@ -277,7 +323,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
       <div className="tx-summary anim-fade-up">
         <div className="tx-summary__card tx-summary__card--income">
           <span className="tx-summary__label">
-            <TrendingUp size={16} color="var(--success)" /> Entradas (Mês)
+            <TrendingUp size={16} color="var(--success)" /> Entradas (Período)
           </span>
           <span className="tx-summary__value" style={{ color: 'var(--success)' }}>
             {totals.income.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -286,7 +332,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
         <div className="tx-summary__card tx-summary__card--expense">
           <span className="tx-summary__label">
-            <TrendingDown size={16} color="var(--danger)" /> Saídas (Mês)
+            <TrendingDown size={16} color="var(--danger)" /> Saídas (Período)
           </span>
           <span className="tx-summary__value" style={{ color: 'var(--danger)' }}>
             {totals.expense.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -295,26 +341,41 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
         <div className="tx-summary__card tx-summary__card--balance">
           <span className="tx-summary__label">
-            <DollarSign size={16} color="var(--brand-primary)" /> Saldo do Mês
+            <DollarSign size={16} color="var(--brand-primary)" /> Saldo Atual (Total Acumulado)
           </span>
           <span className="tx-summary__value gradient-text">
-            {totals.balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            {totals.totalBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </span>
+          <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: 'var(--text-secondary)' }}>
+            Saldo no período: {totals.periodBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
         </div>
       </div>
 
       {/* Barra de Filtros e Controles */}
       <div className="tx-controls anim-fade-up" style={{ animationDelay: '50ms' }}>
         <div className="tx-controls__left">
-          {/* Seletor de Mês */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Calendar size={16} color="var(--text-muted)" />
+          {/* Seletor de Período */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Calendar size={16} color="var(--text-muted)" />
+              <input 
+                type="month" 
+                value={startMonth}
+                onChange={(e) => setStartMonth(e.target.value)}
+                className="tx-search-input"
+                style={{ minWidth: '130px' }}
+                title="Mês Inicial"
+              />
+            </div>
+            <span style={{ color: 'var(--text-muted)' }}>até</span>
             <input 
               type="month" 
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              value={endMonth}
+              onChange={(e) => setEndMonth(e.target.value)}
               className="tx-search-input"
-              style={{ minWidth: '150px' }}
+              style={{ minWidth: '130px' }}
+              title="Mês Final"
             />
           </div>
 
@@ -504,8 +565,15 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                   onChange={(e) => setFormDesc(e.target.value)}
                   className="tx-search-input"
                   style={{ width: '100%' }}
+                  list="desc-suggestions"
+                  autoComplete="off"
                   required
                 />
+                <datalist id="desc-suggestions">
+                  {recentDescriptions.map(desc => (
+                    <option key={desc} value={desc} />
+                  ))}
+                </datalist>
               </div>
 
               {/* Valor */}
