@@ -35,7 +35,7 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const ToolWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
+  <div className="container anim-fade-up" style={{ padding: '3rem var(--sp-6)' }}>
     {children}
   </div>
 );
