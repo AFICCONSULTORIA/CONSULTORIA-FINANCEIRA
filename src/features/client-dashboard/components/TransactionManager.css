@@ -272,7 +272,7 @@ select.tx-search-input option {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 99999;
   padding: 1rem;
 }
 
@@ -425,6 +425,7 @@ select.tx-search-input option {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     max-height: 85vh;
+    padding: 1.25rem 1.25rem 2.5rem;
     animation: slideUpModal 0.3s ease forwards;
   }
 }
