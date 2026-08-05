@@ -101,6 +101,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
   const [formStatus, setFormStatus] = useState<'completed' | 'pending'>('completed');
   const [formDate, setFormDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [formNotes, setFormNotes] = useState('');
+  const [formInstallments, setFormInstallments] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
   // Modal State for Delete
@@ -185,6 +186,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
     setFormStatus('completed');
     setFormDate(new Date().toISOString().split('T')[0]);
     setFormNotes('');
+    setFormInstallments(1);
     setIsModalOpen(true);
   };
 
@@ -199,6 +201,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
     setFormStatus(tx.status);
     setFormDate(tx.date);
     setFormNotes(tx.notes || '');
+    setFormInstallments(1);
     setIsModalOpen(true);
   };
 
@@ -218,19 +221,18 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
     setSubmitting(true);
     try {
-      const payload = {
-        user_id: effectiveUserId,
-        type: formType,
-        description: formDesc.trim(),
-        amount: numericAmount,
-        category: formCategory,
-        payment_method: formMethod,
-        status: formStatus,
-        date: formDate,
-        notes: formNotes.trim() || null
-      };
-
       if (editingTx) {
+        const payload = {
+          user_id: effectiveUserId,
+          type: formType,
+          description: formDesc.trim(),
+          amount: numericAmount,
+          category: formCategory,
+          payment_method: formMethod,
+          status: formStatus,
+          date: formDate,
+          notes: formNotes.trim() || null
+        };
         const { error } = await supabase
           .from('transactions')
           .update(payload)
@@ -239,12 +241,44 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
         if (error) throw error;
         toast.success('Lançamento atualizado com sucesso!');
       } else {
+        const isCreditCard = formMethod === 'Cartão de Crédito';
+        const installments = isCreditCard && formInstallments > 1 ? formInstallments : 1;
+        
+        const installmentAmount = installments > 1 ? (numericAmount / installments) : numericAmount;
+        const payloads = [];
+
+        for (let i = 0; i < installments; i++) {
+          const baseDate = new Date(formDate);
+          // Adicionar i meses à data base
+          baseDate.setMonth(baseDate.getMonth() + i);
+          
+          const formattedDate = baseDate.toISOString().split('T')[0];
+          const isFuture = i > 0;
+          
+          let itemDesc = formDesc.trim();
+          if (installments > 1) {
+            itemDesc = `${itemDesc} (${i + 1}/${installments})`;
+          }
+
+          payloads.push({
+            user_id: effectiveUserId,
+            type: formType,
+            description: itemDesc,
+            amount: installmentAmount,
+            category: formCategory,
+            payment_method: formMethod,
+            status: isFuture ? 'pending' : formStatus,
+            date: formattedDate,
+            notes: formNotes.trim() || null
+          });
+        }
+
         const { error } = await supabase
           .from('transactions')
-          .insert([payload]);
+          .insert(payloads);
 
         if (error) throw error;
-        toast.success('Lançamento adicionado com sucesso!');
+        toast.success(installments > 1 ? `${installments} parcelas lançadas com sucesso!` : 'Lançamento adicionado com sucesso!');
       }
 
       // Save to recent descriptions
@@ -632,6 +666,24 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                   ))}
                 </select>
               </div>
+
+              {!editingTx && formMethod === 'Cartão de Crédito' && (
+                <div>
+                  <label className="afic-label">Número de Parcelas</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    max="72"
+                    value={formInstallments}
+                    onChange={(e) => setFormInstallments(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="tx-search-input"
+                    style={{ width: '100%' }}
+                  />
+                  <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block', lineHeight: 1.2 }}>
+                    O valor total será dividido pelo número de parcelas informadas. As próximas parcelas serão lançadas automaticamente para os meses seguintes, com status pendente.
+                  </small>
+                </div>
+              )}
 
               <div className="afic-grid-2">
                 {/* Data */}
