@@ -627,7 +627,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
       {!readOnly && (
         <button 
           className="tx-fab" 
-          onClick={openCreateModal}
+          onClick={handleOpenCreateModal}
           aria-label="Novo Lançamento"
         >
           <Plus size={28} />
