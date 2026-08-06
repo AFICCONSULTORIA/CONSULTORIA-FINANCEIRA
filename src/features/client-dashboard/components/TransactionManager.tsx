@@ -390,25 +390,50 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
       <div className="tx-controls anim-fade-up" style={{ animationDelay: '50ms' }}>
         <div className="tx-controls__left">
           {/* Seletor de Período */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Calendar size={16} color="var(--text-muted)" />
-              <input 
-                type="month" 
-                value={startMonth}
-                onChange={(e) => setStartMonth(e.target.value)}
-                className="tx-search-input"
-                style={{ minWidth: '130px' }}
-                title="Mês Inicial"
-              />
-            </div>
-            <span style={{ color: 'var(--text-muted)' }}>até</span>
+          <div 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--r-md)',
+              padding: '0.25rem 0.5rem',
+              height: '42px' // matching typical input heights
+            }}
+          >
+            <Calendar size={16} color="var(--text-muted)" />
+            <input 
+              type="month" 
+              value={startMonth}
+              onChange={(e) => setStartMonth(e.target.value)}
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                color: 'var(--text-primary)',
+                outline: 'none',
+                fontFamily: 'inherit',
+                fontSize: '0.9375rem',
+                padding: '0',
+                width: '120px'
+              }}
+              title="Mês Inicial"
+            />
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>até</span>
             <input 
               type="month" 
               value={endMonth}
               onChange={(e) => setEndMonth(e.target.value)}
-              className="tx-search-input"
-              style={{ minWidth: '130px' }}
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                color: 'var(--text-primary)',
+                outline: 'none',
+                fontFamily: 'inherit',
+                fontSize: '0.9375rem',
+                padding: '0',
+                width: '120px'
+              }}
               title="Mês Final"
             />
           </div>
