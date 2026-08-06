@@ -7,6 +7,8 @@ export interface ParsedOfxTransaction {
   fitid?: string;
   selected?: boolean;
   category?: string;
+  paymentMethod?: string;
+  installmentInfo?: string;
 }
 
 /**
@@ -61,6 +63,9 @@ function guessCategory(description: string, type: 'income' | 'expense'): string 
 export function parseOfx(ofxText: string): ParsedOfxTransaction[] {
   const transactions: ParsedOfxTransaction[] = [];
   
+  // Detect if this is a credit card OFX
+  const isCreditCard = ofxText.includes('<ACCTTYPE>CREDITLINE') || /CREDITCARD/i.test(ofxText);
+  
   // Extract all <STMTTRN>...</STMTTRN> or <STMTTRN>... until next tag/end
   const stmttrnRegex = /<STMTTRN>([\s\S]*?)(?:<\/STMTTRN>|(?=<STMTTRN>)|$)/gi;
   let match;
@@ -81,6 +86,16 @@ export function parseOfx(ofxText: string): ParsedOfxTransaction[] {
     let description = memo || name || 'Lançamento OFX';
     // Clean up extra spaces
     description = description.replace(/\s+/g, ' ').trim();
+
+    // Parse installment info from description like "01/05", "1/12", "02/10"
+    let installmentInfo = undefined;
+    const installmentMatch = description.match(/(?:PARC|PARCELA|PCD|-|\s)?\s*(\d{1,2})\/(\d{1,2})\b/i);
+    if (installmentMatch) {
+      installmentInfo = `Parcela ${installmentMatch[1]} de ${installmentMatch[2]}`;
+    }
+
+    // Determine payment method
+    let paymentMethod = isCreditCard ? 'Cartão de Crédito' : 'Extrato Bancário';
 
     // Parse amount
     let numericAmt = parseFloat(rawAmt.replace(',', '.'));
@@ -110,7 +125,9 @@ export function parseOfx(ofxText: string): ParsedOfxTransaction[] {
       date,
       fitid,
       selected: true,
-      category
+      category,
+      paymentMethod,
+      installmentInfo
     });
   }
 
