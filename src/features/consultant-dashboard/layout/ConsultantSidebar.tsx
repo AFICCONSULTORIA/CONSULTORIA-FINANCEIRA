@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Users, FileText, Settings, LogOut } from 'lucide-react';
+import { Users, FileText, Settings, LogOut, PieChart } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { Logo } from '../../../components/ui/Logo';
 import { ThemeToggle } from '../../../components/ui/ThemeToggle';
@@ -8,6 +8,7 @@ import '../../../components/layout/Sidebar.css';
 
 const SIDEBAR_LINKS = [
   { to: '/consultor', icon: Users, label: 'Meus Clientes', exact: true },
+  { to: '/consultor/portfolio', icon: PieChart, label: 'Carteira AFIC' },
   { to: '/consultor/reports', icon: FileText, label: 'Relatórios' },
   { to: '/consultor/settings', icon: Settings, label: 'Configurações' },
 ];

@@ -15,6 +15,7 @@ import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import { PrivateRoute } from './PrivateRoute';
 import { AdminDashboard } from '../features/admin-dashboard/AdminDashboard';
+import { RecommendedPortfolio } from '../features/portfolio/RecommendedPortfolio';
 
 // Ferramentas interativas
 import { BucketCalculator } from '../features/client-dashboard/components/BucketCalculator';
@@ -70,6 +71,7 @@ export const AppRoutes: React.FC = () => (
       }>
         <Route index element={<ConsultantDashboard />} />
         <Route path="client/:id" element={<ClientDiagnostic />} />
+        <Route path="portfolio" element={<div className="container" style={{ padding: '2rem 1.5rem' }}><RecommendedPortfolio /></div>} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
       </Route>
@@ -81,6 +83,7 @@ export const AppRoutes: React.FC = () => (
         </PrivateRoute>
       }>
         <Route index element={<ClientDashboard />} />
+        <Route path="portfolio" element={<ToolWrapper><RecommendedPortfolio /></ToolWrapper>} />
         <Route path="calculator" element={<ToolWrapper><BucketCalculator /></ToolWrapper>} />
         <Route path="time-calculator" element={<ToolWrapper><TimeCalculator /></ToolWrapper>} />
         <Route path="expenses" element={<div className="container" style={{ padding: '2rem 1.5rem' }}><TransactionManager /></div>} />
