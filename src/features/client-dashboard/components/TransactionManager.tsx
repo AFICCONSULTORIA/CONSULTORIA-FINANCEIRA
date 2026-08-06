@@ -186,6 +186,11 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
   const [txToDelete, setTxToDelete] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Bulk selection & deletion
+  const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
+  const [bulkDeleteConfirmModal, setBulkDeleteConfirmModal] = useState<'selected' | 'all_period' | null>(null);
+  const [deletingBulk, setDeletingBulk] = useState(false);
+
   // Suggestions for Description (sessionStorage)
   const [recentDescriptions, setRecentDescriptions] = useState<string[]>([]);
 
@@ -396,12 +401,57 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
       if (error) throw error;
       toast.success('Lançamento excluído.');
       setTransactions(prev => prev.filter(t => t.id !== txToDelete.id));
+      setSelectedTxIds(prev => prev.filter(id => id !== txToDelete.id));
       setTxToDelete(null);
     } catch (err) {
       console.error('Erro ao excluir lançamento:', err);
       toast.error('Erro ao excluir lançamento.');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  // Bulk Delete Transactions (Selected or All in Period)
+  const handleConfirmBulkDelete = async () => {
+    if (!bulkDeleteConfirmModal || !effectiveUserId) return;
+    setDeletingBulk(true);
+    try {
+      if (bulkDeleteConfirmModal === 'selected') {
+        if (selectedTxIds.length === 0) return;
+        const { error } = await supabase
+          .from('transactions')
+          .delete()
+          .in('id', selectedTxIds);
+
+        if (error) throw error;
+        toast.success(`${selectedTxIds.length} lançamentos excluídos com sucesso!`);
+        setSelectedTxIds([]);
+      } else if (bulkDeleteConfirmModal === 'all_period') {
+        const [startYear, startM] = startMonth.split('-');
+        const startDate = `${startYear}-${startM}-01`;
+        const [endYear, endM] = endMonth.split('-');
+        const lastDay = new Date(Number(endYear), Number(endM), 0).getDate();
+        const endDate = `${endYear}-${endM}-${String(lastDay).padStart(2, '0')}`;
+
+        const { error } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('user_id', effectiveUserId)
+          .gte('date', startDate)
+          .lte('date', endDate);
+
+        if (error) throw error;
+        toast.success(`Todos os lançamentos do período foram excluídos com sucesso!`);
+        setSelectedTxIds([]);
+      }
+
+      setBulkDeleteConfirmModal(null);
+      fetchTransactions();
+    } catch (err) {
+      console.error('Erro ao excluir lançamentos em lote:', err);
+      toast.error('Erro ao excluir lançamentos em lote.');
+    } finally {
+      setDeletingBulk(false);
     }
   };
 
@@ -638,12 +688,88 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
             </p>
           </Card>
         ) : (
-          filteredTransactions.map(tx => (
-            <div key={tx.id} className="tx-item">
-              <div className="tx-item__left">
-                <div className={`tx-item__icon ${tx.type === 'income' ? 'tx-item__icon--income' : 'tx-item__icon--expense'}`}>
-                  {tx.type === 'income' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+          <>
+            {!readOnly && (
+              <div className="tx-bulk-bar">
+                <div className="tx-bulk-left">
+                  <label className="tx-bulk-checkbox-label">
+                    <input 
+                      type="checkbox"
+                      checked={filteredTransactions.length > 0 && selectedTxIds.length === filteredTransactions.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedTxIds(filteredTransactions.map(t => t.id));
+                        } else {
+                          setSelectedTxIds([]);
+                        }
+                      }}
+                    />
+                    <span>
+                      {selectedTxIds.length > 0
+                        ? `${selectedTxIds.length} de ${filteredTransactions.length} selecionado(s)`
+                        : 'Selecionar Todos'}
+                    </span>
+                  </label>
+
+                  {selectedTxIds.length > 0 && (
+                    <button 
+                      type="button"
+                      className="tx-chip" 
+                      onClick={() => setSelectedTxIds([])}
+                      style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                    >
+                      Limpar seleção
+                    </button>
+                  )}
                 </div>
+
+                <div className="tx-bulk-right">
+                  {selectedTxIds.length > 0 && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setBulkDeleteConfirmModal('selected')}
+                      style={{ borderColor: 'var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                    >
+                      <Trash2 size={15} /> Excluir Selecionados ({selectedTxIds.length})
+                    </Button>
+                  )}
+
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setBulkDeleteConfirmModal('all_period')}
+                    style={{ color: 'var(--danger)', opacity: 0.9, padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                    title="Excluir todos os lançamentos exibidos para este período"
+                  >
+                    <Trash2 size={14} /> Excluir Todos do Período
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {filteredTransactions.map(tx => {
+              const isSelected = selectedTxIds.includes(tx.id);
+              return (
+                <div key={tx.id} className={`tx-item ${isSelected ? 'tx-item--selected' : ''}`}>
+                  <div className="tx-item__left">
+                    {!readOnly && (
+                      <input 
+                        type="checkbox"
+                        className="tx-item__checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          if (e.target.checked) {
+                            setSelectedTxIds(prev => [...prev, tx.id]);
+                          } else {
+                            setSelectedTxIds(prev => prev.filter(id => id !== tx.id));
+                          }
+                        }}
+                      />
+                    )}
+
+                    <div className={`tx-item__icon ${tx.type === 'income' ? 'tx-item__icon--income' : 'tx-item__icon--expense'}`}>
+                      {tx.type === 'income' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                    </div>
 
                 <div className="tx-item__details">
                   <span className="tx-item__desc">{tx.description}</span>
@@ -695,7 +821,9 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                 )}
               </div>
             </div>
-          ))
+          );
+        })}
+        </>
         )}
       </div>
 
@@ -964,6 +1092,35 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
               </Button>
               <Button onClick={handleConfirmDelete} disabled={deleting} style={{ background: 'var(--danger)', color: '#fff', border: 'none' }}>
                 {deleting ? 'Excluindo...' : 'Sim, Excluir'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {bulkDeleteConfirmModal && (
+        <div className="tx-modal-overlay">
+          <div className="tx-modal anim-fade-up" style={{ textAlign: 'center', maxWidth: '440px' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem auto' }}>
+              <Trash2 size={28} color="var(--danger)" />
+            </div>
+
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              {bulkDeleteConfirmModal === 'selected' 
+                ? `Excluir ${selectedTxIds.length} ${selectedTxIds.length === 1 ? 'Lançamento' : 'Lançamentos'}?` 
+                : `Excluir TODOS os ${filteredTransactions.length} Lançamentos?`}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: 1.5 }}>
+              {bulkDeleteConfirmModal === 'selected'
+                ? `Tem certeza que deseja excluir os ${selectedTxIds.length} lançamentos selecionados? Esta ação não pode ser desfeita.`
+                : `Tem certeza que deseja apagar TODOS os ${filteredTransactions.length} lançamentos do período exibido (${formatMonthLabel(startMonth, true)} até ${formatMonthLabel(endMonth, true)})? Esta ação é permanente.`}
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <Button variant="outline" onClick={() => setBulkDeleteConfirmModal(null)} disabled={deletingBulk}>
+                Cancelar
+              </Button>
+              <Button onClick={handleConfirmBulkDelete} disabled={deletingBulk} style={{ background: 'var(--danger)', color: '#fff', border: 'none' }}>
+                {deletingBulk ? 'Excluindo...' : 'Sim, Excluir'}
               </Button>
             </div>
           </div>
