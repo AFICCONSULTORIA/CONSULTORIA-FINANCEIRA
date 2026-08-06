@@ -50,7 +50,7 @@ img, svg { display: block; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
 /* ---- Inputs & Select ---- */
-input:not([type="range"]), select, textarea {
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), select, textarea {
   font-family: var(--font-primary);
   font-size: 0.9375rem;
   color: var(--text-primary);
