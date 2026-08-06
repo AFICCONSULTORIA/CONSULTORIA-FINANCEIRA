@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { ClientLayout } from '../components/layout/ClientLayout';
 import { Home } from '../pages/Home';
@@ -44,7 +44,8 @@ const ToolWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 export const AppRoutes: React.FC = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<RootLayout><Home /></RootLayout>} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/demonstracao" element={<RootLayout><Home /></RootLayout>} />
       
       {/* ── Rotas de Autenticação ── */}
       <Route path="/login" element={<Login />} />

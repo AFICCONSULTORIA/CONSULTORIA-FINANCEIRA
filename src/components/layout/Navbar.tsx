@@ -28,7 +28,7 @@ export const Navbar: React.FC = () => {
   return (
     <header className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__inner container">
-        <Link to="/" className="navbar__logo" style={{ textDecoration: 'none' }}>
+        <Link to="/demonstracao" className="navbar__logo" style={{ textDecoration: 'none' }}>
           <Logo size={28} textSuffix="Consultoria" />
         </Link>
 
