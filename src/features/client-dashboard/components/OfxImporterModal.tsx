@@ -133,10 +133,7 @@ export const OfxImporterModal: React.FC<OfxImporterModalProps> = ({
         payment_method: item.paymentMethod || 'Extrato Bancário',
         status: 'completed',
         date: item.date,
-        notes: [
-          item.fitid ? `Importado via OFX (FITID: ${item.fitid})` : 'Importado via OFX',
-          item.installmentInfo ? `(${item.installmentInfo})` : ''
-        ].filter(Boolean).join(' | ')
+        notes: item.fitid ? `Importado via OFX (FITID: ${item.fitid})` : 'Importado via OFX'
       }));
 
       const { error } = await supabase.from('transactions').insert(payloads);
@@ -286,11 +283,9 @@ export const OfxImporterModal: React.FC<OfxImporterModalProps> = ({
                         <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                           {item.description}
                         </div>
-                        {(item.paymentMethod === 'Cartão de Crédito' || item.installmentInfo) && (
+                        {item.paymentMethod === 'Cartão de Crédito' && (
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {item.paymentMethod === 'Cartão de Crédito' && <span>💳 Cartão de Crédito</span>}
-                            {item.paymentMethod === 'Cartão de Crédito' && item.installmentInfo && <span style={{ margin: '0 4px' }}>•</span>}
-                            {item.installmentInfo && <span>{item.installmentInfo}</span>}
+                            <span>💳 Cartão de Crédito</span>
                           </div>
                         )}
                       </td>
