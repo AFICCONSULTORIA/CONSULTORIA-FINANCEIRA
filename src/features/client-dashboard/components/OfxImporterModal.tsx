@@ -133,7 +133,7 @@ export const OfxImporterModal: React.FC<OfxImporterModalProps> = ({
         payment_method: item.paymentMethod || 'Extrato Bancário',
         status: 'completed',
         date: item.date,
-        notes: item.fitid ? `Importado via OFX (FITID: ${item.fitid})` : 'Importado via OFX'
+        notes: ''
       }));
 
       const { error } = await supabase.from('transactions').insert(payloads);
