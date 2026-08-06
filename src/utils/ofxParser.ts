@@ -87,9 +87,9 @@ export function parseOfx(ofxText: string): ParsedOfxTransaction[] {
     // Clean up extra spaces
     description = description.replace(/\s+/g, ' ').trim();
 
-    // Parse installment info from description like "01/05", "1/12", "02/10"
+    // Parse installment info from description like "01/05", "1/12", "02/10", "1 de 5"
     let installmentInfo = undefined;
-    const installmentMatch = description.match(/(?:PARC|PARCELA|PCD|-|\s)?\s*(\d{1,2})\/(\d{1,2})\b/i);
+    const installmentMatch = description.match(/(?:PARC(?:ELA)?|PCD|-)?\s*(\d{1,2})\s*(?:\/|DE)\s*(\d{1,2})\b/i);
     if (installmentMatch) {
       installmentInfo = `Parcela ${installmentMatch[1]} de ${installmentMatch[2]}`;
     }

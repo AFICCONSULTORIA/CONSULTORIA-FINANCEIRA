@@ -77,8 +77,8 @@ export const OfxImporterModal: React.FC<OfxImporterModalProps> = ({
       setLoading(false);
     };
 
-    // Try reading with ISO-8859-1 (latin1) as Brazilian OFX files often use Windows-1252/Latin1
-    reader.readAsText(file, 'ISO-8859-1');
+    // Read with UTF-8 as standard, which correctly parses accents for most modern banks (Nubank, Inter, etc.)
+    reader.readAsText(file, 'UTF-8');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
