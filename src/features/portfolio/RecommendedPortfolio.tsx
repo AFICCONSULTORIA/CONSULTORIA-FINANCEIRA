@@ -295,7 +295,7 @@ export const RecommendedPortfolio: React.FC = () => {
       </div>
 
       {/* Main Tabs Navigation */}
-      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <button
           onClick={() => setActiveTab('client')}
           style={{
@@ -310,7 +310,9 @@ export const RecommendedPortfolio: React.FC = () => {
             background: activeTab === 'client' ? 'var(--primary-color)' : 'transparent',
             color: activeTab === 'client' ? '#ffffff' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
           }}
         >
           <Wallet size={18} /> Minha Carteira
@@ -330,7 +332,9 @@ export const RecommendedPortfolio: React.FC = () => {
             background: activeTab === 'recommended' ? 'var(--primary-color)' : 'transparent',
             color: activeTab === 'recommended' ? '#ffffff' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
           }}
         >
           <Award size={18} /> Carteira Recomendada AFIC {!isAdmin && '🔒'}
@@ -350,7 +354,9 @@ export const RecommendedPortfolio: React.FC = () => {
             background: activeTab === 'comparison' ? 'var(--primary-color)' : 'transparent',
             color: activeTab === 'comparison' ? '#ffffff' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
           }}
         >
           <PieChart size={18} /> Comparativo & Sugestões {!isAdmin && '🔒'}

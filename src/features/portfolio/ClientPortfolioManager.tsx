@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit2, Trash2, TrendingUp, TrendingDown, 
-  Search, AlertCircle, Building2, DollarSign, Wallet, X 
+  Search, AlertCircle, Building2, DollarSign, Wallet, X, RefreshCw
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { fetchAssetQuote, fetchMultipleQuotes } from '../../lib/brapi';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
@@ -57,7 +58,8 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
   const [formInstitution, setFormInstitution] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [saving, setSaving] = useState(false);
-
+  const [fetchingQuote, setFetchingQuote] = useState(false);
+  const [updatingAllQuotes, setUpdatingAllQuotes] = useState(false);
   useEffect(() => {
     fetchAssets();
   }, [targetUserId]);
@@ -187,6 +189,85 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
       fetchAssets();
     } catch (err: any) {
       toast.error('Erro ao remover ativo.');
+    }
+  };
+
+  const handleFetchQuote = async () => {
+    if (!formTicker.trim()) {
+      toast.error('Digite o ticker antes de buscar.');
+      return;
+    }
+    setFetchingQuote(true);
+    try {
+      const quote = await fetchAssetQuote(formTicker.trim());
+      if (quote) {
+        setFormName(quote.longName || quote.shortName || '');
+        setFormCurrentPrice(quote.regularMarketPrice?.toString() || '');
+        
+        const upperTicker = formTicker.trim().toUpperCase();
+        if (upperTicker.endsWith('11') && !upperTicker.includes('BDR')) {
+          setFormCategory('FIIs');
+        } else if (upperTicker.endsWith('34') || upperTicker.endsWith('39')) {
+          setFormCategory('Internacional');
+        } else {
+          setFormCategory('Ações');
+        }
+        
+        toast.success(`Cotação de ${upperTicker} atualizada!`);
+      } else {
+        toast.error(`Ativo ${formTicker.toUpperCase()} não encontrado na B3.`);
+      }
+    } catch (err) {
+      toast.error('Erro ao buscar cotação.');
+    } finally {
+      setFetchingQuote(false);
+    }
+  };
+
+  const handleUpdateAllQuotes = async () => {
+    if (assets.length === 0) return;
+    
+    const b3Assets = assets.filter(a => ['Ações', 'FIIs', 'Internacional'].includes(a.category));
+    if (b3Assets.length === 0) {
+      toast('Nenhum ativo da B3 encontrado para atualizar.', { icon: 'ℹ️' });
+      return;
+    }
+
+    setUpdatingAllQuotes(true);
+    const toastId = toast.loading('Atualizando cotações...');
+    try {
+      const tickers = Array.from(new Set(b3Assets.map(a => a.ticker))); // Unique tickers
+      const quotes = await fetchMultipleQuotes(tickers);
+      
+      if (quotes.length > 0) {
+        let updatedCount = 0;
+        
+        for (const quote of quotes) {
+          const matchingAssets = b3Assets.filter(a => a.ticker.toUpperCase() === quote.symbol.toUpperCase());
+          for (const asset of matchingAssets) {
+            const newPrice = quote.regularMarketPrice;
+            if (newPrice !== asset.current_price) {
+              const newTotal = asset.quantity * newPrice;
+              await supabase
+                .from('client_assets')
+                .update({ current_price: newPrice, total_value: newTotal, updated_at: new Date().toISOString() })
+                .eq('id', asset.id);
+              updatedCount++;
+            }
+          }
+        }
+        
+        toast.success(`${updatedCount} ativo(s) atualizado(s) com sucesso!`, { id: toastId });
+        if (updatedCount > 0) {
+          fetchAssets();
+        }
+      } else {
+        toast.error('Não foi possível obter as cotações.', { id: toastId });
+      }
+    } catch (err) {
+      toast.error('Erro ao atualizar cotações em massa.', { id: toastId });
+    } finally {
+      setUpdatingAllQuotes(false);
     }
   };
 
@@ -339,7 +420,7 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '2px' }}>
+          <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '4px', maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
             {['Todos', ...CATEGORIES].map(cat => (
               <button
                 key={cat}
@@ -364,9 +445,20 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
         </div>
 
         {!readOnly && (
-          <Button onClick={() => handleOpenModal()}>
-            <Plus size={18} /> Adicionar Ativo
-          </Button>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <Button 
+              variant="outline" 
+              onClick={handleUpdateAllQuotes}
+              disabled={updatingAllQuotes || assets.length === 0}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <RefreshCw size={16} /> 
+              {updatingAllQuotes ? 'Atualizando...' : 'Atualizar Cotações'}
+            </Button>
+            <Button onClick={() => handleOpenModal()}>
+              <Plus size={18} /> Adicionar Ativo
+            </Button>
+          </div>
         )}
       </div>
 
@@ -502,17 +594,30 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
             </div>
 
             <form onSubmit={handleSaveAsset} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="afic-grid-2">
                 <div>
                   <label className="afic-label">Código / Ticker *</label>
-                  <input 
-                    type="text" 
-                    className="afic-input" 
-                    placeholder="Ex: VALE3, HGLG11" 
-                    value={formTicker} 
-                    onChange={e => setFormTicker(e.target.value)}
-                    required
-                  />
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input 
+                      type="text" 
+                      className="afic-input" 
+                      placeholder="Ex: VALE3, HGLG11" 
+                      value={formTicker} 
+                      onChange={e => setFormTicker(e.target.value)}
+                      required
+                      style={{ flex: 1 }}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleFetchQuote}
+                      disabled={fetchingQuote || !formTicker.trim()}
+                      style={{ padding: '0 0.75rem' }}
+                      title="Buscar dados na B3"
+                    >
+                      {fetchingQuote ? <RefreshCw size={18} /> : <Search size={18} />}
+                    </Button>
+                  </div>
                 </div>
 
                 <div>
@@ -539,7 +644,7 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+              <div className="afic-grid-3">
                 <div>
                   <label className="afic-label">Quantidade</label>
                   <input 
@@ -577,7 +682,7 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="afic-grid-2">
                 <div>
                   <label className="afic-label">Instituição / Corretora</label>
                   <input 

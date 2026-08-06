@@ -38,7 +38,7 @@
 
 @media (max-width: 640px) {
   .dashboard {
-    padding: 1.25rem 1rem 7rem;
+    padding: 1rem 1rem 4rem;
     gap: 1.25rem;
   }
 
@@ -52,7 +52,7 @@
     gap: 0.75rem;
   }
 
-  .stat-card {
+  .stat-card, .dash-card {
     padding: 1rem;
   }
 }

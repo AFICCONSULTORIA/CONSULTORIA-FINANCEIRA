@@ -10,8 +10,9 @@
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid var(--border-color);
-  padding: 0.5rem 0.25rem calc(0.5rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+  padding: 0.5rem 0.25rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .bottom-nav__inner {
@@ -27,35 +28,53 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 0.375rem 0.625rem;
+  gap: 3px;
+  padding: 0.5rem 0.375rem;
+  min-height: 48px; /* Touch target min height */
   border-radius: var(--r-md);
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.6875rem;
+  font-size: 0.7rem;
   font-weight: 600;
   transition: all var(--ease-fast);
   flex: 1;
+  position: relative;
+}
+
+.bottom-nav__item:active {
+  transform: scale(0.95);
 }
 
 .bottom-nav__icon-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--ease-fast);
+  transition: transform var(--ease-fast), color var(--ease-fast);
 }
 
 .bottom-nav__item--active {
-  color: var(--brand-primary);
+  color: var(--brand-primary-light);
 }
 
 .bottom-nav__item--active .bottom-nav__icon-wrap {
   transform: translateY(-2px);
+  color: var(--brand-primary-light);
 }
 
 .bottom-nav__item--active .bottom-nav__label {
-  color: var(--brand-primary);
+  color: var(--brand-primary-light);
   font-weight: 700;
+}
+
+.bottom-nav__item--active::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--brand-primary-light);
+  box-shadow: 0 0 8px var(--brand-primary);
 }
 
 @media (max-width: 768px) {
