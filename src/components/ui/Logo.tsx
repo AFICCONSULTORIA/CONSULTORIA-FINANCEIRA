@@ -20,13 +20,13 @@ export const Logo: React.FC<LogoProps> = ({
           width: size, 
           height: size, 
           borderRadius: '25%',
-          background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%)',
-          border: '1px solid rgba(147, 51, 234, 0.3)',
+          background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%)',
+          border: '1px solid rgba(234, 179, 8, 0.4)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: `${size * 0.15}px`,
-          boxShadow: '0 0 16px rgba(147, 51, 234, 0.25)',
+          boxShadow: '0 0 16px rgba(234, 179, 8, 0.3)',
           flexShrink: 0
         }}
       >
