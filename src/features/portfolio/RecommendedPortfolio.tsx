@@ -28,96 +28,286 @@ export interface RecommendedAsset {
   highlights?: string[];
 }
 
-const INITIAL_RECOMMENDED_ASSETS: RecommendedAsset[] = [
+export interface PortfolioProfile {
+  id: 'conservador' | 'moderado' | 'arrojado';
+  name: string;
+  badge: string;
+  badgeBg: string;
+  badgeColor: string;
+  description: string;
+  assets: RecommendedAsset[];
+}
+
+export const RECOMMENDED_PROFILES: PortfolioProfile[] = [
   {
-    id: '1',
-    ticker: 'VALE3',
-    name: 'Vale S.A.',
-    category: 'Ações',
-    currentPrice: 61.20,
-    maxPrice: 75.00,
-    dy: 8.5,
-    plPvP: '5.8x P/L',
-    targetWeight: 10,
-    riskLevel: 'Médio',
-    status: 'COMPRAR',
-    thesis: 'Líder mundial na produção de minério de ferro de alta pureza. Valuation extremamente atrativo com múltiplos historicamente baixos e alto fluxo de caixa livre.',
-    highlights: ['Líder Global', 'Alto Dividend Yield', 'Geração de Caixa']
+    id: 'conservador',
+    name: 'Carteira Fortaleza',
+    badge: 'Conservador / Preservação',
+    badgeBg: 'rgba(34, 197, 94, 0.15)',
+    badgeColor: 'var(--success)',
+    description: 'Foco em Renda Fixa com liquidez, títulos públicos e fundos imobiliários de tijolo/papel de alta segurança.',
+    assets: [
+      {
+        id: 'c1',
+        ticker: 'TESOURO SELIC 2029',
+        name: 'Tesouro Selic Pós-Fixado',
+        category: 'Renda Fixa',
+        currentPrice: 14850.00,
+        maxPrice: 0,
+        dy: 11.7,
+        plPvP: '100% Selic',
+        targetWeight: 40,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Liquidez diária com risco soberano e rendimento acompanhar de perto a taxa básica de juros (Selic). Ideal para reserva e baixo risco.',
+        highlights: ['Garantia Soberana', 'Liquidez Diária', 'Baixo Risco']
+      },
+      {
+        id: 'c2',
+        ticker: 'TESOURO IPCA+ 2035',
+        name: 'Tesouro IPCA+ com Juros Semestrais',
+        category: 'Renda Fixa',
+        currentPrice: 3120.00,
+        maxPrice: 0,
+        dy: 6.2,
+        plPvP: 'IPCA + 6.2%',
+        targetWeight: 30,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Garante rendimento real acima da inflação com poder de compra blindado no longo prazo.',
+        highlights: ['Proteção Inflacionária', 'Ganho Real', 'Risco Soberano']
+      },
+      {
+        id: 'c3',
+        ticker: 'KNCR11',
+        name: 'Kinea Rendimento Imobiliário',
+        category: 'FIIs',
+        currentPrice: 101.80,
+        maxPrice: 106.00,
+        dy: 12.1,
+        plPvP: '1.01x P/VP',
+        targetWeight: 15,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Fundo imobiliário focado em papéis de crédito privado de primeira linha (CRIs) atrelados ao CDI.',
+        highlights: ['Indexado ao CDI', 'Gestão Kinea', 'Proventos Mensais']
+      },
+      {
+        id: 'c4',
+        ticker: 'HGLG11',
+        name: 'CSHG Logística FII',
+        category: 'FIIs',
+        currentPrice: 161.50,
+        maxPrice: 172.00,
+        dy: 8.9,
+        plPvP: '0.98x P/VP',
+        targetWeight: 15,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Galpões logísticos de alto padrão técnico em localizações estratégicas de consumo no Brasil.',
+        highlights: ['Galpões AAA', 'Vacância Baixa', 'Renda Estável']
+      }
+    ]
   },
   {
-    id: '2',
-    ticker: 'ITUB4',
-    name: 'Itaú Unibanco',
-    category: 'Ações',
-    currentPrice: 32.40,
-    maxPrice: 38.00,
-    dy: 6.8,
-    plPvP: '8.2x P/L',
-    targetWeight: 12,
-    riskLevel: 'Baixo',
-    status: 'COMPRAR',
-    thesis: 'Banco mais eficiente do Brasil. Apresenta ROE consistente acima de 20%, excelente gestão de inadimplência e forte previsibilidade de proventos.',
-    highlights: ['ROE > 20%', 'Líder Financeiro', 'Baixo Risco']
+    id: 'moderado',
+    name: 'Carteira Equilíbrio',
+    badge: 'Moderado / Balanciado',
+    badgeBg: 'rgba(59, 130, 246, 0.15)',
+    badgeColor: '#3b82f6',
+    description: 'Combinação ideal entre Renda Fixa, FIIs pagadores de dividendos e Ações resilientes de valor.',
+    assets: [
+      {
+        id: 'm1',
+        ticker: 'ITUB4',
+        name: 'Itaú Unibanco S.A.',
+        category: 'Ações',
+        currentPrice: 32.40,
+        maxPrice: 38.00,
+        dy: 6.8,
+        plPvP: '8.2x P/L',
+        targetWeight: 20,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Maior banco privado da América Latina, apresentando ROE elevado (>20%) e consistência histórica na entrega de proventos.',
+        highlights: ['ROE > 20%', 'Líder Financeiro', 'Pagador de Proventos']
+      },
+      {
+        id: 'm2',
+        ticker: 'VALE3',
+        name: 'Vale S.A.',
+        category: 'Ações',
+        currentPrice: 61.20,
+        maxPrice: 75.00,
+        dy: 8.5,
+        plPvP: '5.8x P/L',
+        targetWeight: 15,
+        riskLevel: 'Médio',
+        status: 'COMPRAR',
+        thesis: 'Líder mundial na extração de minério de ferro de alta qualidade. Excelente geração de caixa livre e múltiplos atraentes.',
+        highlights: ['Líder Global', 'Alto Dividend Yield', 'Geração de Caixa']
+      },
+      {
+        id: 'm3',
+        ticker: 'HGLG11',
+        name: 'CSHG Logística FII',
+        category: 'FIIs',
+        currentPrice: 161.50,
+        maxPrice: 172.00,
+        dy: 8.9,
+        plPvP: '0.98x P/VP',
+        targetWeight: 20,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Fundo imobiliário logístico com imóveis classe A e inquilinos de grande porte comercial.',
+        highlights: ['Imóveis Próprios', 'Dividendos Isentos', 'Localização Top']
+      },
+      {
+        id: 'm4',
+        ticker: 'KNCR11',
+        name: 'Kinea Rendimento Imobiliário',
+        category: 'FIIs',
+        currentPrice: 101.80,
+        maxPrice: 106.00,
+        dy: 12.1,
+        plPvP: '1.01x P/VP',
+        targetWeight: 15,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Excelente retorno em renda fixa imobiliária via CRIs de alta liquidez.',
+        highlights: ['Retorno CDI+', 'Portfólio Pulverizado', 'Sem IR no Dividendo']
+      },
+      {
+        id: 'm5',
+        ticker: 'TESOURO IPCA+ 2035',
+        name: 'Tesouro IPCA+ 2035',
+        category: 'Renda Fixa',
+        currentPrice: 3120.00,
+        maxPrice: 0,
+        dy: 6.2,
+        plPvP: 'IPCA + 6.2%',
+        targetWeight: 15,
+        riskLevel: 'Baixo',
+        status: 'COMPRAR',
+        thesis: 'Proteção contra surtos inflacionários com ganho real contratado no Tesouro Direto.',
+        highlights: ['Ganho Real Garantido', 'Proteção da Moeda', 'Título Público']
+      },
+      {
+        id: 'm6',
+        ticker: 'IVVB11',
+        name: 'iShares S&P 500 ETF',
+        category: 'Internacional',
+        currentPrice: 298.50,
+        maxPrice: 320.00,
+        dy: 1.4,
+        plPvP: '22.4x P/L',
+        targetWeight: 15,
+        riskLevel: 'Médio',
+        status: 'COMPRAR',
+        thesis: 'Diversificação geográfica e cambial investindo em dólar nas 500 maiores empresas dos Estados Unidos.',
+        highlights: ['Moeda Forte', 'Gigantes Globais', 'Diversificação EUA']
+      }
+    ]
   },
   {
-    id: '3',
-    ticker: 'HGLG11',
-    name: 'CSHG Logística FII',
-    category: 'FIIs',
-    currentPrice: 161.50,
-    maxPrice: 172.00,
-    dy: 8.9,
-    plPvP: '0.98x P/VP',
-    targetWeight: 15,
-    riskLevel: 'Baixo',
-    status: 'COMPRAR',
-    thesis: 'Fundo imobiliário logístico de alta qualidade com galpões bem localizados perto dos grandes centros de consumo e vacância mínima.',
-    highlights: ['Galpões AAA', 'Vacância Baixa', 'Renda Mensal']
-  },
-  {
-    id: '4',
-    ticker: 'KNCR11',
-    name: 'Kinea Rendimento Imobiliário',
-    category: 'FIIs',
-    currentPrice: 101.80,
-    maxPrice: 106.00,
-    dy: 12.1,
-    plPvP: '1.01x P/VP',
-    targetWeight: 15,
-    riskLevel: 'Baixo',
-    status: 'COMPRAR',
-    thesis: 'Fundo de papel focado em CRIs atrelados ao CDI. Excelente veículo para fluxo de renda mensal com gestão Kinea de alta liquidez.',
-    highlights: ['Indexado ao CDI', 'Gestão Kinea', 'Proteção de Capital']
-  },
-  {
-    id: '5',
-    ticker: 'TESOURO IPCA+ 2035',
-    name: 'Tesouro Nacional IPCA+ 2035',
-    category: 'Renda Fixa',
-    currentPrice: 3120.00,
-    maxPrice: 0,
-    dy: 6.2,
-    plPvP: 'IPCA + 6.2%',
-    targetWeight: 25,
-    riskLevel: 'Baixo',
-    status: 'COMPRAR',
-    thesis: 'Garante rendimento real acima da inflação com risco soberano. Ideal para acumulação de capital de médio/longo prazo.',
-    highlights: ['Garantia Soberana', 'Ganho Real', 'Proteção Inflacionária']
-  },
-  {
-    id: '6',
-    ticker: 'IVVB11',
-    name: 'iShares S&P 500 ETF',
-    category: 'Internacional',
-    currentPrice: 298.50,
-    maxPrice: 320.00,
-    dy: 1.4,
-    plPvP: '22.4x P/L',
-    targetWeight: 15,
-    riskLevel: 'Médio',
-    status: 'COMPRAR',
-    thesis: 'Dolarização automática do patrimônio investindo nas 500 maiores empresas globais (Apple, Microsoft, Nvidia, Amazon).',
-    highlights: ['Dolarizado', 'Top 500 EUA', 'Tecnologia Global']
+    id: 'arrojado',
+    name: 'Carteira Expansão & Alpha',
+    badge: 'Arrojado / Crescimento',
+    badgeBg: 'rgba(234, 179, 8, 0.15)',
+    badgeColor: 'var(--brand-primary)',
+    description: 'Foco total em valorização de capital no longo prazo com Ações de alto crescimento, B3 e ativos globais/cripto.',
+    assets: [
+      {
+        id: 'a1',
+        ticker: 'WEGE3',
+        name: 'WEG S.A.',
+        category: 'Ações',
+        currentPrice: 42.50,
+        maxPrice: 52.00,
+        dy: 2.4,
+        plPvP: '28.5x P/L',
+        targetWeight: 25,
+        riskLevel: 'Médio',
+        status: 'COMPRAR',
+        thesis: 'Multinacional brasileira líder em equipamentos eletroeletrônicos e motores industriais. Crescimento composto fantástico.',
+        highlights: ['Crescimento Histórico', 'Globalização', 'Vantagem Competitiva']
+      },
+      {
+        id: 'a2',
+        ticker: 'PETR4',
+        name: 'Petróleo Brasileiro S.A.',
+        category: 'Ações',
+        currentPrice: 38.90,
+        maxPrice: 45.00,
+        dy: 14.2,
+        plPvP: '4.2x P/L',
+        targetWeight: 20,
+        riskLevel: 'Alto',
+        status: 'COMPRAR',
+        thesis: 'Custo de extração Pré-Sal ultracompetitivo gerando proventos gigantescos mesmo com oscilações no petróleo.',
+        highlights: ['Pré-Sal Eficiente', 'Super Dividendo', 'Preço Descontado']
+      },
+      {
+        id: 'a3',
+        ticker: 'VALE3',
+        name: 'Vale S.A.',
+        category: 'Ações',
+        currentPrice: 61.20,
+        maxPrice: 75.00,
+        dy: 8.5,
+        plPvP: '5.8x P/L',
+        targetWeight: 15,
+        riskLevel: 'Médio',
+        status: 'COMPRAR',
+        thesis: 'Minério de ferro de alto teor essencial para transição energética e descarbonização da siderurgia global.',
+        highlights: ['Qualidade Premium', 'Dividendos em Dólar', 'Valuation Baixo']
+      },
+      {
+        id: 'a4',
+        ticker: 'IVVB11',
+        name: 'iShares S&P 500 ETF',
+        category: 'Internacional',
+        currentPrice: 298.50,
+        maxPrice: 320.00,
+        dy: 1.4,
+        plPvP: '22.4x P/L',
+        targetWeight: 20,
+        riskLevel: 'Médio',
+        status: 'COMPRAR',
+        thesis: 'Exposição direta aos líderes de tecnologia e inovação mundial (Apple, Microsoft, Nvidia, Meta, Alphabet).',
+        highlights: ['Exposição em Dólar', 'Líderes de IA', 'Top Empresas Mundiais']
+      },
+      {
+        id: 'a5',
+        ticker: 'ALZR11',
+        name: 'Alianza Trust Renda Imobiliária',
+        category: 'FIIs',
+        currentPrice: 112.00,
+        maxPrice: 118.00,
+        dy: 9.1,
+        plPvP: '1.02x P/VP',
+        targetWeight: 10,
+        riskLevel: 'Médio',
+        status: 'COMPRAR',
+        thesis: 'Fundo Imobiliário atípico de galpões e centros operacionais com contratos longos de 10+ anos e reajuste por inflação.',
+        highlights: ['Contratos Atípicos', 'Inquilinos Corporativos', 'Proteção Inflação']
+      },
+      {
+        id: 'a6',
+        ticker: 'HASH11',
+        name: 'Hashdex Nasdaq Crypto ETF',
+        category: 'Cripto',
+        currentPrice: 48.00,
+        maxPrice: 65.00,
+        dy: 0,
+        plPvP: 'Indexado Nasdaq Crypto',
+        targetWeight: 10,
+        riskLevel: 'Alto',
+        status: 'COMPRAR',
+        thesis: 'Cesta diversificada dos principais criptoativos globais (Bitcoin, Ethereum, Solana) regulada pela CVM.',
+        highlights: ['Cripto Regulado', 'Bitcoin & Ethereum', 'Alto Potencial Alpha']
+      }
+    ]
   }
 ];
 
@@ -130,10 +320,20 @@ export const RecommendedPortfolio: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'client' | 'recommended' | 'comparison'>('client');
   
   // Assets state
+  const [selectedProfileId, setSelectedProfileId] = useState<'conservador' | 'moderado' | 'arrojado'>('moderado');
   const [clientAssets, setClientAssets] = useState<ClientAsset[]>([]);
-  const [assets, setAssets] = useState<RecommendedAsset[]>(INITIAL_RECOMMENDED_ASSETS);
+  const [assets, setAssets] = useState<RecommendedAsset[]>(RECOMMENDED_PROFILES[1].assets);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const handleSelectProfile = (profileId: 'conservador' | 'moderado' | 'arrojado') => {
+    setSelectedProfileId(profileId);
+    const profile = RECOMMENDED_PROFILES.find(p => p.id === profileId);
+    if (profile) {
+      setAssets(profile.assets);
+      toast.success(`Carteira carregada: ${profile.name}`);
+    }
+  };
 
   // Modal State for Admin CRUD
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -530,6 +730,59 @@ export const RecommendedPortfolio: React.FC = () => {
                 <Plus size={18} /> Adicionar Ativo Recomendado
               </Button>
             )}
+          </div>
+
+          {/* Seleção de Perfil de Investidor */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
+              Selecione o Perfil de Investimento:
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+              {RECOMMENDED_PROFILES.map(profile => {
+                const isSelected = profile.id === selectedProfileId;
+                return (
+                  <Card 
+                    key={profile.id}
+                    onClick={() => handleSelectProfile(profile.id)}
+                    style={{ 
+                      padding: '1.1rem 1.25rem', 
+                      cursor: 'pointer',
+                      border: isSelected ? '2px solid var(--brand-primary)' : '1px solid var(--border-color)',
+                      background: isSelected ? 'rgba(234, 179, 8, 0.05)' : 'var(--bg-card)',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.4rem',
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        fontWeight: 800, 
+                        padding: '0.2rem 0.6rem', 
+                        borderRadius: 'var(--r-full)', 
+                        background: profile.badgeBg, 
+                        color: profile.badgeColor 
+                      }}>
+                        {profile.badge}
+                      </span>
+                      {isSelected && (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--brand-primary)' }}>
+                          ✓ Ativa
+                        </span>
+                      )}
+                    </div>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
+                      {profile.name}
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                      {profile.description}
+                    </p>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
 
           {/* Cards de Métricas Recomendadas */}

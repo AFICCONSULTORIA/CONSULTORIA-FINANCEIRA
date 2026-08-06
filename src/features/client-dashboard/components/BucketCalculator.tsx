@@ -295,7 +295,7 @@ export const BucketCalculator: React.FC = () => {
                       step="5"
                       value={b.percentage}
                       onChange={(e) => handlePercentageChange(b.id, Number(e.target.value))}
-                      style={{ flex: 1, color: b.color, cursor: 'pointer' }}
+                      style={{ flex: 1, accentColor: b.color, color: b.color, cursor: 'pointer' }}
                     />
                   </div>
                 </Card>

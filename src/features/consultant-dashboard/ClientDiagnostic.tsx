@@ -497,7 +497,7 @@ export const ClientDiagnostic: React.FC = () => {
                 <div key={b.type}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
                     <span style={{ color: 'var(--text-primary)' }}>{b.label}</span>
-                    <strong style={{ color: 'var(--brand-primary-light)' }}>{b.percentage}%</strong>
+                    <strong style={{ color: 'var(--brand-primary)' }}>{b.percentage}%</strong>
                   </div>
                   <input 
                     type="range" 
@@ -505,7 +505,7 @@ export const ClientDiagnostic: React.FC = () => {
                     max="100" 
                     value={b.percentage} 
                     onChange={e => handleBucketChange(b.type, parseInt(e.target.value))}
-                    style={{ width: '100%', cursor: 'pointer' }} 
+                    style={{ width: '100%', cursor: 'pointer', accentColor: 'var(--brand-primary)', color: 'var(--brand-primary)' }} 
                   />
                 </div>
               ))}
