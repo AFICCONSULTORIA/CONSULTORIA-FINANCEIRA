@@ -280,6 +280,26 @@ export const RecommendedPortfolio: React.FC = () => {
     );
   }
 
+  if (!isAdmin) {
+    return (
+      <div className="anim-fade-up" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: '2rem' }}>
+        <div style={{ 
+          width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.1)', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: 'var(--brand-primary)',
+          border: '1px solid rgba(234, 179, 8, 0.2)'
+        }}>
+          <Lock size={36} />
+        </div>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
+          Módulo em Construção
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', lineHeight: 1.6 }}>
+          A funcionalidade de Carteira Inteligente AFIC está sendo preparada pelos nossos especialistas e estará disponível em breve para você!
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="anim-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Main Header */}
