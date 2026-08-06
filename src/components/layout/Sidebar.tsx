@@ -2,6 +2,8 @@ import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Logo } from '../ui/Logo';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import './Sidebar.css';
 
 const SIDEBAR_LINKS = [
@@ -27,8 +29,7 @@ export const Sidebar: React.FC = () => {
     <aside className="sidebar">
       <div className="sidebar__header">
         <div className="sidebar__logo">
-          <TrendingUp size={24} color="var(--brand-primary)" />
-          <span>AFIC-<strong>Client</strong></span>
+          <Logo size={28} textSuffix="Client" />
         </div>
       </div>
 
@@ -50,11 +51,12 @@ export const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      <div className="sidebar__footer">
-        <button onClick={handleLogout} className="sidebar__link sidebar__link--danger" style={{ border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', background: 'transparent' }}>
+      <div className="sidebar__footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem' }}>
+        <button onClick={handleLogout} className="sidebar__link sidebar__link--danger" style={{ border: 'none', textAlign: 'left', cursor: 'pointer', background: 'transparent', flex: 1, padding: 0 }}>
           <LogOut size={20} />
           <span>Sair</span>
         </button>
+        <ThemeToggle />
       </div>
     </aside>
   );

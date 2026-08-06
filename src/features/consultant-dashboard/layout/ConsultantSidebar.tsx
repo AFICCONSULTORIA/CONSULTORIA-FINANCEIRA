@@ -1,7 +1,9 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Users, FileText, Settings, LogOut, Briefcase } from 'lucide-react';
+import { Users, FileText, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { Logo } from '../../../components/ui/Logo';
+import { ThemeToggle } from '../../../components/ui/ThemeToggle';
 import '../../../components/layout/Sidebar.css';
 
 const SIDEBAR_LINKS = [
@@ -24,8 +26,7 @@ export const ConsultantSidebar: React.FC = () => {
     <aside className="sidebar">
       <div className="sidebar__header">
         <div className="sidebar__logo">
-          <Briefcase size={24} color="var(--brand-primary)" />
-          <span>AFIC-<strong>Consultor</strong></span>
+          <Logo size={28} textSuffix="Consultor" />
         </div>
       </div>
 
@@ -47,11 +48,12 @@ export const ConsultantSidebar: React.FC = () => {
         })}
       </nav>
 
-      <div className="sidebar__footer">
-        <button onClick={handleLogout} className="sidebar__link sidebar__link--danger" style={{ border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', background: 'transparent' }}>
+      <div className="sidebar__footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem' }}>
+        <button onClick={handleLogout} className="sidebar__link sidebar__link--danger" style={{ border: 'none', textAlign: 'left', cursor: 'pointer', background: 'transparent', flex: 1, padding: 0 }}>
           <LogOut size={20} />
           <span>Sair</span>
         </button>
+        <ThemeToggle />
       </div>
     </aside>
   );

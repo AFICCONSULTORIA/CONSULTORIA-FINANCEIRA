@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { TrendingUp, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { Logo } from '../ui/Logo';
 import './Navbar.css';
 
 const navLinks = [
@@ -27,9 +28,8 @@ export const Navbar: React.FC = () => {
   return (
     <header className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__inner container">
-        <Link to="/" className="navbar__logo">
-          <span className="navbar__logo-icon"><TrendingUp size={20} /></span>
-          <span className="navbar__logo-text">AFIC-<strong>Consultoria</strong></span>
+        <Link to="/" className="navbar__logo" style={{ textDecoration: 'none' }}>
+          <Logo size={28} textSuffix="Consultoria" />
         </Link>
 
         <nav className={`navbar__links ${menuOpen ? 'navbar__links--open' : ''}`}>

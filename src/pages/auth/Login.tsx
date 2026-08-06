@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
-import { TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { Logo } from '../../components/ui/Logo';
+import { ThemeToggle } from '../../components/ui/ThemeToggle';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -47,13 +49,17 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)' }}>
-      <div style={{ width: '100%', maxWidth: '400px', padding: '2rem', background: 'var(--bg-card)', borderRadius: 'var(--r-xl)', border: '1px solid var(--border-color)' }}>
+    <div style={{ display: 'flex', height: '100dvh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+        <ThemeToggle />
+      </div>
+
+      <div style={{ width: '100%', maxWidth: '400px', padding: '2.5rem 2rem', background: 'var(--bg-card)', borderRadius: 'var(--r-xl)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
         
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-          <TrendingUp size={40} color="var(--brand-primary)" style={{ marginBottom: '1rem' }} />
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Bem-vindo de volta</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Acesse o seu painel AFIC</p>
+          <Logo size={44} showText={false} />
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '1rem' }}>Bem-vindo de volta</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Acesse o seu painel AFIC</p>
         </div>
 
         {error && (

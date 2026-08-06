@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
-import { TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { Logo } from '../../components/ui/Logo';
+import { ThemeToggle } from '../../components/ui/ThemeToggle';
 
 export const Register: React.FC = () => {
   const [name, setName] = useState('');
@@ -52,13 +54,17 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100dvh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', padding: '2rem 0' }}>
-      <div style={{ width: '100%', maxWidth: '400px', padding: '2rem', background: 'var(--bg-card)', borderRadius: 'var(--r-xl)', border: '1px solid var(--border-color)' }}>
+    <div style={{ display: 'flex', minHeight: '100dvh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', padding: '2rem 0', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+        <ThemeToggle />
+      </div>
+
+      <div style={{ width: '100%', maxWidth: '400px', padding: '2.5rem 2rem', background: 'var(--bg-card)', borderRadius: 'var(--r-xl)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
         
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-          <TrendingUp size={40} color="var(--brand-primary)" style={{ marginBottom: '1rem' }} />
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Crie sua conta</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Comece sua jornada financeira</p>
+          <Logo size={44} showText={false} />
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '1rem' }}>Crie sua conta</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>Comece sua jornada financeira</p>
         </div>
 
         {error && (
