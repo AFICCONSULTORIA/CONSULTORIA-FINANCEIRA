@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, 
-  Calendar, X, AlertCircle, Tag 
+  Calendar, X, AlertCircle, Tag, ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal 
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
@@ -87,6 +87,72 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCustomRange, setShowCustomRange] = useState(false);
+
+  // Helper to format YYYY-MM into friendly Portuguese label
+  const formatMonthLabel = (yyyyMm: string, short = false) => {
+    if (!yyyyMm) return '';
+    const [year, month] = yyyyMm.split('-');
+    const date = new Date(Number(year), Number(month) - 1, 15);
+    if (short) {
+      const formatted = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '');
+      return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    }
+    const str = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  const handlePrevMonth = () => {
+    const [sy, sm] = startMonth.split('-').map(Number);
+    const [ey, em] = endMonth.split('-').map(Number);
+    
+    const newStart = new Date(sy, sm - 2, 1);
+    const newEnd = new Date(ey, em - 2, 1);
+    
+    setStartMonth(`${newStart.getFullYear()}-${String(newStart.getMonth() + 1).padStart(2, '0')}`);
+    setEndMonth(`${newEnd.getFullYear()}-${String(newEnd.getMonth() + 1).padStart(2, '0')}`);
+  };
+
+  const handleNextMonth = () => {
+    const [sy, sm] = startMonth.split('-').map(Number);
+    const [ey, em] = endMonth.split('-').map(Number);
+    
+    const newStart = new Date(sy, sm, 1);
+    const newEnd = new Date(ey, em, 1);
+    
+    setStartMonth(`${newStart.getFullYear()}-${String(newStart.getMonth() + 1).padStart(2, '0')}`);
+    setEndMonth(`${newEnd.getFullYear()}-${String(newEnd.getMonth() + 1).padStart(2, '0')}`);
+  };
+
+  const handlePreset = (preset: 'current' | 'last_month' | '3_months' | 'this_year') => {
+    setShowCustomRange(false);
+    const today = new Date();
+    const currYear = today.getFullYear();
+    const currMonth = today.getMonth() + 1;
+
+    if (preset === 'current') {
+      const mStr = `${currYear}-${String(currMonth).padStart(2, '0')}`;
+      setStartMonth(mStr);
+      setEndMonth(mStr);
+    } else if (preset === 'last_month') {
+      const lastMonthDate = new Date(currYear, today.getMonth() - 1, 1);
+      const mStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+      setStartMonth(mStr);
+      setEndMonth(mStr);
+    } else if (preset === '3_months') {
+      const threeMonthsAgo = new Date(currYear, today.getMonth() - 2, 1);
+      setStartMonth(`${threeMonthsAgo.getFullYear()}-${String(threeMonthsAgo.getMonth() + 1).padStart(2, '0')}`);
+      setEndMonth(`${currYear}-${String(currMonth).padStart(2, '0')}`);
+    } else if (preset === 'this_year') {
+      setStartMonth(`${currYear}-01`);
+      setEndMonth(`${currYear}-12`);
+    }
+  };
+
+  const today = new Date();
+  const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const isCurrentMonthPreset = startMonth === currentMonthStr && endMonth === currentMonthStr && !showCustomRange;
+  const isThisYearPreset = startMonth === `${today.getFullYear()}-01` && endMonth === `${today.getFullYear()}-12` && !showCustomRange;
 
   // Modal State for Create/Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -389,53 +455,84 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
       {/* Barra de Filtros e Controles */}
       <div className="tx-controls anim-fade-up" style={{ animationDelay: '50ms' }}>
         <div className="tx-controls__left">
-          {/* Seletor de Período */}
-          <div 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.5rem',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--r-md)',
-              padding: '0.25rem 0.5rem',
-              height: '42px' // matching typical input heights
-            }}
-          >
-            <Calendar size={16} color="var(--text-muted)" />
-            <input 
-              type="month" 
-              value={startMonth}
-              onChange={(e) => setStartMonth(e.target.value)}
-              style={{ 
-                background: 'transparent', 
-                border: 'none', 
-                color: 'var(--text-primary)',
-                outline: 'none',
-                fontFamily: 'inherit',
-                fontSize: '0.9375rem',
-                padding: '0',
-                width: '120px'
-              }}
-              title="Mês Inicial"
-            />
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>até</span>
-            <input 
-              type="month" 
-              value={endMonth}
-              onChange={(e) => setEndMonth(e.target.value)}
-              style={{ 
-                background: 'transparent', 
-                border: 'none', 
-                color: 'var(--text-primary)',
-                outline: 'none',
-                fontFamily: 'inherit',
-                fontSize: '0.9375rem',
-                padding: '0',
-                width: '120px'
-              }}
-              title="Mês Final"
-            />
+          {/* Novo Seletor de Período Estético & Funcional */}
+          <div className="tx-date-wrapper">
+            <div className="tx-date-bar">
+              {/* Navegador por Setas e Label */}
+              <div className="tx-date-selector">
+                <button type="button" className="tx-date-btn" onClick={handlePrevMonth} title="Mês Anterior">
+                  <ChevronLeft size={18} />
+                </button>
+                <div 
+                  className="tx-date-display"
+                  onClick={() => setShowCustomRange(v => !v)}
+                  title="Clique para abrir intervalo personalizado"
+                >
+                  <Calendar size={16} className="tx-date-display__icon" />
+                  <span>
+                    {startMonth === endMonth
+                      ? formatMonthLabel(startMonth)
+                      : `${formatMonthLabel(startMonth, true)} até ${formatMonthLabel(endMonth, true)}`}
+                  </span>
+                  <ChevronDown size={14} style={{ transform: showCustomRange ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </div>
+                <button type="button" className="tx-date-btn" onClick={handleNextMonth} title="Próximo Mês">
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
+              {/* Presets Rápidos */}
+              <div className="tx-date-presets">
+                <button 
+                  type="button"
+                  className={`tx-chip ${isCurrentMonthPreset ? 'tx-chip--active' : ''}`}
+                  onClick={() => handlePreset('current')}
+                >
+                  Este Mês
+                </button>
+                <button 
+                  type="button"
+                  className={`tx-chip ${isThisYearPreset ? 'tx-chip--active' : ''}`}
+                  onClick={() => handlePreset('this_year')}
+                >
+                  Este Ano
+                </button>
+                <button 
+                  type="button"
+                  className={`tx-chip ${showCustomRange ? 'tx-chip--active' : ''}`}
+                  onClick={() => setShowCustomRange(v => !v)}
+                >
+                  <SlidersHorizontal size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> Customizar
+                </button>
+              </div>
+            </div>
+
+            {/* Painel Expansível de Intervalo Customizado */}
+            {showCustomRange && (
+              <div className="tx-custom-date-box anim-fade-up">
+                <div className="tx-custom-date-field">
+                  <label className="afic-label">Mês Inicial</label>
+                  <input 
+                    type="month" 
+                    value={startMonth}
+                    onChange={(e) => setStartMonth(e.target.value)}
+                    className="tx-search-input"
+                    style={{ minWidth: '140px' }}
+                  />
+                </div>
+                <span className="tx-custom-date-separator">até</span>
+                <div className="tx-custom-date-field">
+                  <label className="afic-label">Mês Final</label>
+                  <input 
+                    type="month" 
+                    value={endMonth}
+                    onChange={(e) => setEndMonth(e.target.value)}
+                    className="tx-search-input"
+                    style={{ minWidth: '140px' }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Busca por Texto */}

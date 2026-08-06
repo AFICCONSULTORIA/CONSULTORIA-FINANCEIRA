@@ -76,9 +76,110 @@
 
 .tx-controls__left {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.tx-date-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.tx-date-bar {
+  display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tx-date-selector {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-xl);
+  padding: 4px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--ease-fast);
+}
+
+.tx-date-selector:hover {
+  border-color: var(--border-hover);
+}
+
+.tx-date-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--ease-fast);
+}
+
+.tx-date-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.tx-date-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  transition: background var(--ease-fast);
+}
+
+.tx-date-display:hover {
+  background: var(--bg-card-hover);
+}
+
+.tx-date-display__icon {
+  color: var(--brand-primary);
+}
+
+.tx-date-presets {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.tx-custom-date-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-brand);
+  border-radius: var(--r-lg);
+  padding: 0.875rem 1.25rem;
+  margin-top: 0.25rem;
+  box-shadow: var(--shadow-brand);
+  flex-wrap: wrap;
+}
+
+.tx-custom-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tx-custom-date-separator {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
 }
 
 .tx-search-input {
