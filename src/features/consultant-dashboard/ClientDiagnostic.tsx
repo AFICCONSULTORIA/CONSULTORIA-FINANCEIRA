@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { TransactionManager } from '../client-dashboard/components/TransactionManager';
 import { GoalTracker } from '../client-dashboard/components/GoalTracker';
+import { ClientPortfolioManager } from '../portfolio/ClientPortfolioManager';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { calculateHealthScore, getScoreStatus } from '../../utils/scoreCalculator';
@@ -471,6 +472,13 @@ export const ClientDiagnostic: React.FC = () => {
 
           <Card>
             <GoalTracker targetUserId={id} />
+          </Card>
+
+          <Card>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+              Carteira de Investimentos do Cliente
+            </h3>
+            <ClientPortfolioManager targetUserId={id} readOnly={true} />
           </Card>
         </div>
 

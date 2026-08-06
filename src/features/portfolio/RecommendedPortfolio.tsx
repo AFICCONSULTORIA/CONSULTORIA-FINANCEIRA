@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Lock, Shield, Plus, Edit2, Trash2, 
-  ExternalLink, RefreshCw, X, Search, 
-  ChevronDown, ChevronUp, Award
+  Plus, Edit2, Trash2, 
+  RefreshCw, X, Search, 
+  Award, Wallet, PieChart, Lock, Shield
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
+import { ClientPortfolioManager, type ClientAsset } from './ClientPortfolioManager';
+import { PortfolioAllocationComparison } from './PortfolioAllocationComparison';
 
 export interface RecommendedAsset {
   id: string;
@@ -124,10 +126,14 @@ export const RecommendedPortfolio: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loadingRole, setLoadingRole] = useState(true);
   
+  // Navigation tab state
+  const [activeTab, setActiveTab] = useState<'client' | 'recommended' | 'comparison'>('client');
+  
+  // Assets state
+  const [clientAssets, setClientAssets] = useState<ClientAsset[]>([]);
   const [assets, setAssets] = useState<RecommendedAsset[]>(INITIAL_RECOMMENDED_ASSETS);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [expandedAssetId, setExpandedAssetId] = useState<string | null>(null);
 
   // Modal State for Admin CRUD
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -161,7 +167,7 @@ export const RecommendedPortfolio: React.FC = () => {
           .eq('id', user.id)
           .single();
 
-        if (data?.role === 'admin') {
+        if (data?.role === 'admin' || data?.role === 'consultant') {
           setIsAdmin(true);
         } else {
           setIsAdmin(false);
@@ -256,10 +262,6 @@ export const RecommendedPortfolio: React.FC = () => {
     toast.success('Ativo removido da carteira.');
   };
 
-  const toggleExpand = (id: string) => {
-    setExpandedAssetId(prev => prev === id ? null : id);
-  };
-
   const filteredAssets = assets.filter(a => {
     const matchesCategory = selectedCategory === 'Todos' || a.category === selectedCategory;
     const matchesSearch = a.ticker.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -273,563 +275,509 @@ export const RecommendedPortfolio: React.FC = () => {
     return (
       <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
         <RefreshCw className="anim-spin" size={24} style={{ marginBottom: '0.5rem' }} />
-        <p>Verificando permissões de acesso...</p>
+        <p>Carregando carteira de investimentos...</p>
       </div>
     );
   }
 
-  // 🔒 VISÃO BLOQUEADA PARA CLIENTES (NÃO ADMIN)
-  if (!isAdmin) {
-    return (
-      <div className="anim-fade-up" style={{ maxWidth: '900px', margin: '0 auto' }}>
-        <Card style={{ 
-          padding: '3rem 2rem', 
-          textAlign: 'center', 
-          position: 'relative', 
-          overflow: 'hidden',
-          border: '1px solid var(--border-brand)',
-          background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.06) 0%, rgba(10, 10, 12, 0.95) 100%)',
-          boxShadow: 'var(--shadow-brand)'
-        }}>
-          <div style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            background: 'rgba(234, 179, 8, 0.15)', 
-            border: '1px solid var(--brand-primary)',
-            color: 'var(--brand-primary)',
-            padding: '0.375rem 1rem',
-            borderRadius: 'var(--r-full)',
-            fontSize: '0.8125rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            marginBottom: '1.5rem'
-          }}>
-            <Lock size={14} /> Recurso Exclusivo VIP
-          </div>
-
-          <div style={{ 
-            width: '80px', 
-            height: '80px', 
-            borderRadius: '50%', 
-            background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
-            border: '1px solid var(--border-brand)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1.5rem auto',
-            boxShadow: '0 0 30px rgba(234, 179, 8, 0.25)'
-          }}>
-            <Shield size={40} color="var(--brand-primary)" />
-          </div>
-
-          <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
-            Carteira Recomendada AFIC
-          </h1>
-
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.0625rem', maxWidth: '600px', margin: '0 auto 2rem auto', lineHeight: 1.6 }}>
-            Acesso restrito à alocação estratégica de ativos (Ações, FIIs, Renda Fixa e Internacional) selecionados com inteligência fundamentalista no estilo Investidor 10.
-          </p>
-
-          <div style={{ 
-            background: 'var(--bg-surface)', 
-            borderRadius: 'var(--r-xl)', 
-            padding: '1.5rem', 
-            border: '1px solid var(--border-color)',
-            marginBottom: '2rem',
-            filter: 'blur(0.5px)',
-            opacity: 0.85
-          }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '1rem', textTransform: 'uppercase' }}>
-              Prévia de Distribuição Recomendada
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
-              <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: 'var(--r-lg)', border: '1px solid var(--border-color)' }}>
-                <span style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: '1.25rem' }}>33%</span>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Renda Fixa (CDI/IPCA)</p>
-              </div>
-              <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: 'var(--r-lg)', border: '1px solid var(--border-color)' }}>
-                <span style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: '1.25rem' }}>30%</span>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>FIIs (Tijolo / Papel)</p>
-              </div>
-              <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: 'var(--r-lg)', border: '1px solid var(--border-color)' }}>
-                <span style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: '1.25rem' }}>22%</span>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Ações Brasileiras</p>
-              </div>
-              <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: 'var(--r-lg)', border: '1px solid var(--border-color)' }}>
-                <span style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: '1.25rem' }}>15%</span>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Internacional (Dólar)</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <Button 
-              onClick={() => toast('Fale com seu consultor para solicitar a liberação do seu plano VIP!')}
-              style={{ background: 'var(--grad-brand)', color: 'var(--text-on-primary)', fontWeight: 800, padding: '0.875rem 2rem' }}
-            >
-              Solicitar Liberação de Acesso <ExternalLink size={16} style={{ marginLeft: '0.5rem' }} />
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  // 🟢 PAINEL INVESTIDOR 10 STYLE (ADMIN)
   return (
     <div className="anim-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      
-      {/* Header Admin */}
+      {/* Main Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-              Carteira Recomendada (Estilo Investidor 10)
-            </h1>
-            <span style={{ 
-              background: 'rgba(234, 179, 8, 0.15)', 
-              border: '1px solid var(--brand-primary)', 
-              color: 'var(--brand-primary)', 
-              padding: '0.2rem 0.6rem', 
-              borderRadius: 'var(--r-full)',
-              fontSize: '0.75rem',
-              fontWeight: 800 
-            }}>
-              PAINEL ADMIN
-            </span>
-          </div>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+            Carteira & Investimentos AFIC
+          </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginTop: '0.25rem' }}>
-            Análise fundamentalista com múltiplos (DY, P/L, P/VP), Preço Teto, Margem de Segurança e Tese de Investimento.
+            Monte sua carteira pessoal, consulte a carteira recomendada AFIC e receba sugestões de alocação.
           </p>
         </div>
-
-        <Button onClick={handleOpenCreate}>
-          <Plus size={18} /> Adicionar Ativo Recomendado
-        </Button>
       </div>
 
-      {/* Cards de Métricas Principais */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        <Card style={{ padding: '1.25rem', borderLeft: '4px solid var(--brand-primary)' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-            Alocação Recomendada (Peso)
-          </span>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-            {totalWeight}%
-          </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Meta de alocação total
-          </p>
-        </Card>
+      {/* Main Tabs Navigation */}
+      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => setActiveTab('client')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.625rem 1.25rem',
+            borderRadius: 'var(--r-md)',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            border: 'none',
+            background: activeTab === 'client' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'client' ? '#ffffff' : 'var(--text-secondary)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Wallet size={18} /> Minha Carteira
+        </button>
 
-        <Card style={{ padding: '1.25rem', borderLeft: '4px solid var(--success)' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-            DY Médio Estimado
-          </span>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--success)', marginTop: '0.25rem' }}>
-            8.9% a.a.
-          </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Geração de proventos isentos
-          </p>
-        </Card>
+        <button
+          onClick={() => setActiveTab('recommended')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.625rem 1.25rem',
+            borderRadius: 'var(--r-md)',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            border: 'none',
+            background: activeTab === 'recommended' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'recommended' ? '#ffffff' : 'var(--text-secondary)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Award size={18} /> Carteira Recomendada AFIC {!isAdmin && '🔒'}
+        </button>
 
-        <Card style={{ padding: '1.25rem', borderLeft: '4px solid var(--info)' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-            Total de Ativos Analisados
-          </span>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-            {assets.length} Ativos
-          </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Ações, FIIs, Renda Fixa e Internacional
-          </p>
-        </Card>
+        <button
+          onClick={() => setActiveTab('comparison')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.625rem 1.25rem',
+            borderRadius: 'var(--r-md)',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            border: 'none',
+            background: activeTab === 'comparison' ? 'var(--primary-color)' : 'transparent',
+            color: activeTab === 'comparison' ? '#ffffff' : 'var(--text-secondary)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <PieChart size={18} /> Comparativo & Sugestões {!isAdmin && '🔒'}
+        </button>
       </div>
 
-      {/* Controles de Filtro e Busca Estilo Investidor 10 */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        flexWrap: 'wrap', 
-        gap: '1rem', 
-        background: 'var(--bg-card)', 
-        padding: '1rem 1.25rem', 
-        borderRadius: 'var(--r-xl)', 
-        border: '1px solid var(--border-color)' 
-      }}>
-        {/* Chips de Categoria */}
-        <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
-          {['Todos', 'Ações', 'FIIs', 'Renda Fixa', 'Internacional', 'Cripto'].map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`tx-chip ${selectedCategory === cat ? 'tx-chip--active' : ''}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+      {/* Tab 1: Minha Carteira (Client Portfolio) */}
+      {activeTab === 'client' && (
+        <ClientPortfolioManager 
+          onAssetsLoaded={(loaded) => setClientAssets(loaded)}
+        />
+      )}
 
-        {/* Input de Busca */}
-        <div style={{ position: 'relative', minWidth: '220px' }}>
-          <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input 
-            type="text"
-            placeholder="Buscar por ticker ou nome..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="tx-search-input"
-            style={{ paddingLeft: '2.25rem', width: '100%' }}
+      {/* Tab 3: Comparativo & Sugestões */}
+      {activeTab === 'comparison' && (
+        !isAdmin ? (
+          <Card style={{ 
+            padding: '3rem 2rem', 
+            textAlign: 'center', 
+            border: '1px solid var(--border-brand)',
+            background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.06) 0%, rgba(10, 10, 12, 0.95) 100%)',
+            boxShadow: 'var(--shadow-brand)'
+          }}>
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              background: 'rgba(234, 179, 8, 0.15)', 
+              border: '1px solid var(--brand-primary)',
+              color: 'var(--brand-primary)',
+              padding: '0.375rem 1rem',
+              borderRadius: 'var(--r-full)',
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              marginBottom: '1.5rem'
+            }}>
+              <Lock size={14} /> Recurso Exclusivo VIP
+            </div>
+
+            <div style={{ 
+              width: '70px', 
+              height: '70px', 
+              borderRadius: '50%', 
+              background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
+              border: '1px solid var(--border-brand)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem auto'
+            }}>
+              <Shield size={36} color="var(--brand-primary)" />
+            </div>
+
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
+              Comparativo & Sugestões de Alocação 🔒
+            </h2>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', maxWidth: '600px', margin: '0 auto 1.5rem auto' }}>
+              Acesso exclusivo ao comparativo de ativos e sugestões de rebalanceamento enviadas pelos consultores da AFIC.
+            </p>
+          </Card>
+        ) : (
+          <PortfolioAllocationComparison 
+            clientAssets={clientAssets}
+            recommendedAssets={assets}
+            onSelectTab={(tab) => setActiveTab(tab)}
           />
-        </div>
-      </div>
+        )
+      )}
 
-      {/* Tabela / Cards de Ativos Estilo Investidor 10 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-        {filteredAssets.map(asset => {
-          const isExpanded = expandedAssetId === asset.id;
-          
-          // Cálculo da Margem de Segurança (%)
-          const hasMaxPrice = asset.maxPrice > 0;
-          const safetyMargin = hasMaxPrice 
-            ? ((asset.maxPrice - asset.currentPrice) / asset.currentPrice) * 100 
-            : 0;
+      {/* Tab 2: Carteira Recomendada AFIC */}
+      {activeTab === 'recommended' && (
+        !isAdmin ? (
+          <Card style={{ 
+            padding: '3rem 2rem', 
+            textAlign: 'center', 
+            border: '1px solid var(--border-brand)',
+            background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.06) 0%, rgba(10, 10, 12, 0.95) 100%)',
+            boxShadow: 'var(--shadow-brand)'
+          }}>
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              background: 'rgba(234, 179, 8, 0.15)', 
+              border: '1px solid var(--brand-primary)',
+              color: 'var(--brand-primary)',
+              padding: '0.375rem 1rem',
+              borderRadius: 'var(--r-full)',
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              marginBottom: '1.5rem'
+            }}>
+              <Lock size={14} /> Recurso Exclusivo VIP
+            </div>
 
-          return (
-            <Card 
-              key={asset.id} 
-              style={{ 
-                padding: '1.25rem 1.5rem', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '1rem',
-                borderLeft: asset.status === 'COMPRAR' ? '4px solid var(--success)' : '4px solid var(--warning)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {/* Linha Principal do Ativo */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                
-                {/* Ticker Avatar & Nome */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ 
-                    width: '48px', 
-                    height: '48px', 
-                    borderRadius: 'var(--r-lg)', 
-                    background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
-                    border: '1px solid var(--border-brand)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 900,
-                    fontSize: '0.9375rem',
-                    color: 'var(--brand-primary-light)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                    flexShrink: 0
+            <div style={{ 
+              width: '70px', 
+              height: '70px', 
+              borderRadius: '50%', 
+              background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
+              border: '1px solid var(--border-brand)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem auto'
+            }}>
+              <Shield size={36} color="var(--brand-primary)" />
+            </div>
+
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
+              Carteira Recomendada AFIC 🔒
+            </h2>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', maxWidth: '600px', margin: '0 auto 1.5rem auto' }}>
+              Acesso exclusivo às recomendações estratégicas de ativos selecionados com inteligência fundamentalista e tese da consultoria AFIC.
+            </p>
+          </Card>
+        ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Header AFIC Recommended */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  Carteira Recomendada AFIC (Estilo Investidor 10)
+                </h2>
+                {isAdmin && (
+                  <span style={{ 
+                    background: 'rgba(234, 179, 8, 0.15)', 
+                    border: '1px solid var(--brand-primary)', 
+                    color: 'var(--brand-primary)', 
+                    padding: '0.2rem 0.6rem', 
+                    borderRadius: 'var(--r-full)',
+                    fontSize: '0.75rem',
+                    fontWeight: 800 
                   }}>
-                    {asset.ticker.slice(0, 4)}
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-                        {asset.ticker}
-                      </span>
-                      <span style={{ 
-                        background: asset.status === 'COMPRAR' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', 
-                        color: asset.status === 'COMPRAR' ? 'var(--success)' : 'var(--warning)', 
-                        border: `1px solid ${asset.status === 'COMPRAR' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-                        padding: '0.15rem 0.5rem', 
-                        borderRadius: 'var(--r-full)', 
-                        fontSize: '0.75rem', 
-                        fontWeight: 800 
-                      }}>
-                        {asset.status}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                      {asset.name} • <span style={{ color: 'var(--text-muted)' }}>{asset.category}</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Métricas Fundamentalistas Investidor 10 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-                  
-                  {/* Preço Atual */}
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Cotação Atual</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {asset.currentPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                  </div>
-
-                  {/* Preço Teto */}
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Preço Teto</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--brand-primary)' }}>
-                      {hasMaxPrice ? asset.maxPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/A'}
-                    </span>
-                  </div>
-
-                  {/* Margem de Segurança */}
-                  {hasMaxPrice && (
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Margem Seg.</span>
-                      <span style={{ 
-                        fontSize: '0.875rem', 
-                        fontWeight: 800, 
-                        color: safetyMargin >= 0 ? 'var(--success)' : 'var(--danger)',
-                        background: safetyMargin >= 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: 'var(--r-sm)'
-                      }}>
-                        {safetyMargin >= 0 ? `+${safetyMargin.toFixed(1)}%` : `${safetyMargin.toFixed(1)}%`}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* DY % */}
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>DY (12M)</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--success)' }}>
-                      {asset.dy}%
-                    </span>
-                  </div>
-
-                  {/* Múltiplo (P/L ou P/VP) */}
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Múltiplo</span>
-                    <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                      {asset.plPvP}
-                    </span>
-                  </div>
-
-                  {/* Peso Recomendado */}
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Peso Alvo</span>
-                    <span style={{ fontSize: '1.125rem', fontWeight: 900, color: 'var(--brand-primary-light)' }}>
-                      {asset.targetWeight}%
-                    </span>
-                  </div>
-
-                  {/* Ações e Expandir */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                    <button 
-                      onClick={() => toggleExpand(asset.id)} 
-                      className="tx-action-btn"
-                      title="Ver Tese & Ficha Técnica"
-                      style={{ background: 'var(--bg-input)' }}
-                    >
-                      {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                    </button>
-                    <button onClick={() => handleOpenEdit(asset)} className="tx-action-btn" title="Editar">
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => handleDeleteAsset(asset.id)} className="tx-action-btn tx-action-btn--delete" title="Excluir">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-
-                </div>
+                    PAINEL ADMIN
+                  </span>
+                )}
               </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                Análise fundamentalista com múltiplos, Preço Teto, Margem de Segurança e Tese de Investimento.
+              </p>
+            </div>
 
-              {/* Ficha Técnica & Tese Expandível (Estilo Investidor 10) */}
-              {isExpanded && (
-                <div className="anim-fade-up" style={{ 
-                  background: 'var(--bg-input)', 
-                  padding: '1.25rem', 
-                  borderRadius: 'var(--r-lg)', 
+            {isAdmin && (
+              <Button onClick={handleOpenCreate}>
+                <Plus size={18} /> Adicionar Ativo Recomendado
+              </Button>
+            )}
+          </div>
+
+          {/* Cards de Métricas Recomendadas */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <Card style={{ padding: '1.25rem', borderLeft: '4px solid var(--brand-primary)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                Alocação Recomendada (Peso)
+              </span>
+              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                {totalWeight}%
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                Meta de alocação total
+              </p>
+            </Card>
+
+            <Card style={{ padding: '1.25rem', borderLeft: '4px solid var(--success)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                DY Médio Estimado
+              </span>
+              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--success)', marginTop: '0.25rem' }}>
+                8.9% a.a.
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                Geração de proventos isentos
+              </p>
+            </Card>
+
+            <Card style={{ padding: '1.25rem', borderLeft: '4px solid var(--info)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                Total de Ativos Analisados
+              </span>
+              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                {assets.length} Ativos
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                Ações, FIIs, Renda Fixa e Internacional
+              </p>
+            </Card>
+          </div>
+
+          {/* Filtros e Busca */}
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', minWidth: '220px', flex: 1 }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text" 
+                placeholder="Buscar por ticker ou nome..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+                  borderRadius: 'var(--r-md)',
                   border: '1px solid var(--border-color)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                  marginTop: '0.5rem'
-                }}>
-                  {/* Highlights / Destaques da Empresa */}
-                  {asset.highlights && asset.highlights.length > 0 && (
+                  background: 'var(--card-bg)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.85rem'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto' }}>
+              {['Todos', 'Ações', 'FIIs', 'Renda Fixa', 'Internacional', 'Cripto'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: 'var(--r-md)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    border: '1px solid',
+                    borderColor: selectedCategory === cat ? 'var(--primary-color)' : 'var(--border-color)',
+                    background: selectedCategory === cat ? 'var(--primary-color)' : 'transparent',
+                    color: selectedCategory === cat ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid de Ativos Recomendados */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            {filteredAssets.map(asset => {
+              const hasMaxPrice = asset.maxPrice > 0;
+              const isDiscounted = hasMaxPrice && asset.currentPrice <= asset.maxPrice;
+              const discountMargin = hasMaxPrice ? ((asset.maxPrice - asset.currentPrice) / asset.maxPrice) * 100 : 0;
+
+              return (
+                <Card key={asset.id} style={{ padding: '1.25rem', position: 'relative', borderTop: '4px solid var(--primary-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '0.375rem' }}>
-                        Destaques Fundamentalistas (Investidor 10)
-                      </span>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {asset.highlights.map((hl, idx) => (
-                          <span key={idx} style={{ 
-                            background: 'rgba(234, 179, 8, 0.12)', 
-                            border: '1px solid var(--border-brand)', 
-                            color: 'var(--brand-primary-light)', 
-                            padding: '0.2rem 0.6rem', 
-                            borderRadius: 'var(--r-full)', 
-                            fontSize: '0.75rem', 
-                            fontWeight: 700,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.25rem'
-                          }}>
-                            <Award size={12} /> {hl}
-                          </span>
-                        ))}
+                      <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.7rem', 
+                          fontWeight: 700, 
+                          padding: '0.15rem 0.5rem', 
+                          borderRadius: 'var(--r-sm)', 
+                          background: 'rgba(59, 130, 246, 0.1)', 
+                          color: 'var(--primary-color)',
+                          textTransform: 'uppercase'
+                        }}>
+                          {asset.category}
+                        </span>
+
+                        <span style={{ 
+                          fontSize: '0.7rem', 
+                          fontWeight: 800, 
+                          padding: '0.15rem 0.5rem', 
+                          borderRadius: 'var(--r-sm)', 
+                          background: asset.status === 'COMPRAR' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', 
+                          color: asset.status === 'COMPRAR' ? 'var(--success)' : 'var(--danger)'
+                        }}>
+                          {asset.status}
+                        </span>
                       </div>
+
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.35rem' }}>
+                        {asset.ticker}
+                      </h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        {asset.name}
+                      </p>
+                    </div>
+
+                    {isAdmin && (
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <button 
+                          onClick={() => handleOpenEdit(asset)} 
+                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
+                          title="Editar Ativo AFIC"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAsset(asset.id)} 
+                          style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '0.25rem' }}
+                          title="Excluir Ativo AFIC"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ margin: '1rem 0', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.825rem' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Preço Atual</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {asset.currentPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Preço Teto</span>
+                      <span style={{ fontWeight: 700, color: 'var(--primary-color)' }}>
+                        {hasMaxPrice ? asset.maxPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/A'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Dividend Yield (DY)</span>
+                      <span style={{ fontWeight: 700, color: 'var(--success)' }}>
+                        {asset.dy}% a.a.
+                      </span>
+                    </div>
+
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Peso Alvo</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {asset.targetWeight}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {hasMaxPrice && (
+                    <div style={{ 
+                      fontSize: '0.78rem', 
+                      padding: '0.4rem 0.6rem', 
+                      borderRadius: 'var(--r-sm)', 
+                      background: isDiscounted ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      color: isDiscounted ? 'var(--success)' : 'var(--danger)',
+                      fontWeight: 600,
+                      marginBottom: '0.75rem'
+                    }}>
+                      {isDiscounted ? `Margem de Segurança: +${discountMargin.toFixed(1)}%` : 'Acima do Preço Teto Recomendado'}
                     </div>
                   )}
 
-                  {/* Tese de Investimento do Consultor */}
-                  <div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '0.375rem' }}>
-                      Tese do Consultor AFIC
-                    </span>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.5, background: 'var(--bg-surface)', padding: '0.875rem 1rem', borderRadius: 'var(--r-md)', borderLeft: '3px solid var(--brand-primary)' }}>
-                      {asset.thesis}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </Card>
-          );
-        })}
-      </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+                    "{asset.thesis}"
+                  </p>
 
-      {/* Modal Admin Create/Edit Asset */}
+                  {asset.highlights && asset.highlights.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                      {asset.highlights.map((h, idx) => (
+                        <span key={idx} style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: 'var(--r-sm)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                          • {h}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+        )
+      )}
+
+      {/* Modal Admin Add/Edit Recommended Asset */}
       {isModalOpen && (
         <div className="tx-modal-overlay">
-          <div className="tx-modal anim-fade-up" style={{ maxWidth: '580px' }}>
+          <div className="tx-modal anim-fade-up" style={{ maxWidth: '540px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {editingAsset ? 'Editar Ativo Recomendado' : 'Novo Ativo Recomendado'}
+                {editingAsset ? 'Editar Ativo Recomendado (AFIC)' : 'Novo Ativo Recomendado (AFIC)'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSaveAsset} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="afic-grid-2">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label className="afic-label">Ticker (Código) *</label>
-                  <input 
-                    type="text"
-                    required
-                    placeholder="Ex: VALE3, HGLG11..."
-                    value={formTicker}
-                    onChange={e => setFormTicker(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  />
+                  <label className="afic-label">Ticker *</label>
+                  <input type="text" className="afic-input" value={formTicker} onChange={e => setFormTicker(e.target.value)} required />
                 </div>
-
                 <div>
                   <label className="afic-label">Categoria *</label>
-                  <select 
-                    value={formCategory}
-                    onChange={(e: any) => setFormCategory(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  >
-                    <option value="Ações">Ações</option>
-                    <option value="FIIs">FIIs</option>
-                    <option value="Renda Fixa">Renda Fixa</option>
-                    <option value="Internacional">Internacional</option>
-                    <option value="Cripto">Cripto</option>
+                  <select className="afic-input" value={formCategory} onChange={e => setFormCategory(e.target.value as any)}>
+                    {['Ações', 'FIIs', 'Renda Fixa', 'Internacional', 'Cripto'].map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="afic-label">Nome da Empresa / Ativo *</label>
-                <input 
-                  type="text"
-                  required
-                  placeholder="Ex: Vale S.A., CSHG Logística..."
-                  value={formName}
-                  onChange={e => setFormName(e.target.value)}
-                  className="tx-search-input"
-                  style={{ width: '100%' }}
-                />
+                <label className="afic-label">Nome do Ativo *</label>
+                <input type="text" className="afic-input" value={formName} onChange={e => setFormName(e.target.value)} required />
               </div>
 
-              <div className="afic-grid-2">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
                 <div>
                   <label className="afic-label">Preço Atual (R$)</label>
-                  <input 
-                    type="number"
-                    step="0.01"
-                    placeholder="61.20"
-                    value={formCurrentPrice}
-                    onChange={e => setFormCurrentPrice(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  />
+                  <input type="number" step="any" className="afic-input" value={formCurrentPrice} onChange={e => setFormCurrentPrice(e.target.value)} />
                 </div>
-
                 <div>
                   <label className="afic-label">Preço Teto (R$)</label>
-                  <input 
-                    type="number"
-                    step="0.01"
-                    placeholder="75.00"
-                    value={formMaxPrice}
-                    onChange={e => setFormMaxPrice(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  />
+                  <input type="number" step="any" className="afic-input" value={formMaxPrice} onChange={e => setFormMaxPrice(e.target.value)} />
+                </div>
+                <div>
+                  <label className="afic-label">Dividend Yield %</label>
+                  <input type="number" step="any" className="afic-input" value={formDy} onChange={e => setFormDy(e.target.value)} />
                 </div>
               </div>
 
-              <div className="afic-grid-2">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label className="afic-label">DY % (12M)</label>
-                  <input 
-                    type="number"
-                    step="0.1"
-                    placeholder="8.5"
-                    value={formDy}
-                    onChange={e => setFormDy(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  />
+                  <label className="afic-label">P/L ou P/VP</label>
+                  <input type="text" className="afic-input" value={formPlPvP} onChange={e => setFormPlPvP(e.target.value)} />
                 </div>
-
                 <div>
-                  <label className="afic-label">Múltiplo (P/L ou P/VP)</label>
-                  <input 
-                    type="text"
-                    placeholder="Ex: 5.8x P/L"
-                    value={formPlPvP}
-                    onChange={e => setFormPlPvP(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  />
+                  <label className="afic-label">Peso Alvo %</label>
+                  <input type="number" step="any" className="afic-input" value={formWeight} onChange={e => setFormWeight(e.target.value)} />
                 </div>
-              </div>
-
-              <div className="afic-grid-2">
                 <div>
-                  <label className="afic-label">Peso Alvo (%) *</label>
-                  <input 
-                    type="number"
-                    step="0.5"
-                    required
-                    placeholder="10"
-                    value={formWeight}
-                    onChange={e => setFormWeight(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  />
-                </div>
-
-                <div>
-                  <label className="afic-label">Status da Recomendação</label>
-                  <select 
-                    value={formStatus}
-                    onChange={(e: any) => setFormStatus(e.target.value)}
-                    className="tx-search-input"
-                    style={{ width: '100%' }}
-                  >
+                  <label className="afic-label">Status Recomendação</label>
+                  <select className="afic-input" value={formStatus} onChange={e => setFormStatus(e.target.value as any)}>
                     <option value="COMPRAR">COMPRAR</option>
                     <option value="AGUARDAR">AGUARDAR</option>
                     <option value="MANTER">MANTER</option>
@@ -838,36 +786,18 @@ export const RecommendedPortfolio: React.FC = () => {
               </div>
 
               <div>
-                <label className="afic-label">Destaques Fundamentalistas (Separados por vírgula)</label>
-                <input 
-                  type="text"
-                  placeholder="Ex: Líder Global, ROE > 20%, Baixa Vacância"
-                  value={formHighlightsStr}
-                  onChange={e => setFormHighlightsStr(e.target.value)}
-                  className="tx-search-input"
-                  style={{ width: '100%' }}
-                />
+                <label className="afic-label">Tese de Investimento</label>
+                <textarea className="afic-input" rows={3} value={formThesis} onChange={e => setFormThesis(e.target.value)} />
               </div>
 
               <div>
-                <label className="afic-label">Tese de Investimento</label>
-                <textarea 
-                  rows={3}
-                  placeholder="Explique os motivos dessa recomendação para os clientes..."
-                  value={formThesis}
-                  onChange={e => setFormThesis(e.target.value)}
-                  className="tx-search-input"
-                  style={{ width: '100%', fontFamily: 'inherit' }}
-                />
+                <label className="afic-label">Destaques (separados por vírgula)</label>
+                <input type="text" className="afic-input" value={formHighlightsStr} onChange={e => setFormHighlightsStr(e.target.value)} />
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} style={{ flex: 1 }}>
-                  Cancelar
-                </Button>
-                <Button type="submit" style={{ flex: 2 }}>
-                  {editingAsset ? 'Salvar Alterações' : 'Adicionar Ativo'}
-                </Button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                <Button type="submit">Salvar Recomendação</Button>
               </div>
             </form>
           </div>

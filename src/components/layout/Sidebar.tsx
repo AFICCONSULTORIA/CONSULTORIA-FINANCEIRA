@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../ui/Logo';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -8,7 +8,7 @@ import './Sidebar.css';
 
 const SIDEBAR_LINKS = [
   { to: '/client', icon: LayoutDashboard, label: 'Meu Painel', exact: true },
-  { to: '/client/portfolio', icon: ShieldAlert, label: 'Carteira AFIC 🔒' },
+  { to: '/client/portfolio', icon: TrendingUp, label: 'Carteira AFIC 🔒' },
   { to: '/client/calculator', icon: Calculator, label: 'Calc. de Baldes' },
   { to: '/client/time-calculator', icon: Clock, label: 'Choque de Realidade' },
   { to: '/client/expenses', icon: ShoppingBag, label: 'Lançamentos' },
