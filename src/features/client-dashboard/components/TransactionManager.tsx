@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, 
-  Calendar, X, AlertCircle, Tag, ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal 
+  Calendar, X, AlertCircle, Tag, ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal, FileText 
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { MoneyInput } from '../../../components/ui/MoneyInput';
+import { OfxImporterModal } from './OfxImporterModal';
 import './TransactionManager.css';
 
 export interface Transaction {
@@ -166,6 +167,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
   // Modal State for Create/Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOfxModalOpen, setIsOfxModalOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   
   // Form State
@@ -608,9 +610,14 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
         </div>
 
         {!readOnly && (
-          <Button onClick={handleOpenCreateModal}>
-            <Plus size={18} /> Novo Lançamento
-          </Button>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <Button variant="outline" onClick={() => setIsOfxModalOpen(true)} title="Importar extrato de banco (.ofx)">
+              <FileText size={18} /> Importar OFX
+            </Button>
+            <Button onClick={() => handleOpenCreateModal()}>
+              <Plus size={18} /> Novo Lançamento
+            </Button>
+          </div>
         )}
       </div>
 
@@ -963,11 +970,21 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
         </div>
       )}
 
+      {/* Modal de Importação de OFX */}
+      {effectiveUserId && (
+        <OfxImporterModal
+          userId={effectiveUserId}
+          isOpen={isOfxModalOpen}
+          onClose={() => setIsOfxModalOpen(false)}
+          onSuccess={() => fetchTransactions()}
+        />
+      )}
+
       {/* Floating Action Button (Mobile) */}
       {!readOnly && (
         <button 
           className="tx-fab" 
-          onClick={handleOpenCreateModal}
+          onClick={() => handleOpenCreateModal()}
           aria-label="Novo Lançamento"
         >
           <Plus size={28} />

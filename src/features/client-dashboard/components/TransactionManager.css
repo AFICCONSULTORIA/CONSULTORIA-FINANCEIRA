@@ -542,3 +542,163 @@ select.tx-search-input option {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* ============================================================
+   OFX Importer Modal Styles
+   ============================================================ */
+
+.ofx-importer-modal {
+  max-width: 800px !important;
+}
+
+.ofx-importer-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ofx-importer-modal__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ofx-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--r-sm);
+  transition: color var(--ease-fast);
+}
+
+.ofx-close-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Step 1: Dropzone */
+.ofx-dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--r-xl);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all var(--ease-std);
+}
+
+.ofx-dropzone:hover,
+.ofx-dropzone--active {
+  border-color: var(--brand-primary);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.ofx-dropzone__icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* Step 2: Preview & Table */
+.ofx-file-info-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: var(--r-lg);
+  margin-bottom: 1rem;
+}
+
+.ofx-selection-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.ofx-table-container {
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
+}
+
+.ofx-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ofx-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+  z-index: 10;
+}
+
+.ofx-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.875rem;
+}
+
+.ofx-tr--selected {
+  background: var(--bg-card);
+}
+
+.ofx-tr--unselected {
+  opacity: 0.4;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.ofx-cat-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: var(--r-md);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8125rem;
+  outline: none;
+  width: 100%;
+  max-width: 180px;
+}
+
+.ofx-cat-select option {
+  background-color: var(--bg-card-solid, #1e293b);
+  color: #f8fafc;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Lock, Shield, TrendingUp, PieChart, Star, Plus, Edit2, Trash2, 
-  CheckCircle, AlertTriangle, ExternalLink, RefreshCw, X, Info, Search, 
-  ChevronDown, ChevronUp, DollarSign, Award, ArrowUpRight, Percent, BarChart3
+  Lock, Shield, Plus, Edit2, Trash2, 
+  ExternalLink, RefreshCw, X, Search, 
+  ChevronDown, ChevronUp, Award
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -452,7 +452,7 @@ export const RecommendedPortfolio: React.FC = () => {
       {/* Controles de Filtro e Busca Estilo Investidor 10 */}
       <div style={{ 
         display: 'flex', 
-        justify: 'space-between', 
+        justifyContent: 'space-between', 
         alignItems: 'center', 
         flexWrap: 'wrap', 
         gap: '1rem', 
