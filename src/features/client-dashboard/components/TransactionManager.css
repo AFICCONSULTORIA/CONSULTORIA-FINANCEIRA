@@ -450,10 +450,17 @@ select.tx-search-input option {
 }
 
 .tx-chip--active {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(234, 179, 8, 0.18);
   border-color: var(--brand-primary);
   color: var(--brand-primary-light);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+}
+
+.tx-chip--income-active {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: var(--success);
+  color: #34D399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
 }
 
 /* Hide FAB on desktop by default */

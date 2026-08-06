@@ -47,14 +47,24 @@ const CATEGORIES = [
   'Outros'
 ];
 
-const QUICK_CATEGORIES = [
+const EXPENSE_QUICK_CATEGORIES = [
   'Alimentação',
   'Transporte',
   'Moradia',
+  'Saúde',
   'Lazer',
   'Custo Fixo',
   'Conforto',
   'Investimento',
+  'Outros'
+];
+
+const INCOME_QUICK_CATEGORIES = [
+  'Salário / Renda Principal',
+  'Renda Extra',
+  'Investimentos',
+  'Vendas / Freelance',
+  'Rendimentos',
   'Outros'
 ];
 
@@ -241,13 +251,19 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
     }
   };
 
+  const handleToggleFormType = (type: 'income' | 'expense') => {
+    setFormType(type);
+    const defaultCat = type === 'income' ? INCOME_QUICK_CATEGORIES[0] : EXPENSE_QUICK_CATEGORIES[0];
+    setFormCategory(defaultCat);
+  };
+
   // Open modal for Create
-  const handleOpenCreateModal = () => {
+  const handleOpenCreateModal = (initialType: 'income' | 'expense' = 'expense') => {
     setEditingTx(null);
-    setFormType('expense');
+    setFormType(initialType);
     setFormDesc('');
     setFormAmountStr('');
-    setFormCategory('Custo Fixo');
+    setFormCategory(initialType === 'income' ? INCOME_QUICK_CATEGORIES[0] : EXPENSE_QUICK_CATEGORIES[0]);
     setFormMethod('Pix');
     setFormStatus('completed');
     setFormDate(new Date().toISOString().split('T')[0]);
@@ -679,11 +695,25 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
       {/* Modal de Cadastro / Edição */}
       {isModalOpen && (
         <div className="tx-modal-overlay">
-          <div className="tx-modal anim-fade-up">
+          <div className="tx-modal anim-fade-up" style={{ borderTop: `4px solid ${formType === 'income' ? 'var(--success)' : 'var(--danger)'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {editingTx ? 'Editar Lançamento' : 'Novo Lançamento'}
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <div style={{ 
+                  width: '36px', 
+                  height: '36px', 
+                  borderRadius: 'var(--r-md)', 
+                  background: formType === 'income' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  color: formType === 'income' ? 'var(--success)' : 'var(--danger)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {formType === 'income' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                </div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  {editingTx ? 'Editar Lançamento' : (formType === 'income' ? 'Nova Receita' : 'Nova Despesa')}
+                </h2>
+              </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
@@ -698,14 +728,14 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                 <button
                   type="button"
                   className={`tx-type-btn ${formType === 'expense' ? 'tx-type-btn--expense-active' : ''}`}
-                  onClick={() => setFormType('expense')}
+                  onClick={() => handleToggleFormType('expense')}
                 >
                   <TrendingDown size={18} /> Despesa (Saída)
                 </button>
                 <button
                   type="button"
                   className={`tx-type-btn ${formType === 'income' ? 'tx-type-btn--income-active' : ''}`}
-                  onClick={() => setFormType('income')}
+                  onClick={() => handleToggleFormType('income')}
                 >
                   <TrendingUp size={18} /> Receita (Entrada)
                 </button>
@@ -713,10 +743,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
               {/* Descrição */}
               <div>
-                <label className="afic-label">Descrição *</label>
+                <label className="afic-label">Descrição do Lançamento *</label>
                 <input 
                   type="text"
-                  placeholder="Ex: Supermercado, Salário, Conta de Luz..."
+                  placeholder={formType === 'income' ? "Ex: Salário Mensal, Rendimentos, Pix..." : "Ex: Supermercado, Aluguel, Luz..."}
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
                   className="tx-search-input"
@@ -734,7 +764,12 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
               {/* Valor */}
               <div>
-                <label className="afic-label">Valor (R$) *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                  <label className="afic-label" style={{ margin: 0 }}>Valor (R$) *</label>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: formType === 'income' ? 'var(--success)' : 'var(--danger)' }}>
+                    {formType === 'income' ? '+ Entrada' : '- Saída'}
+                  </span>
+                </div>
                 <MoneyInput 
                   value={formAmountStr}
                   onChange={(v) => setFormAmountStr(v)}
@@ -742,19 +777,19 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                 />
               </div>
 
-              {/* Categoria com Atalhos Rápidos */}
+              {/* Categoria com Atalhos Rápidos Dinâmicos */}
               <div>
                 <label className="afic-label" style={{ marginBottom: '0.375rem', display: 'block' }}>
                   Categoria / Balde *
                 </label>
                 <div className="tx-category-chips">
-                  {QUICK_CATEGORIES.map(cat => {
+                  {(formType === 'income' ? INCOME_QUICK_CATEGORIES : EXPENSE_QUICK_CATEGORIES).map(cat => {
                     const isSelected = formCategory === cat;
                     return (
                       <button
                         key={cat}
                         type="button"
-                        className={`tx-chip ${isSelected ? 'tx-chip--active' : ''}`}
+                        className={`tx-chip ${isSelected ? (formType === 'income' ? 'tx-chip--income-active' : 'tx-chip--active') : ''}`}
                         onClick={() => setFormCategory(cat)}
                       >
                         {cat}
@@ -790,7 +825,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
               </div>
 
               {!editingTx && formMethod === 'Cartão de Crédito' && (
-                <div>
+                <div className="anim-fade-up">
                   <label className="afic-label">Número de Parcelas</label>
                   <input 
                     type="number"
@@ -802,15 +837,34 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                     style={{ width: '100%' }}
                   />
                   <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block', lineHeight: 1.2 }}>
-                    O valor total será dividido pelo número de parcelas informadas. As próximas parcelas serão lançadas automaticamente para os meses seguintes, com status pendente.
+                    O valor total será dividido em {formInstallments}x. As próximas parcelas serão lançadas automaticamente para os meses seguintes, com status pendente.
                   </small>
                 </div>
               )}
 
               <div className="afic-grid-2">
-                {/* Data */}
+                {/* Data com atalhos Hoje e Ontem */}
                 <div>
-                  <label className="afic-label">Data do Lançamento</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                    <label className="afic-label" style={{ margin: 0 }}>Data</label>
+                    <div style={{ display: 'flex', gap: '0.375rem' }}>
+                      <button 
+                        type="button" 
+                        style={{ background: 'transparent', border: 'none', color: 'var(--brand-primary)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                        onClick={() => setFormDate(new Date().toISOString().split('T')[0])}
+                      >
+                        Hoje
+                      </button>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>|</span>
+                      <button 
+                        type="button" 
+                        style={{ background: 'transparent', border: 'none', color: 'var(--brand-primary)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                        onClick={() => setFormDate(new Date(Date.now() - 86400000).toISOString().split('T')[0])}
+                      >
+                        Ontem
+                      </button>
+                    </div>
+                  </div>
                   <input 
                     type="date"
                     value={formDate}
@@ -830,8 +884,8 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                     className="tx-search-input"
                     style={{ width: '100%' }}
                   >
-                    <option value="completed">Concluído / Pago</option>
-                    <option value="pending">Pendente / Agendado</option>
+                    <option value="completed">{formType === 'income' ? 'Recebido' : 'Pago / Concluído'}</option>
+                    <option value="pending">{formType === 'income' ? 'A Receber' : 'Pendente / Agendado'}</option>
                   </select>
                 </div>
               </div>
@@ -841,7 +895,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                 <label className="afic-label">Observações (Opcional)</label>
                 <input 
                   type="text"
-                  placeholder="Ex: Parcelado em 3x..."
+                  placeholder="Ex: Pagamento referente ao projeto X..."
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                   className="tx-search-input"
@@ -849,19 +903,38 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
                 />
               </div>
 
-              {/* Botões do Formulário */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
-                <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)} disabled={submitting}>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsModalOpen(false)} 
+                  style={{ flex: 1 }}
+                >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Salvando...' : 'Salvar Lançamento'}
+                <Button 
+                  type="submit" 
+                  disabled={submitting} 
+                  style={{ 
+                    flex: 2, 
+                    background: formType === 'income' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : 'var(--grad-brand)',
+                    color: formType === 'income' ? '#ffffff' : 'var(--text-on-primary)',
+                    borderColor: 'transparent'
+                  }}
+                >
+                  {submitting 
+                    ? 'Salvando...' 
+                    : (editingTx 
+                      ? 'Salvar Alterações' 
+                      : (formType === 'income' ? '+ Confirmar Receita' : '- Confirmar Despesa'))}
                 </Button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+
 
       {/* Modal de Confirmação de Exclusão */}
       {txToDelete && (
