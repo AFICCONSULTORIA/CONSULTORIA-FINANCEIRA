@@ -29,16 +29,23 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  padding: 0.5rem 0.375rem;
+  padding: 0.5rem 0.2rem;
   min-height: 48px; /* Touch target min height */
   border-radius: var(--r-md);
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   transition: all var(--ease-fast);
   flex: 1;
   position: relative;
+}
+
+.bottom-nav__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .bottom-nav__item:active {

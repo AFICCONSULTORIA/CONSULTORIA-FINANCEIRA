@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Receipt, Calculator, Target, TrendingUp } from 'lucide-react';
+import { Home, Receipt, Calculator, Target, TrendingUp, Briefcase } from 'lucide-react';
 import './BottomNav.css';
 
 const navItems = [
   { to: '/client', label: 'Início', icon: Home },
-  { to: '/client/expenses', label: 'Lançamentos', icon: Receipt },
+  { to: '/client/portfolio', label: 'Carteira', icon: Briefcase },
+  { to: '/client/expenses', label: 'Lanç.', icon: Receipt },
   { to: '/client/calculator', label: 'Baldes', icon: Calculator },
   { to: '/client/goals', label: 'Metas', icon: Target },
   { to: '/client/simulator', label: 'Simulador', icon: TrendingUp },
