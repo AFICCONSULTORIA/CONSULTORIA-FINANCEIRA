@@ -2,6 +2,7 @@ import { AppRoutes } from './routes/AppRoutes';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
+import { AdminRoleSwitcher } from './components/ui/AdminRoleSwitcher';
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <AppRoutes />
+          <AdminRoleSwitcher />
           <Toaster position="top-right" toastOptions={{ style: { background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' } }} />
         </AuthProvider>
       </ThemeProvider>

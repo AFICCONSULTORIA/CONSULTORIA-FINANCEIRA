@@ -8,6 +8,8 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   role: 'client' | 'consultant' | 'admin' | null;
+  realRole: 'client' | 'consultant' | 'admin' | null;
+  setMockedRole?: (role: 'client' | 'consultant' | 'admin' | null) => void;
   hasCompletedOnboarding: boolean;
 }
 
@@ -17,8 +19,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<'client' | 'consultant' | 'admin' | null>(null);
+  const [realRole, setRealRole] = useState<'client' | 'consultant' | 'admin' | null>(null);
+  const [mockedRole, setMockedRoleState] = useState<'client' | 'consultant' | 'admin' | null>(() => {
+    return (localStorage.getItem('afic_mock_role') as any) || null;
+  });
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
+  const setMockedRole = (newRole: 'client' | 'consultant' | 'admin' | null) => {
+    if (newRole) {
+      localStorage.setItem('afic_mock_role', newRole);
+    } else {
+      localStorage.removeItem('afic_mock_role');
+    }
+    setMockedRoleState(newRole);
+  };
+
+  const role = realRole === 'admin' && mockedRole ? mockedRole : realRole;
 
   useEffect(() => {
     // Busca a sessão inicial
@@ -39,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchUserData(session.user.id);
       } else {
-        setRole(null);
+        setRealRole(null);
         setHasCompletedOnboarding(false);
         setLoading(false);
       }
@@ -57,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
         
       if (data && !error) {
-        setRole(data.role);
+        setRealRole(data.role);
         setHasCompletedOnboarding(data.has_completed_onboarding || false);
       }
     } catch (err) {
@@ -72,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, role, hasCompletedOnboarding }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, role, realRole, setMockedRole, hasCompletedOnboarding }}>
       {children}
     </AuthContext.Provider>
   );
