@@ -11,6 +11,7 @@ interface AuthContextType {
   realRole: 'client' | 'consultant' | 'admin' | null;
   setMockedRole?: (role: 'client' | 'consultant' | 'admin' | null) => void;
   hasCompletedOnboarding: boolean;
+  hasPortfolioAccess: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -24,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (localStorage.getItem('afic_mock_role') as any) || null;
   });
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [hasPortfolioAccess, setHasPortfolioAccess] = useState(false);
 
   const setMockedRole = (newRole: 'client' | 'consultant' | 'admin' | null) => {
     if (newRole) {
@@ -57,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setRealRole(null);
         setHasCompletedOnboarding(false);
+        setHasPortfolioAccess(false);
         setLoading(false);
       }
     });
@@ -68,13 +71,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('role, has_completed_onboarding')
+        .select('role, has_completed_onboarding, has_portfolio_access')
         .eq('id', userId)
         .single();
         
       if (data && !error) {
         setRealRole(data.role);
         setHasCompletedOnboarding(data.has_completed_onboarding || false);
+        setHasPortfolioAccess(data.has_portfolio_access || false);
       }
     } catch (err) {
       console.error("Erro ao buscar papel do usuário", err);
@@ -88,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, role, realRole, setMockedRole, hasCompletedOnboarding }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, role, realRole, setMockedRole, hasCompletedOnboarding, hasPortfolioAccess }}>
       {children}
     </AuthContext.Provider>
   );

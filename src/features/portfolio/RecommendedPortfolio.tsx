@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 import { ClientPortfolioManager, type ClientAsset } from './ClientPortfolioManager';
 import { PortfolioAllocationComparison } from './PortfolioAllocationComparison';
+import { PortfolioPaywall } from './PortfolioPaywall';
 
 export interface RecommendedAsset {
   id: string;
@@ -45,68 +46,18 @@ export const RECOMMENDED_PROFILES: PortfolioProfile[] = [
     badge: 'Conservador / Preservação',
     badgeBg: 'rgba(34, 197, 94, 0.15)',
     badgeColor: 'var(--success)',
-    description: 'Foco em Renda Fixa com liquidez, títulos públicos e fundos imobiliários de tijolo/papel de alta segurança.',
+    description: 'Foco em Renda Fixa com liquidez, títulos públicos e FIIs de tijolo/papel de alta segurança.',
     assets: [
-      {
-        id: 'c1',
-        ticker: 'TESOURO SELIC 2029',
-        name: 'Tesouro Selic Pós-Fixado',
-        category: 'Renda Fixa',
-        currentPrice: 14850.00,
-        maxPrice: 0,
-        dy: 11.7,
-        plPvP: '100% Selic',
-        targetWeight: 40,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Liquidez diária com risco soberano e rendimento acompanhar de perto a taxa básica de juros (Selic). Ideal para reserva e baixo risco.',
-        highlights: ['Garantia Soberana', 'Liquidez Diária', 'Baixo Risco']
-      },
-      {
-        id: 'c2',
-        ticker: 'TESOURO IPCA+ 2035',
-        name: 'Tesouro IPCA+ com Juros Semestrais',
-        category: 'Renda Fixa',
-        currentPrice: 3120.00,
-        maxPrice: 0,
-        dy: 6.2,
-        plPvP: 'IPCA + 6.2%',
-        targetWeight: 30,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Garante rendimento real acima da inflação com poder de compra blindado no longo prazo.',
-        highlights: ['Proteção Inflacionária', 'Ganho Real', 'Risco Soberano']
-      },
-      {
-        id: 'c3',
-        ticker: 'KNCR11',
-        name: 'Kinea Rendimento Imobiliário',
-        category: 'FIIs',
-        currentPrice: 101.80,
-        maxPrice: 106.00,
-        dy: 12.1,
-        plPvP: '1.01x P/VP',
-        targetWeight: 15,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Fundo imobiliário focado em papéis de crédito privado de primeira linha (CRIs) atrelados ao CDI.',
-        highlights: ['Indexado ao CDI', 'Gestão Kinea', 'Proventos Mensais']
-      },
-      {
-        id: 'c4',
-        ticker: 'HGLG11',
-        name: 'CSHG Logística FII',
-        category: 'FIIs',
-        currentPrice: 161.50,
-        maxPrice: 172.00,
-        dy: 8.9,
-        plPvP: '0.98x P/VP',
-        targetWeight: 15,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Galpões logísticos de alto padrão técnico em localizações estratégicas de consumo no Brasil.',
-        highlights: ['Galpões AAA', 'Vacância Baixa', 'Renda Estável']
-      }
+      { id: 'c1', ticker: 'TESOURO SELIC 2029', name: 'Tesouro Selic Pós-Fixado', category: 'Renda Fixa', currentPrice: 14850.00, maxPrice: 0, dy: 11.7, plPvP: '100% Selic', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Liquidez diária com risco soberano. Ideal para reserva de emergência.', highlights: ['Garantia Soberana', 'Liquidez Diária', 'Baixo Risco'] },
+      { id: 'c2', ticker: 'TESOURO IPCA+ 2035', name: 'Tesouro IPCA+ c/ Juros', category: 'Renda Fixa', currentPrice: 3120.00, maxPrice: 0, dy: 6.2, plPvP: 'IPCA + 6.2%', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Garante rendimento real acima da inflação com poder de compra blindado no longo prazo.', highlights: ['Proteção Inflacionária', 'Ganho Real', 'Risco Soberano'] },
+      { id: 'c3', ticker: 'CDB MASTER', name: 'CDB Banco Master', category: 'Renda Fixa', currentPrice: 1000.00, maxPrice: 0, dy: 12.5, plPvP: '120% CDI', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'CDB com alta rentabilidade atrelada ao CDI e proteção do FGC.', highlights: ['Garantia FGC', 'Alta Rentabilidade', 'Pós-Fixado'] },
+      { id: 'c4', ticker: 'LCI CAIXA', name: 'LCI Caixa Econômica', category: 'Renda Fixa', currentPrice: 1000.00, maxPrice: 0, dy: 9.8, plPvP: '95% CDI', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Isenção de IR com segurança institucional forte, rendimento atrativo.', highlights: ['Isento de IR', 'Baixíssimo Risco', 'Garantia FGC'] },
+      { id: 'c5', ticker: 'KNCR11', name: 'Kinea Rendimento Imobiliário', category: 'FIIs', currentPrice: 101.80, maxPrice: 106.00, dy: 12.1, plPvP: '1.01x P/VP', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Fundo imobiliário focado em papéis de crédito privado de primeira linha (CRIs) atrelados ao CDI.', highlights: ['Indexado ao CDI', 'Gestão Kinea', 'Proventos Mensais'] },
+      { id: 'c6', ticker: 'HGLG11', name: 'CSHG Logística FII', category: 'FIIs', currentPrice: 161.50, maxPrice: 172.00, dy: 8.9, plPvP: '0.98x P/VP', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Galpões logísticos de alto padrão técnico em localizações estratégicas de consumo no Brasil.', highlights: ['Galpões AAA', 'Vacância Baixa', 'Renda Estável'] },
+      { id: 'c7', ticker: 'VISC11', name: 'Vinci Shopping Centers', category: 'FIIs', currentPrice: 115.40, maxPrice: 125.00, dy: 8.5, plPvP: '0.92x P/VP', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Fundo de shoppings com portfólio diversificado em várias regiões do Brasil.', highlights: ['Recuperação Varejo', 'Diversificação', 'Dividendos Crescentes'] },
+      { id: 'c8', ticker: 'MXRF11', name: 'Maxi Renda FII', category: 'FIIs', currentPrice: 10.30, maxPrice: 11.00, dy: 13.2, plPvP: '1.03x P/VP', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Fundo de papel bastante pulverizado, sendo porta de entrada para investidores iniciantes.', highlights: ['Ticket Baixo', 'Alto DY', 'Alta Liquidez'] },
+      { id: 'c9', ticker: 'BBAS3', name: 'Banco do Brasil', category: 'Ações', currentPrice: 28.50, maxPrice: 32.00, dy: 11.0, plPvP: '4.5x P/L', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Banco sólido da estratégia BESST, com resultados consistentes e dividend yield excelente.', highlights: ['Valuation Atrativo', 'Dividendos', 'Forte no Agro'] },
+      { id: 'c10', ticker: 'TAEE11', name: 'Transmissora Aliança', category: 'Ações', currentPrice: 35.80, maxPrice: 40.00, dy: 10.2, plPvP: '1.8x P/VP', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Setor elétrico altamente defensivo (estratégia BESST). Contratos longos atrelados à inflação.', highlights: ['Receita Previsível', 'Defensiva', 'Dividendos Constantes'] }
     ]
   },
   {
@@ -117,96 +68,18 @@ export const RECOMMENDED_PROFILES: PortfolioProfile[] = [
     badgeColor: '#3b82f6',
     description: 'Combinação ideal entre Renda Fixa, FIIs pagadores de dividendos e Ações resilientes de valor.',
     assets: [
-      {
-        id: 'm1',
-        ticker: 'ITUB4',
-        name: 'Itaú Unibanco S.A.',
-        category: 'Ações',
-        currentPrice: 32.40,
-        maxPrice: 38.00,
-        dy: 6.8,
-        plPvP: '8.2x P/L',
-        targetWeight: 20,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Maior banco privado da América Latina, apresentando ROE elevado (>20%) e consistência histórica na entrega de proventos.',
-        highlights: ['ROE > 20%', 'Líder Financeiro', 'Pagador de Proventos']
-      },
-      {
-        id: 'm2',
-        ticker: 'TAEE11',
-        name: 'Transmissora Aliança de Energia',
-        category: 'Ações',
-        currentPrice: 35.80,
-        maxPrice: 40.00,
-        dy: 10.2,
-        plPvP: '1.8x P/VP',
-        targetWeight: 15,
-        riskLevel: 'Médio',
-        status: 'COMPRAR',
-        thesis: 'Atua no setor de transmissão de energia elétrica (estratégia BESST), conhecido por ter receitas previsíveis (RAP) e contratos longos reajustados pela inflação. Excelente pagadora de dividendos.',
-        highlights: ['Receita Previsível', 'Dividendos Altos', 'Setor de Energia']
-      },
-      {
-        id: 'm3',
-        ticker: 'HGLG11',
-        name: 'CSHG Logística FII',
-        category: 'FIIs',
-        currentPrice: 161.50,
-        maxPrice: 172.00,
-        dy: 8.9,
-        plPvP: '0.98x P/VP',
-        targetWeight: 20,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Fundo imobiliário logístico com imóveis classe A e inquilinos de grande porte comercial.',
-        highlights: ['Imóveis Próprios', 'Dividendos Isentos', 'Localização Top']
-      },
-      {
-        id: 'm4',
-        ticker: 'KNCR11',
-        name: 'Kinea Rendimento Imobiliário',
-        category: 'FIIs',
-        currentPrice: 101.80,
-        maxPrice: 106.00,
-        dy: 12.1,
-        plPvP: '1.01x P/VP',
-        targetWeight: 15,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Excelente retorno em renda fixa imobiliária via CRIs de alta liquidez.',
-        highlights: ['Retorno CDI+', 'Portfólio Pulverizado', 'Sem IR no Dividendo']
-      },
-      {
-        id: 'm5',
-        ticker: 'TESOURO IPCA+ 2035',
-        name: 'Tesouro IPCA+ 2035',
-        category: 'Renda Fixa',
-        currentPrice: 3120.00,
-        maxPrice: 0,
-        dy: 6.2,
-        plPvP: 'IPCA + 6.2%',
-        targetWeight: 15,
-        riskLevel: 'Baixo',
-        status: 'COMPRAR',
-        thesis: 'Proteção contra surtos inflacionários com ganho real contratado no Tesouro Direto.',
-        highlights: ['Ganho Real Garantido', 'Proteção da Moeda', 'Título Público']
-      },
-      {
-        id: 'm6',
-        ticker: 'IVVB11',
-        name: 'iShares S&P 500 ETF',
-        category: 'Internacional',
-        currentPrice: 298.50,
-        maxPrice: 320.00,
-        dy: 1.4,
-        plPvP: '22.4x P/L',
-        targetWeight: 15,
-        riskLevel: 'Médio',
-        status: 'COMPRAR',
-        thesis: 'Diversificação geográfica e cambial investindo em dólar nas 500 maiores empresas dos Estados Unidos.',
-        highlights: ['Moeda Forte', 'Gigantes Globais', 'Diversificação EUA']
-      }
+      { id: 'm1', ticker: 'TESOURO IPCA+ 2035', name: 'Tesouro IPCA+ 2035', category: 'Renda Fixa', currentPrice: 3120.00, maxPrice: 0, dy: 6.2, plPvP: 'IPCA + 6.2%', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Proteção contra surtos inflacionários com ganho real contratado.', highlights: ['Ganho Real Garantido', 'Proteção', 'Título Público'] },
+      { id: 'm2', ticker: 'CDB ABC', name: 'CDB Banco ABC Brasil', category: 'Renda Fixa', currentPrice: 1000.00, maxPrice: 0, dy: 11.5, plPvP: '115% CDI', targetWeight: 5, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Banco especializado em crédito corporativo de baixo risco, ótimo rendimento.', highlights: ['Liquidez', 'Baixo Risco', 'FGC'] },
+      { id: 'm3', ticker: 'CRA JBS', name: 'CRA JBS IPCA+', category: 'Renda Fixa', currentPrice: 1000.00, maxPrice: 0, dy: 7.0, plPvP: 'IPCA + 7.0%', targetWeight: 5, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Isenção de IR com prêmio de risco adequado em empresa gigante de alimentos.', highlights: ['Isento de IR', 'Proteção Inflação', 'Prêmio Alto'] },
+      { id: 'm4', ticker: 'HGLG11', name: 'CSHG Logística FII', category: 'FIIs', currentPrice: 161.50, maxPrice: 172.00, dy: 8.9, plPvP: '0.98x P/VP', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Fundo imobiliário logístico de alta qualidade e localização.', highlights: ['Imóveis Próprios', 'Sem IR no Dividendo', 'Localização'] },
+      { id: 'm5', ticker: 'KNCR11', name: 'Kinea Rendimento Imobiliário', category: 'FIIs', currentPrice: 101.80, maxPrice: 106.00, dy: 12.1, plPvP: '1.01x P/VP', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'CRIs indexados ao CDI para manter altos rendimentos sem risco direcional.', highlights: ['Retorno CDI+', 'Pulverizado', 'Isento'] },
+      { id: 'm6', ticker: 'BTLG11', name: 'BTG Pactual Logística', category: 'FIIs', currentPrice: 102.50, maxPrice: 108.00, dy: 9.2, plPvP: '0.95x P/VP', targetWeight: 5, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Galpões modernos focados em e-commerce e logística urbana (last-mile).', highlights: ['Logística Last-Mile', 'Gestão BTG', 'Crescimento'] },
+      { id: 'm7', ticker: 'ITUB4', name: 'Itaú Unibanco S.A.', category: 'Ações', currentPrice: 32.40, maxPrice: 38.00, dy: 6.8, plPvP: '8.2x P/L', targetWeight: 10, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Maior banco privado, ROE elevado e consistência. Pilar (Bancos) do BESST.', highlights: ['ROE > 20%', 'Líder Financeiro', 'Bancos'] },
+      { id: 'm8', ticker: 'TAEE11', name: 'Transmissora Aliança', category: 'Ações', currentPrice: 35.80, maxPrice: 40.00, dy: 10.2, plPvP: '1.8x P/VP', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Atua na transmissão de energia. Receitas previsíveis e alta distribuição. Pilar (Energia) BESST.', highlights: ['Energia Elétrica', 'Receita Estável', 'Defensiva'] },
+      { id: 'm9', ticker: 'BBSE3', name: 'BB Seguridade', category: 'Ações', currentPrice: 33.20, maxPrice: 38.00, dy: 9.5, plPvP: '8.5x P/L', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Negócio asset-light de altíssima geração de caixa. Pilar (Seguros) do BESST.', highlights: ['Seguros', 'Alta Geração Caixa', 'Asset Light'] },
+      { id: 'm10', ticker: 'VIVT3', name: 'Telefônica (Vivo)', category: 'Ações', currentPrice: 52.40, maxPrice: 60.00, dy: 7.8, plPvP: '13.0x P/L', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Líder de telecom com forte infraestrutura de fibra. Pilar (Telecom) do BESST.', highlights: ['Telecomunicações', 'Liderança', 'Fibra'] },
+      { id: 'm11', ticker: 'IVVB11', name: 'iShares S&P 500 ETF', category: 'Internacional', currentPrice: 298.50, maxPrice: 320.00, dy: 1.4, plPvP: '22.4x P/L', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Diversificação geográfica nas 500 maiores empresas dos Estados Unidos (proteção em dólar).', highlights: ['Moeda Forte', 'Gigantes Globais', 'EUA'] },
+      { id: 'm12', ticker: 'WRLD11', name: 'Investo Global ETF', category: 'Internacional', currentPrice: 85.20, maxPrice: 95.00, dy: 1.2, plPvP: '20.0x P/L', targetWeight: 5, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Exposição mundial a mais de 9000 empresas de países desenvolvidos e emergentes.', highlights: ['Diversificação Global', 'Proteção Total', 'Múltiplos Mercados'] }
     ]
   },
   {
@@ -215,104 +88,30 @@ export const RECOMMENDED_PROFILES: PortfolioProfile[] = [
     badge: 'Arrojado / Crescimento',
     badgeBg: 'rgba(234, 179, 8, 0.15)',
     badgeColor: 'var(--brand-primary)',
-    description: 'Foco total em valorização de capital no longo prazo com Ações de alto crescimento, B3 e ativos globais/cripto.',
+    description: 'Foco total em valorização de capital no longo prazo com Ações BESST, Crescimento e ativos globais/cripto.',
     assets: [
-      {
-        id: 'a1',
-        ticker: 'BBSE3',
-        name: 'BB Seguridade Participações S.A.',
-        category: 'Ações',
-        currentPrice: 33.20,
-        maxPrice: 38.00,
-        dy: 9.5,
-        plPvP: '8.5x P/L',
-        targetWeight: 25,
-        riskLevel: 'Médio',
-        status: 'COMPRAR',
-        thesis: 'Braço de seguros, previdência e capitalização do Banco do Brasil. Negócio "asset-light" com altíssima geração de caixa, sendo pilar (Seguros) da estratégia BESST.',
-        highlights: ['Baixa Necessidade de Capital', 'Alto Dividend Yield', 'Setor Defensivo']
-      },
-      {
-        id: 'a2',
-        ticker: 'SAPR4',
-        name: 'Companhia de Saneamento do Paraná',
-        category: 'Ações',
-        currentPrice: 5.60,
-        maxPrice: 6.50,
-        dy: 6.5,
-        plPvP: '0.7x P/VP',
-        targetWeight: 20,
-        riskLevel: 'Alto',
-        status: 'COMPRAR',
-        thesis: 'Empresa do setor de saneamento básico (estratégia BESST). Atuação em um setor perene e defensivo, sendo negociada abaixo do seu valor patrimonial com dividendos consistentes.',
-        highlights: ['Setor Perene', 'Valuation Descontado', 'Serviço Essencial']
-      },
-      {
-        id: 'a3',
-        ticker: 'VIVT3',
-        name: 'Telefônica Brasil S.A. (Vivo)',
-        category: 'Ações',
-        currentPrice: 52.40,
-        maxPrice: 60.00,
-        dy: 7.8,
-        plPvP: '13.0x P/L',
-        targetWeight: 15,
-        riskLevel: 'Médio',
-        status: 'COMPRAR',
-        thesis: 'Líder absoluta no setor de telecomunicações brasileiro (estratégia BESST). Possui infraestrutura robusta de fibra e alta geração de caixa, permitindo forte distribuição de proventos.',
-        highlights: ['Liderança de Mercado', 'Geração de Caixa Forte', 'Setor Telecom']
-      },
-      {
-        id: 'a4',
-        ticker: 'IVVB11',
-        name: 'iShares S&P 500 ETF',
-        category: 'Internacional',
-        currentPrice: 298.50,
-        maxPrice: 320.00,
-        dy: 1.4,
-        plPvP: '22.4x P/L',
-        targetWeight: 20,
-        riskLevel: 'Médio',
-        status: 'COMPRAR',
-        thesis: 'Exposição direta aos líderes de tecnologia e inovação mundial (Apple, Microsoft, Nvidia, Meta, Alphabet).',
-        highlights: ['Exposição em Dólar', 'Líderes de IA', 'Top Empresas Mundiais']
-      },
-      {
-        id: 'a5',
-        ticker: 'ALZR11',
-        name: 'Alianza Trust Renda Imobiliária',
-        category: 'FIIs',
-        currentPrice: 112.00,
-        maxPrice: 118.00,
-        dy: 9.1,
-        plPvP: '1.02x P/VP',
-        targetWeight: 10,
-        riskLevel: 'Médio',
-        status: 'COMPRAR',
-        thesis: 'Fundo Imobiliário atípico de galpões e centros operacionais com contratos longos de 10+ anos e reajuste por inflação.',
-        highlights: ['Contratos Atípicos', 'Inquilinos Corporativos', 'Proteção Inflação']
-      },
-      {
-        id: 'a6',
-        ticker: 'HASH11',
-        name: 'Hashdex Nasdaq Crypto ETF',
-        category: 'Cripto',
-        currentPrice: 48.00,
-        maxPrice: 65.00,
-        dy: 0,
-        plPvP: 'Indexado Nasdaq Crypto',
-        targetWeight: 10,
-        riskLevel: 'Alto',
-        status: 'COMPRAR',
-        thesis: 'Cesta diversificada dos principais criptoativos globais (Bitcoin, Ethereum, Solana) regulada pela CVM.',
-        highlights: ['Cripto Regulado', 'Bitcoin & Ethereum', 'Alto Potencial Alpha']
-      }
+      { id: 'a1', ticker: 'TESOURO IPCA+ 2045', name: 'Tesouro IPCA+ Longo', category: 'Renda Fixa', currentPrice: 1200.00, maxPrice: 0, dy: 6.5, plPvP: 'IPCA + 6.5%', targetWeight: 5, riskLevel: 'Alto', status: 'COMPRAR', thesis: 'Marcação a mercado forte em cenários de queda de juros com carrego alto.', highlights: ['Marcação a Mercado', 'Longo Prazo', 'Ganho Real'] },
+      { id: 'a2', ticker: 'DEB VALE', name: 'Debênture Vale IPCA+', category: 'Renda Fixa', currentPrice: 1000.00, maxPrice: 0, dy: 6.0, plPvP: 'IPCA + 6.0%', targetWeight: 5, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Crédito premium de gigante corporativa, proteção inflacionária isenta de IR.', highlights: ['Isento de IR', 'Crédito Premium', 'Proteção'] },
+      { id: 'a3', ticker: 'ALZR11', name: 'Alianza Trust Renda', category: 'FIIs', currentPrice: 112.00, maxPrice: 118.00, dy: 9.1, plPvP: '1.02x P/VP', targetWeight: 5, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Fundo atípico com contratos longos (10+ anos) e reajuste garantido por inflação.', highlights: ['Contratos Atípicos', 'Inquilinos Fortes', 'Proteção'] },
+      { id: 'a4', ticker: 'KNIP11', name: 'Kinea Índices de Preços', category: 'FIIs', currentPrice: 94.50, maxPrice: 100.00, dy: 11.5, plPvP: '0.96x P/VP', targetWeight: 5, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Fundo de CRIs atrelados à inflação (IPCA), excelente para manutenção do poder de compra.', highlights: ['Proteção Inflação', 'Gestão Kinea', 'Desconto'] },
+      { id: 'a5', ticker: 'BBAS3', name: 'Banco do Brasil', category: 'Ações', currentPrice: 28.50, maxPrice: 32.00, dy: 11.0, plPvP: '4.5x P/L', targetWeight: 7, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Pilar Bancos (BESST). Valuation descontado com dividend yield duplo dígito.', highlights: ['Bancos', 'Dividendos', 'Desconto'] },
+      { id: 'a6', ticker: 'EGIE3', name: 'Engie Brasil', category: 'Ações', currentPrice: 42.10, maxPrice: 48.00, dy: 8.5, plPvP: '12.0x P/L', targetWeight: 7, riskLevel: 'Baixo', status: 'COMPRAR', thesis: 'Pilar Energia (BESST). Matriz 100% renovável e forte capacidade de execução de novos projetos.', highlights: ['Energia Renovável', 'Execução', 'ESG'] },
+      { id: 'a7', ticker: 'BBSE3', name: 'BB Seguridade', category: 'Ações', currentPrice: 33.20, maxPrice: 38.00, dy: 9.5, plPvP: '8.5x P/L', targetWeight: 7, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Pilar Seguros (BESST). Crescimento em prêmios e sinistralidade controlada.', highlights: ['Seguros', 'Rentabilidade', 'Sem CAPEX'] },
+      { id: 'a8', ticker: 'SAPR4', name: 'Sanepar', category: 'Ações', currentPrice: 5.60, maxPrice: 6.50, dy: 6.5, plPvP: '0.7x P/VP', targetWeight: 7, riskLevel: 'Alto', status: 'COMPRAR', thesis: 'Pilar Saneamento (BESST). Monopólio natural descontado com novo marco do saneamento.', highlights: ['Saneamento', 'Desconto P/VP', 'Monopólio'] },
+      { id: 'a9', ticker: 'VIVT3', name: 'Telefônica (Vivo)', category: 'Ações', currentPrice: 52.40, maxPrice: 60.00, dy: 7.8, plPvP: '13.0x P/L', targetWeight: 7, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Pilar Telecom (BESST). Expansão acelerada de fibra e controle de custos operacionais.', highlights: ['Telecom', 'Fibra Óptica', 'Liderança'] },
+      { id: 'a10', ticker: 'WEGE3', name: 'WEG S.A.', category: 'Ações', currentPrice: 42.50, maxPrice: 52.00, dy: 2.4, plPvP: '28.5x P/L', targetWeight: 5, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Ação de crescimento secular, líder global em motores elétricos, beneficiada por dólar.', highlights: ['Crescimento', 'Global', 'Tecnologia'] },
+      { id: 'a11', ticker: 'RENT3', name: 'Localiza', category: 'Ações', currentPrice: 50.10, maxPrice: 65.00, dy: 2.1, plPvP: '18.0x P/L', targetWeight: 5, riskLevel: 'Alto', status: 'COMPRAR', thesis: 'Liderança absoluta em mobilidade e aluguel de carros, escala traz vantagem competitiva intransponível.', highlights: ['Mobilidade', 'Escala Absoluta', 'Crescimento'] },
+      { id: 'a12', ticker: 'PRIO3', name: 'PetroRio', category: 'Ações', currentPrice: 45.20, maxPrice: 55.00, dy: 0, plPvP: '8.0x P/L', targetWeight: 5, riskLevel: 'Alto', status: 'COMPRAR', thesis: 'Produtora independente de petróleo mais eficiente do mundo (lifting cost muito baixo).', highlights: ['Eficiência Extrema', 'O&G', 'Crescimento'] },
+      { id: 'a13', ticker: 'IVVB11', name: 'iShares S&P 500 ETF', category: 'Internacional', currentPrice: 298.50, maxPrice: 320.00, dy: 1.4, plPvP: '22.4x P/L', targetWeight: 10, riskLevel: 'Médio', status: 'COMPRAR', thesis: 'Exposição direta aos líderes globais de inovação e tecnologia do S&P 500.', highlights: ['Dólar', 'EUA', 'Líderes de Mercado'] },
+      { id: 'a14', ticker: 'NASD11', name: 'Nasdaq 100 ETF', category: 'Internacional', currentPrice: 12.50, maxPrice: 15.00, dy: 0.5, plPvP: '28.0x P/L', targetWeight: 5, riskLevel: 'Alto', status: 'COMPRAR', thesis: 'Focado em tecnologia extrema, engloba Inteligência Artificial e Semiconductors.', highlights: ['Tech Pura', 'Nasdaq', 'Inteligência Artificial'] },
+      { id: 'a15', ticker: 'HASH11', name: 'Hashdex Nasdaq Crypto', category: 'Cripto', currentPrice: 48.00, maxPrice: 65.00, dy: 0, plPvP: 'N/A', targetWeight: 10, riskLevel: 'Alto', status: 'COMPRAR', thesis: 'Diversificação inteligente em criptomoedas com custódia regulada via ETF B3.', highlights: ['Criptomoedas', 'Regulação B3', 'Reserva de Valor'] }
     ]
   }
 ];
 
+
 export const RecommendedPortfolio: React.FC = () => {
-  const { user } = useAuth();
+  const { user, role, hasPortfolioAccess } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loadingRole, setLoadingRole] = useState(true);
   
@@ -480,24 +279,9 @@ export const RecommendedPortfolio: React.FC = () => {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="anim-fade-up" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: '2rem' }}>
-        <div style={{ 
-          width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.1)', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: 'var(--brand-primary)',
-          border: '1px solid rgba(234, 179, 8, 0.2)'
-        }}>
-          <Lock size={36} />
-        </div>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
-          Módulo em Construção
-        </h2>
-        <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', lineHeight: 1.6 }}>
-          A funcionalidade de Carteira Inteligente AFIC está sendo preparada pelos nossos especialistas e estará disponível em breve para você!
-        </p>
-      </div>
-    );
+  // Bloqueia acesso para clientes que não compraram
+  if (role === 'client' && !hasPortfolioAccess) {
+    return <PortfolioPaywall />;
   }
 
   return (
