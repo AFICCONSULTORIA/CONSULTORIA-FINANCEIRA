@@ -47,7 +47,7 @@ export const PortfolioPaywall: React.FC = () => {
         marginBottom: '2.5rem',
         lineHeight: 1.6
       }}>
-        Tenha acesso exclusivo às nossas carteiras recomendadas estruturadas pela estratégia <strong>BESST</strong>. Maximize seus dividendos com segurança e rebalanceamento mensal profissional.
+        Tenha acesso exclusivo às nossas carteiras recomendadas estruturadas pela <strong>Estratégia dos Baldes</strong>. Maximize seus dividendos com segurança e rebalanceamento mensal profissional.
       </p>
 
       <div style={{
@@ -69,7 +69,7 @@ export const PortfolioPaywall: React.FC = () => {
         <Card style={{ padding: '1.5rem', textAlign: 'left', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
           <ShieldCheck color="var(--info)" size={24} style={{ flexShrink: 0 }} />
           <div>
-            <h4 style={{ fontWeight: 700, marginBottom: '0.25rem' }}>Proteção BESST</h4>
+            <h4 style={{ fontWeight: 700, marginBottom: '0.25rem' }}>Proteção dos Baldes</h4>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Foco em Bancos, Energia, Seguros, Saneamento e Telecom para segurança blindada.</p>
           </div>
         </Card>
