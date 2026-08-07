@@ -37,17 +37,18 @@ export const InvestmentSimulator: React.FC = () => {
       if (m % 12 === 0) {
         arr.push({
           year: `Ano ${m / 12}`,
-          value: Math.round(balance),
-          invested: monthlyContribution * m
+          total: Math.round(balance),
+          invested: principal + (monthlyContribution * m)
         });
       }
     }
     return arr;
-  }, [monthlyContributionStr, years, annualRate]);
+  }, [principalStr, monthlyContributionStr, years, annualRate]);
 
-  const finalValue = data.length > 0 ? data[data.length - 1].value : 0;
+  const finalValue = data.length > 0 ? data[data.length - 1].total : 0;
+  const principal = parseFloat(principalStr.replace(/\./g, '').replace(',', '.')) || 0;
   const monthlyContribution = parseFloat(monthlyContributionStr.replace(/\./g, '').replace(',', '.')) || 0;
-  const totalInvested = monthlyContribution * years * 12;
+  const totalInvested = principal + (monthlyContribution * years * 12);
   const totalInterest = finalValue - totalInvested;
 
   return (
@@ -59,7 +60,13 @@ export const InvestmentSimulator: React.FC = () => {
         </p>
       </div>
 
-      <div className="afic-grid-3" style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div>
+          <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Capital Inicial</label>
+          <div style={{ marginTop: '0.25rem' }}>
+            <MoneyInput value={principalStr} onChange={v => setPrincipalStr(v)} />
+          </div>
+        </div>
         <div>
           <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Aporte Mensal</label>
           <div style={{ marginTop: '0.25rem' }}>
