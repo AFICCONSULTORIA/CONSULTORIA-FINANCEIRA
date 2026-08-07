@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { TrendingUp, Activity, Target, Loader2 } from 'lucide-react';
+import { TrendingUp, Activity, Target, Loader2, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { TransactionManager } from './components/TransactionManager';
@@ -33,6 +33,7 @@ export const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [clientData, setClientData] = useState<any>(null);
+  const [actionToConfirm, setActionToConfirm] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -87,7 +88,15 @@ export const ClientDashboard: React.FC = () => {
   };
 
   const handleToggleAction = async (action: any) => {
-    const newStatus = action.status === 'pending' ? 'completed' : 'pending';
+    if (action.status === 'pending') {
+      setActionToConfirm(action);
+    } else {
+      executeToggleAction(action, 'pending');
+    }
+  };
+
+  const executeToggleAction = async (action: any, forceStatus?: string) => {
+    const newStatus = forceStatus || (action.status === 'pending' ? 'completed' : 'pending');
     try {
       const { error } = await supabase.from('action_plans').update({ status: newStatus }).eq('id', action.id);
       if (!error) {
@@ -219,6 +228,89 @@ export const ClientDashboard: React.FC = () => {
         </h2>
         <TransactionManager />
       </div>
+
+      {/* Modal de Confirmação de Ação */}
+      {actionToConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            padding: '2rem',
+            borderRadius: 'var(--r-lg)',
+            border: '1px solid var(--border-color)',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            textAlign: 'center',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setActionToConfirm(null)}
+              style={{
+                position: 'absolute', top: '1rem', right: '1rem',
+                background: 'transparent', border: 'none', color: 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={20} />
+            </button>
+            
+            <div style={{
+              width: '60px', height: '60px', borderRadius: '50%',
+              background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 1.5rem auto'
+            }}>
+              <Target size={32} />
+            </div>
+            
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Concluir Etapa?
+            </h3>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Você tem certeza que já concluiu a etapa <strong style={{ color: 'var(--text-primary)' }}>"{actionToConfirm.title}"</strong> do seu plano estratégico?
+            </p>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setActionToConfirm(null)}
+                style={{
+                  flex: 1, padding: '0.75rem', borderRadius: 'var(--r-md)',
+                  background: 'var(--bg-input)', color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)', cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Ainda não
+              </button>
+              <button 
+                onClick={() => {
+                  executeToggleAction(actionToConfirm, 'completed');
+                  setActionToConfirm(null);
+                }}
+                style={{
+                  flex: 1, padding: '0.75rem', borderRadius: 'var(--r-md)',
+                  background: 'var(--brand-primary)', color: '#fff',
+                  border: 'none', cursor: 'pointer',
+                  fontWeight: 600,
+                  boxShadow: '0 4px 12px rgba(100, 100, 255, 0.3)'
+                }}
+              >
+                Sim, concluí!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
