@@ -133,7 +133,7 @@ export const ConsultantDashboard: React.FC = () => {
             p.total_equity || 0
           );
           const newStatus = getScoreStatus(newScore);
-          const { data } = await supabase.from('financial_profiles').update({ health_score: newScore, status: newStatus }).eq('id', p.id).select();
+          const { data } = await supabase.from('financial_profiles').update({ health_score: newScore, status: newStatus }).eq('user_id', p.user_id).select();
           if (data && data.length > 0) successCount++;
         }
         
