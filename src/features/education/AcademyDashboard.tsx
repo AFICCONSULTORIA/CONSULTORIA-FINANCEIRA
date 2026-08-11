@@ -147,7 +147,7 @@ export const AcademyDashboard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedItem, setSelectedItem] = useState<EducationItem | null>(null);
-  const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [showPreview, _setShowPreview] = useState<boolean>(false);
   
   // Progress tracking in LocalStorage
   const [completedIds, setCompletedIds] = useState<string[]>(() => {
@@ -269,9 +269,9 @@ export const AcademyDashboard: React.FC = () => {
             </Button>
             
             {/* Direct preview toggle */}
-            <Button variant="outline" onClick={() => setShowPreview(true)}>
+            {/* <Button variant="outline" onClick={() => _setShowPreview(true)}>
               Visualizar Demonstração
-            </Button>
+            </Button> */}
           </div>
         </Card>
       </div>

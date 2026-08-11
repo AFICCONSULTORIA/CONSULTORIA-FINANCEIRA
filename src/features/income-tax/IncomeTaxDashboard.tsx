@@ -64,7 +64,7 @@ export const IncomeTaxDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Income for PGBL tax estimation
-  const [annualIncome, setAnnualIncome] = useState<number>(120000); // R$ 120k / ano por padrão
+  const [annualIncome, setAnnualIncome] = useState<number>(0); // R$ 0 / ano por padrão
 
   useEffect(() => {
     fetchDocuments();
