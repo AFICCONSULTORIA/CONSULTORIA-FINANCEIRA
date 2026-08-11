@@ -262,7 +262,7 @@ export const IncomeTaxDashboard: React.FC = () => {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <Button variant="outline" onClick={handleExportCSV}>
               <Download size={18} /> Exportar Relatório
             </Button>
