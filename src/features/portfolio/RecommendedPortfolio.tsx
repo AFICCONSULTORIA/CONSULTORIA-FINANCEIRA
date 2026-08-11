@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Edit2, Trash2, 
   RefreshCw, X, Search, 
-  Award, Wallet, PieChart, Lock, Shield
+  Award, Wallet, PieChart, Lock, Shield, GraduationCap
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -111,6 +112,7 @@ export const RECOMMENDED_PROFILES: PortfolioProfile[] = [
 
 
 export const RecommendedPortfolio: React.FC = () => {
+  const navigate = useNavigate();
   const { user, role, hasPortfolioAccess } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loadingRole, setLoadingRole] = useState(true);
@@ -364,6 +366,28 @@ export const RecommendedPortfolio: React.FC = () => {
           }}
         >
           <PieChart size={18} /> Comparativo & Sugestões {!isAdmin && '🔒'}
+        </button>
+
+        <button
+          onClick={() => navigate('/client/education')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.625rem 1.25rem',
+            borderRadius: 'var(--r-md)',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            border: '1px solid rgba(139, 92, 246, 0.4)',
+            background: 'rgba(139, 92, 246, 0.12)',
+            color: '#8B5CF6',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }}
+        >
+          <GraduationCap size={18} /> Academia AFIC 🔒
         </button>
       </div>
 

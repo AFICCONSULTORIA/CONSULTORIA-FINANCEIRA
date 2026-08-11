@@ -1,15 +1,15 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Receipt, Calculator, Target, TrendingUp, Briefcase } from 'lucide-react';
+import { Home, Receipt, Calculator, Target, TrendingUp, Briefcase, GraduationCap, FileText } from 'lucide-react';
 import './BottomNav.css';
 
 const navItems = [
   { to: '/client', label: 'Início', icon: Home },
+  { to: '/client/income-tax', label: 'IRPF', icon: FileText },
+  { to: '/client/education', label: 'Aulas 🔒', icon: GraduationCap },
   { to: '/client/portfolio', label: 'Carteira', icon: Briefcase },
   { to: '/client/expenses', label: 'Lanç.', icon: Receipt },
   { to: '/client/calculator', label: 'Baldes', icon: Calculator },
-  { to: '/client/goals', label: 'Metas', icon: Target },
-  { to: '/client/simulator', label: 'Simulador', icon: TrendingUp },
 ];
 
 export const BottomNav: React.FC = () => {

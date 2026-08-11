@@ -23,6 +23,8 @@ import { GoalTracker } from '../features/client-dashboard/components/GoalTracker
 import { InvestmentSimulator } from '../features/client-dashboard/components/InvestmentSimulator';
 import { TimeCalculator } from '../features/client-dashboard/components/TimeCalculator';
 import { TransactionManager } from '../features/client-dashboard/components/TransactionManager';
+import { AcademyDashboard } from '../features/education/AcademyDashboard';
+import { IncomeTaxDashboard } from '../features/income-tax/IncomeTaxDashboard';
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
@@ -84,6 +86,8 @@ export const AppRoutes: React.FC = () => (
         </PrivateRoute>
       }>
         <Route index element={<ClientDashboard />} />
+        <Route path="education" element={<AcademyDashboard />} />
+        <Route path="income-tax" element={<IncomeTaxDashboard />} />
         <Route path="portfolio" element={<ToolWrapper><RecommendedPortfolio /></ToolWrapper>} />
         <Route path="calculator" element={<ToolWrapper><BucketCalculator /></ToolWrapper>} />
         <Route path="time-calculator" element={<ToolWrapper><TimeCalculator /></ToolWrapper>} />
