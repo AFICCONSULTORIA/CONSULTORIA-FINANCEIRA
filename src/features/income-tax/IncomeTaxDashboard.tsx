@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   FileText, Plus, Trash2, Edit2, ShieldCheck, Download, 
   HelpCircle, Calculator, HeartPulse, GraduationCap, Shield, Users, 
-  Search, CheckCircle2, AlertTriangle, ArrowRight, DollarSign, ExternalLink
+  Search, AlertTriangle, DollarSign, ExternalLink
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -57,7 +57,7 @@ export const IncomeTaxDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'vault' | 'guide' | 'pgbl'>('vault');
   const [documents, setDocuments] = useState<TaxDocument[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDoc, setEditingDoc] = useState<TaxDocument | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
@@ -124,7 +124,7 @@ export const IncomeTaxDashboard: React.FC = () => {
         if (error) throw error;
       } else {
         // Insert Supabase
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('tax_documents')
           .insert({
             user_id: user.id,

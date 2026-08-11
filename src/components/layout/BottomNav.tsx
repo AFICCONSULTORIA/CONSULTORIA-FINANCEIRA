@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Receipt, Calculator, Target, TrendingUp, Briefcase, GraduationCap, FileText } from 'lucide-react';
+import { Home, Receipt, Calculator, Briefcase, GraduationCap, FileText } from 'lucide-react';
 import './BottomNav.css';
 
 const navItems = [

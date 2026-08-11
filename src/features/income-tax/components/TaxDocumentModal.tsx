@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, FileText, DollarSign, Calendar, Building, AlertCircle } from 'lucide-react';
+import { X, Upload, AlertCircle } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { supabase } from '../../../lib/supabase';
 

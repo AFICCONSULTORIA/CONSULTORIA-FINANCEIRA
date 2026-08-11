@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   GraduationCap, Play, BookOpen, Award, CheckCircle2, 
-  Search, Lightbulb, Shield, TrendingUp, DollarSign, Globe, Layers, ArrowRight, Star,
-  Lock, Wrench, Sparkles, ArrowLeft, Clock
+  Search, Shield, ArrowRight,
+  Lock, Wrench, Sparkles, ArrowLeft
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -215,7 +215,7 @@ export const AcademyDashboard: React.FC = () => {
             border: '2px solid rgba(139, 92, 246, 0.4)',
             display: 'flex', 
             alignItems: 'center', 
-            justify: 'center',
+            justifyContent: 'center',
             color: '#8B5CF6',
             boxShadow: '0 0 30px rgba(139, 92, 246, 0.3)'
           }}>
@@ -400,7 +400,7 @@ export const AcademyDashboard: React.FC = () => {
                     background: 'linear-gradient(135deg, #1e293b, #0f172a)',
                     display: 'flex',
                     alignItems: 'center',
-                    justify: 'center',
+                    justifyContent: 'center',
                     position: 'relative'
                   }}>
                     <div style={{ 
@@ -410,7 +410,7 @@ export const AcademyDashboard: React.FC = () => {
                       background: 'rgba(6, 182, 212, 0.9)', 
                       display: 'flex', 
                       alignItems: 'center', 
-                      justify: 'center',
+                      justifyContent: 'center',
                       boxShadow: '0 4px 12px rgba(6, 182, 212, 0.4)'
                     }}>
                       <Play size={22} color="#fff" fill="#fff" style={{ marginLeft: '3px' }} />
@@ -466,7 +466,7 @@ export const AcademyDashboard: React.FC = () => {
                   border: isDone ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid var(--border-color)',
                   display: 'flex',
                   flexDirection: 'column',
-                  justify: 'space-between'
+                  justifyContent: 'space-between'
                 }}
                 className="anim-fade-up"
               >
