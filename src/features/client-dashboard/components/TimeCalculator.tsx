@@ -9,7 +9,7 @@ export const TimeCalculator: React.FC = () => {
   const { user } = useAuth();
   const [income, setIncome] = useState<string>('');
   const [productValue, setProductValue] = useState<string>('');
-  const [workHoursPerMonth, setWorkHoursPerMonth] = useState<number>(220); // Padrão CLT
+  const [workHoursPerMonth, setWorkHoursPerMonth] = useState<string>('220'); // Padrão CLT
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -26,12 +26,13 @@ export const TimeCalculator: React.FC = () => {
   const parsedProduct = parseFloat(productValue.replace(/\./g, '').replace(',', '.')) || 0;
 
   const calculateTime = () => {
-    if (parsedIncome <= 0 || parsedProduct <= 0) return null;
+    const hoursNum = parseFloat(workHoursPerMonth) || 0;
+    if (parsedIncome <= 0 || parsedProduct <= 0 || hoursNum <= 0) return null;
 
-    const hourlyRate = parsedIncome / workHoursPerMonth;
+    const hourlyRate = parsedIncome / hoursNum;
     const totalHoursNeeded = parsedProduct / hourlyRate;
 
-    const days = Math.floor(totalHoursNeeded / (workHoursPerMonth / 22)); // assumindo 22 dias uteis por mes
+    const days = Math.floor(totalHoursNeeded / (hoursNum / 22)); // assumindo 22 dias uteis por mes
     const hours = Math.floor(totalHoursNeeded);
     const minutes = Math.round((totalHoursNeeded - hours) * 60);
 
@@ -62,7 +63,7 @@ export const TimeCalculator: React.FC = () => {
             <input 
               type="number" 
               value={workHoursPerMonth}
-              onChange={(e) => setWorkHoursPerMonth(Number(e.target.value))}
+              onChange={(e) => setWorkHoursPerMonth(e.target.value)}
             />
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Padrão CLT é 220h (44h semanais)</p>
           </div>
