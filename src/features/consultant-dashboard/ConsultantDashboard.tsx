@@ -180,14 +180,14 @@ export const ConsultantDashboard: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '3rem 2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '1.25rem 1rem 5.5rem', maxWidth: '1200px', margin: '0 auto' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Meus Clientes</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Visão geral da carteira de consultoria e status de saúde financeira.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <Button variant="outline" onClick={handleSyncScores} disabled={syncing}>
             {syncing ? <Loader2 className="anim-spin" size={18} /> : <Activity size={18} />} Recalcular Todos
           </Button>
@@ -197,7 +197,7 @@ export const ConsultantDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         <div className="stat-card" style={{ background: 'var(--bg-card)' }}>
           <span className="afic-metric-label">Total de Clientes</span>
           <span className="afic-metric-value">{totalClients}</span>
@@ -212,9 +212,9 @@ export const ConsultantDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--r-xl)', overflow: 'hidden' }}>
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ position: 'relative', width: '300px' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--r-xl)', overflowX: 'auto' }}>
+        <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
             <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 

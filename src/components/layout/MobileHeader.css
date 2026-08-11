@@ -92,6 +92,24 @@
   color: var(--danger);
 }
 
+.mobile-header__menu-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--ease-fast);
+}
+
+.mobile-header__menu-btn:active {
+  background: var(--brand-primary);
+  color: #0A0A0C;
+}
+
 @media (max-width: 768px) {
   .mobile-header {
     display: block;

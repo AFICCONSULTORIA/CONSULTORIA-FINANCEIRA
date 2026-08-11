@@ -39,6 +39,10 @@
   transition: all var(--ease-fast);
   flex: 1;
   position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .bottom-nav__label {

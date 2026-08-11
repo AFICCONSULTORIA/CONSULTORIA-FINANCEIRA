@@ -100,8 +100,8 @@ export const Reports: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '3rem 2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }} className="hide-on-print">
+    <div style={{ padding: '1.25rem 1rem 5.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }} className="hide-on-print">
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Relatórios</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Estatísticas da sua carteira de clientes e exportações em PDF.</p>
@@ -109,7 +109,7 @@ export const Reports: React.FC = () => {
         <Button variant="outline" onClick={handleExport}><Download size={18} /> Exportar Consolidado</Button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
         
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>

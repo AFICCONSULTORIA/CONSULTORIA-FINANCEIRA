@@ -53,10 +53,10 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg-app)', padding: '2rem' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--bg-app)', padding: '1.25rem 1rem 5rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: 'var(--r-md)' }}>
               <Shield size={24} color="var(--brand-primary)" />
@@ -71,7 +71,7 @@ export const AdminDashboard: React.FC = () => {
         </header>
 
         {/* Atalhos Rápidos para o Admin */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <Card style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => navigate('/consultor')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ background: 'var(--bg-app)', padding: '0.75rem', borderRadius: '50%' }}>
@@ -97,7 +97,7 @@ export const AdminDashboard: React.FC = () => {
           </Card>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           
           {/* Formulário de Novo Consultor */}
           <Card>
