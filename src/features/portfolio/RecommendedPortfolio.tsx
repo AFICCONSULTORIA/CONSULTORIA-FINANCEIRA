@@ -400,112 +400,15 @@ export const RecommendedPortfolio: React.FC = () => {
 
       {/* Tab 3: Comparativo & Sugestões */}
       {activeTab === 'comparison' && (
-        !isAdmin ? (
-          <Card style={{ 
-            padding: '3rem 2rem', 
-            textAlign: 'center', 
-            border: '1px solid var(--border-brand)',
-            background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.06) 0%, rgba(10, 10, 12, 0.95) 100%)',
-            boxShadow: 'var(--shadow-brand)'
-          }}>
-            <div style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              background: 'rgba(234, 179, 8, 0.15)', 
-              border: '1px solid var(--brand-primary)',
-              color: 'var(--brand-primary)',
-              padding: '0.375rem 1rem',
-              borderRadius: 'var(--r-full)',
-              fontSize: '0.8125rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              marginBottom: '1.5rem'
-            }}>
-              <Lock size={14} /> Recurso Exclusivo VIP
-            </div>
-
-            <div style={{ 
-              width: '70px', 
-              height: '70px', 
-              borderRadius: '50%', 
-              background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
-              border: '1px solid var(--border-brand)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.25rem auto'
-            }}>
-              <Shield size={36} color="var(--brand-primary)" />
-            </div>
-
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
-              Comparativo & Sugestões de Alocação 🔒
-            </h2>
-
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', maxWidth: '600px', margin: '0 auto 1.5rem auto' }}>
-              Acesso exclusivo ao comparativo de ativos e sugestões de rebalanceamento enviadas pelos consultores da AFIC.
-            </p>
-          </Card>
-        ) : (
-          <PortfolioAllocationComparison 
-            clientAssets={clientAssets}
-            recommendedAssets={assets}
-            onSelectTab={(tab) => setActiveTab(tab)}
-          />
-        )
+        <PortfolioAllocationComparison 
+          clientAssets={clientAssets}
+          recommendedAssets={assets}
+          onSelectTab={(tab) => setActiveTab(tab)}
+        />
       )}
 
       {/* Tab 2: Carteira Recomendada AFIC */}
       {activeTab === 'recommended' && (
-        !isAdmin ? (
-          <Card style={{ 
-            padding: '3rem 2rem', 
-            textAlign: 'center', 
-            border: '1px solid var(--border-brand)',
-            background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.06) 0%, rgba(10, 10, 12, 0.95) 100%)',
-            boxShadow: 'var(--shadow-brand)'
-          }}>
-            <div style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              background: 'rgba(234, 179, 8, 0.15)', 
-              border: '1px solid var(--brand-primary)',
-              color: 'var(--brand-primary)',
-              padding: '0.375rem 1rem',
-              borderRadius: 'var(--r-full)',
-              fontSize: '0.8125rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              marginBottom: '1.5rem'
-            }}>
-              <Lock size={14} /> Recurso Exclusivo VIP
-            </div>
-
-            <div style={{ 
-              width: '70px', 
-              height: '70px', 
-              borderRadius: '50%', 
-              background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
-              border: '1px solid var(--border-brand)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.25rem auto'
-            }}>
-              <Shield size={36} color="var(--brand-primary)" />
-            </div>
-
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
-              Carteira Recomendada AFIC 🔒
-            </h2>
-
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', maxWidth: '600px', margin: '0 auto 1.5rem auto' }}>
-              Acesso exclusivo às recomendações estratégicas de ativos selecionados com inteligência fundamentalista e tese da consultoria AFIC.
-            </p>
-          </Card>
-        ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Header AFIC Recommended */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -803,7 +706,6 @@ export const RecommendedPortfolio: React.FC = () => {
             })}
           </div>
         </div>
-        )
       )}
 
       {/* Modal Admin Add/Edit Recommended Asset */}
