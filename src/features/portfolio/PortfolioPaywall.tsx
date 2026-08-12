@@ -6,9 +6,7 @@ import { Card } from '../../components/ui/Card';
 
 export const PortfolioPaywall: React.FC = () => {
   const handleCheckout = () => {
-    toast('A assinatura estará disponível em breve! Estamos ajustando os últimos detalhes.', { icon: '🚧' });
-    // Integração futura com Stripe / Checkout
-    // window.open('https://buy.stripe.com/test_00w28qfSsasO9AO1teabK04', '_blank');
+    window.open('https://buy.stripe.com/cNiaEX7SZ25daMZbop3ZK00', '_blank');
   };
 
   return (
