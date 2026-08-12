@@ -343,7 +343,7 @@ export const RecommendedPortfolio: React.FC = () => {
             flexShrink: 0
           }}
         >
-          <Award size={18} /> Carteira Recomendada AFIC {!isAdmin && '🔒'}
+          <Award size={18} /> Carteira Recomendada AFIC
         </button>
 
         <button
@@ -365,7 +365,7 @@ export const RecommendedPortfolio: React.FC = () => {
             flexShrink: 0
           }}
         >
-          <PieChart size={18} /> Comparativo & Sugestões {!isAdmin && '🔒'}
+          <PieChart size={18} /> Comparativo & Sugestões
         </button>
 
         <button

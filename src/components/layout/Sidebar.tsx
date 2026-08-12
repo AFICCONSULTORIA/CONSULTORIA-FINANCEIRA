@@ -22,7 +22,7 @@ const SIDEBAR_LINKS = [
 export const Sidebar: React.FC = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, hasPortfolioAccess } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
@@ -42,6 +42,11 @@ export const Sidebar: React.FC = () => {
           const Icon = link.icon;
           const isActive = link.exact ? pathname === link.to : pathname.startsWith(link.to);
           
+          let label = link.label;
+          if (link.to === '/client/portfolio' && hasPortfolioAccess) {
+            label = 'Carteira AFIC';
+          }
+          
           return (
             <NavLink
               key={link.to}
@@ -49,7 +54,7 @@ export const Sidebar: React.FC = () => {
               className={`sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
             >
               <Icon size={20} />
-              <span>{link.label}</span>
+              <span>{label}</span>
             </NavLink>
           );
         })}

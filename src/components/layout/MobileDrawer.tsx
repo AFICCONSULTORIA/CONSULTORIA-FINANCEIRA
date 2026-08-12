@@ -38,7 +38,7 @@ const CONSULTANT_LINKS = [
 export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user, role, signOut } = useAuth();
+  const { user, role, signOut, hasPortfolioAccess } = useAuth();
 
   // Close drawer on route change
   useEffect(() => {
@@ -110,6 +110,11 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = link.exact ? pathname === link.to : pathname.startsWith(link.to);
+              
+              let label = link.label;
+              if (link.to === '/client/portfolio' && hasPortfolioAccess) {
+                label = 'Carteira AFIC';
+              }
 
               return (
                 <NavLink
@@ -121,7 +126,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
                   <div className="mobile-drawer__link-icon">
                     <Icon size={20} />
                   </div>
-                  <span>{link.label}</span>
+                  <span>{label}</span>
                 </NavLink>
               );
             })}
