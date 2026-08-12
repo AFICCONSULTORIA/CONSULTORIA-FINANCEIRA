@@ -1,6 +1,5 @@
 import React from 'react';
 import { Lock, TrendingUp, ShieldCheck, PieChart, ArrowRight } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
