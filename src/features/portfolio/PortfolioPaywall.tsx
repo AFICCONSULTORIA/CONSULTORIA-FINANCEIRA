@@ -4,9 +4,17 @@ import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
+import { useAuth } from '../../context/AuthContext';
+
 export const PortfolioPaywall: React.FC = () => {
+  const { user } = useAuth();
+
   const handleCheckout = () => {
-    window.open('https://buy.stripe.com/cNiaEX7SZ25daMZbop3ZK00', '_blank');
+    let url = 'https://buy.stripe.com/cNiaEX7SZ25daMZbop3ZK00';
+    if (user?.id) {
+      url += `?client_reference_id=${user.id}`;
+    }
+    window.open(url, '_blank');
   };
 
   return (
