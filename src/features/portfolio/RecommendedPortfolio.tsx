@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Edit2, Trash2, 
   RefreshCw, X, Search, 
-  Award, Wallet, PieChart, Lock, Shield, GraduationCap
+  Award, Wallet, PieChart, GraduationCap
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
