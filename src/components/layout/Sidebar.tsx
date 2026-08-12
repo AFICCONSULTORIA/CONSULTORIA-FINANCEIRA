@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock, GraduationCap, FileText } from 'lucide-react';
+import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock, GraduationCap, FileText, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../ui/Logo';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -16,6 +16,7 @@ const SIDEBAR_LINKS = [
   { to: '/client/expenses', icon: ShoppingBag, label: 'Lançamentos' },
   { to: '/client/goals', icon: Target, label: 'Metas e Sonhos' },
   { to: '/client/simulator', icon: TrendingUp, label: 'Simulador Juros' },
+  { to: '/client/settings', icon: SettingsIcon, label: 'Configurações' },
 ];
 
 export const Sidebar: React.FC = () => {

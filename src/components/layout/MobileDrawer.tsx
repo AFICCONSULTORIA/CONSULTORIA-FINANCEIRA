@@ -25,6 +25,7 @@ const CLIENT_LINKS = [
   { to: '/client/expenses', icon: ShoppingBag, label: 'Lançamentos' },
   { to: '/client/goals', icon: Target, label: 'Metas e Sonhos' },
   { to: '/client/simulator', icon: Activity, label: 'Simulador Juros' },
+  { to: '/client/settings', icon: Settings, label: 'Configurações' },
 ];
 
 const CONSULTANT_LINKS = [

@@ -25,6 +25,7 @@ import { TimeCalculator } from '../features/client-dashboard/components/TimeCalc
 import { TransactionManager } from '../features/client-dashboard/components/TransactionManager';
 import { AcademyDashboard } from '../features/education/AcademyDashboard';
 import { IncomeTaxDashboard } from '../features/income-tax/IncomeTaxDashboard';
+import { ClientSettings } from '../features/client-dashboard/ClientSettings';
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
@@ -94,6 +95,7 @@ export const AppRoutes: React.FC = () => (
         <Route path="expenses" element={<div className="container" style={{ padding: '2rem 1.5rem' }}><TransactionManager /></div>} />
         <Route path="goals" element={<ToolWrapper><GoalTracker /></ToolWrapper>} />
         <Route path="simulator" element={<ToolWrapper><InvestmentSimulator /></ToolWrapper>} />
+        <Route path="settings" element={<ClientSettings />} />
       </Route>
       
       {/* Redirecionamento legado */}
