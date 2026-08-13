@@ -48,7 +48,7 @@ export const AppRoutes: React.FC = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/demonstracao" element={<RootLayout><Home /></RootLayout>} />
+      <Route path="/apresentacao" element={<RootLayout><Home /></RootLayout>} />
       
       {/* ── Rotas de Autenticação ── */}
       <Route path="/login" element={<Login />} />
