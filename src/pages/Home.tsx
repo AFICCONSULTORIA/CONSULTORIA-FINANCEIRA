@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClipboardList, LayoutDashboard, Briefcase, ArrowRight, TrendingUp, Shield, Target, ChevronRight } from 'lucide-react';
+import { Logo } from '../components/ui/Logo';
 import './Home.css';
 
 const tools = [
@@ -53,9 +54,16 @@ export const Home: React.FC = () => {
 
   return (
     <div className="home">
+      
+      {/* ── Navbar Simples ── */}
+      <header style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: '1.5rem', zIndex: 10 }}>
+        <div className="container" style={{ display: 'flex', justifyContent: 'center' }}>
+          <Logo size={40} textSuffix="Consultoria" />
+        </div>
+      </header>
 
       {/* ── Hero Section ── */}
-      <section className="home__hero">
+      <section className="home__hero" style={{ paddingTop: '6rem' }}>
         <div className="home__hero-bg" aria-hidden />
 
         <div className="home__hero-content container">
