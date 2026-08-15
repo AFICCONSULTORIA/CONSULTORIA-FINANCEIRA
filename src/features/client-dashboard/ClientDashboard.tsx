@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { TrendingUp, Activity, Target, Loader2, X } from 'lucide-react';
+import { TrendingUp, Activity, Target, Loader2, X, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { TransactionManager } from './components/TransactionManager';
@@ -43,10 +43,11 @@ export const ClientDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [profileRes, userRes, plansRes] = await Promise.all([
+      const [profileRes, userRes, plansRes, messagesRes] = await Promise.all([
         supabase.from('financial_profiles').select('*').eq('user_id', user!.id).single(),
         supabase.from('users').select('full_name').eq('id', user!.id).single(),
-        supabase.from('action_plans').select('*').eq('user_id', user!.id).order('created_at', { ascending: true })
+        supabase.from('action_plans').select('*').eq('user_id', user!.id).order('created_at', { ascending: true }),
+        supabase.from('client_messages').select('*').eq('client_id', user!.id).eq('is_read', false).order('created_at', { ascending: false })
       ]);
 
       if (profileRes.data && userRes.data) {
@@ -77,7 +78,8 @@ export const ClientDashboard: React.FC = () => {
           emergencyFundMonths,
           buckets: chartData,
           isCustomBuckets: !!p.buckets,
-          actions: plansRes.data || []
+          actions: plansRes.data || [],
+          messages: messagesRes.data || []
         });
       }
     } catch (err) {
@@ -103,6 +105,20 @@ export const ClientDashboard: React.FC = () => {
         setClientData((prev: any) => ({
           ...prev,
           actions: prev.actions.map((a: any) => a.id === action.id ? { ...a, status: newStatus } : a)
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMarkMessageRead = async (messageId: string) => {
+    try {
+      const { error } = await supabase.from('client_messages').update({ is_read: true }).eq('id', messageId);
+      if (!error) {
+        setClientData((prev: any) => ({
+          ...prev,
+          messages: prev.messages.filter((m: any) => m.id !== messageId)
         }));
       }
     } catch (err) {
@@ -136,6 +152,33 @@ export const ClientDashboard: React.FC = () => {
           <Activity size={13} /> Saúde Financeira: {statusInfo.label}
         </span>
       </header>
+
+      {clientData.messages && clientData.messages.length > 0 && (
+        <div className="anim-fade-up" style={{ animationDelay: '30ms', marginBottom: '2rem' }}>
+          {clientData.messages.map((msg: any) => (
+            <div key={msg.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'var(--bg-card)', padding: '1.25rem', borderRadius: 'var(--r-lg)', border: '1px solid var(--brand-primary)', borderLeft: '4px solid var(--brand-primary)', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--brand-primary)', padding: '0.75rem', borderRadius: '50%' }}>
+                <MessageSquare size={24} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Nova mensagem do seu consultor</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    {new Date(msg.created_at).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '1rem', whiteSpace: 'pre-wrap' }}>{msg.message}</p>
+                <button 
+                  onClick={() => handleMarkMessageRead(msg.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', border: 'none', color: 'var(--success)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                >
+                  <CheckCircle2 size={18} /> Marcar como lida
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="dashboard__stats anim-fade-up" style={{ animationDelay: '60ms' }}>
         <div className="stat-card stat-card--brand">

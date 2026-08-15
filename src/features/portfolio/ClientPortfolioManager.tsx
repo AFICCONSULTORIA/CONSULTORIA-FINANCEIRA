@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit2, Trash2, TrendingUp, TrendingDown, 
-  Search, AlertCircle, Building2, DollarSign, Wallet, X, RefreshCw
+  Search, AlertCircle, Building2, DollarSign, Wallet, X, RefreshCw,
+  Calculator, Sparkles
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { fetchAssetQuote, fetchMultipleQuotes } from '../../lib/brapi';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
+import { PortfolioInvestmentSimulatorModal } from './PortfolioInvestmentSimulatorModal';
 
 export interface ClientAsset {
   id: string;
@@ -46,6 +48,7 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<ClientAsset | null>(null);
 
   // Form State
@@ -455,6 +458,20 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
               <RefreshCw size={16} /> 
               {updatingAllQuotes ? 'Atualizando...' : 'Atualizar Cotações'}
             </Button>
+            <Button 
+              onClick={() => setIsSimulatorOpen(true)}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                color: '#fff',
+                fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)'
+              }}
+            >
+              <Calculator size={16} /> Aporte Guiado AFIC
+            </Button>
             <Button onClick={() => handleOpenModal()}>
               <Plus size={18} /> Adicionar Ativo
             </Button>
@@ -475,9 +492,19 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
           </p>
           <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
             {!readOnly 
-              ? 'Clique em "Adicionar Ativo" acima para incluir suas ações, FIIs, renda fixa ou outros investimentos.' 
+              ? 'Clique em "Adicionar Ativo" para lançar manualmente ou utilize o Aporte Guiado para montar sua carteira a partir da recomendação AFIC.' 
               : 'O cliente ainda não cadastrou ativos nesta carteira.'}
           </p>
+          {!readOnly && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1.25rem' }}>
+              <Button onClick={() => setIsSimulatorOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={16} /> Montar Carteira com Aporte Guiado
+              </Button>
+              <Button variant="outline" onClick={() => handleOpenModal()}>
+                <Plus size={16} /> Adicionar Manualmente
+              </Button>
+            </div>
+          )}
         </Card>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
@@ -718,6 +745,15 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
           </div>
         </div>
       )}
+      {/* Modal Simulador de Investimento */}
+      <PortfolioInvestmentSimulatorModal
+        isOpen={isSimulatorOpen}
+        onClose={() => setIsSimulatorOpen(false)}
+        targetUserId={targetUserId}
+        onSuccess={() => {
+          fetchAssets();
+        }}
+      />
     </div>
   );
 };

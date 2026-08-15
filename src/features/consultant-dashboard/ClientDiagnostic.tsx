@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Trash2, X, Edit2 } from 'lucide-react';
+import { ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, Circle, Trash2, X, Edit2, MessageSquare, Send } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { TransactionManager } from '../client-dashboard/components/TransactionManager';
@@ -17,6 +17,13 @@ interface ActionPlan {
   category?: 'urgent' | 'organization' | 'growth';
   due_date?: string;
   status: 'pending' | 'completed';
+}
+
+interface ClientMessage {
+  id: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 interface Bucket {
@@ -62,16 +69,21 @@ export const ClientDiagnostic: React.FC = () => {
   const [manualScore, setManualScore] = useState<number>(0);
   const [savingScore, setSavingScore] = useState(false);
 
+  const [messages, setMessages] = useState<ClientMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+
   useEffect(() => {
     if (id) fetchClientData(id);
   }, [id]);
 
   const fetchClientData = async (clientId: string) => {
     try {
-      const [userRes, profileRes, planRes] = await Promise.all([
+      const [userRes, profileRes, planRes, messagesRes] = await Promise.all([
         supabase.from('users').select('*').eq('id', clientId).single(),
         supabase.from('financial_profiles').select('*').eq('user_id', clientId).single(),
-        supabase.from('action_plans').select('*').eq('user_id', clientId).order('created_at', { ascending: true })
+        supabase.from('action_plans').select('*').eq('user_id', clientId).order('created_at', { ascending: true }),
+        supabase.from('client_messages').select('*').eq('client_id', clientId).order('created_at', { ascending: false })
       ]);
 
       if (userRes.data) setClientInfo(userRes.data);
@@ -83,6 +95,9 @@ export const ClientDiagnostic: React.FC = () => {
       }
       if (planRes.data) {
         setActionPlans(planRes.data);
+      }
+      if (messagesRes.data) {
+        setMessages(messagesRes.data);
       }
     } catch (err) {
       console.error(err);
@@ -114,6 +129,33 @@ export const ClientDiagnostic: React.FC = () => {
     } catch (e) {
       console.error(e);
       toast.error('Erro ao adicionar tarefa.');
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !id) return;
+    setSendingMessage(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const { data, error } = await supabase.from('client_messages').insert({
+        client_id: id,
+        consultant_id: userData?.user?.id,
+        message: newMessage.trim(),
+        is_read: false
+      }).select().single();
+      
+      if (data && !error) {
+        setMessages([data, ...messages]);
+        setNewMessage('');
+        toast.success('Mensagem enviada com sucesso!');
+      } else {
+        throw error;
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao enviar mensagem.');
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -478,7 +520,45 @@ export const ClientDiagnostic: React.FC = () => {
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
               Carteira de Investimentos do Cliente
             </h3>
-            <ClientPortfolioManager targetUserId={id} readOnly={true} />
+            <ClientPortfolioManager targetUserId={id} readOnly={false} />
+          </Card>
+          
+          <Card>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <MessageSquare size={18} color="var(--brand-primary)" /> Mensagens para o Cliente
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+              <textarea 
+                value={newMessage}
+                onChange={e => setNewMessage(e.target.value)}
+                placeholder="Escreva uma mensagem ou recomendação..."
+                style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none', resize: 'vertical', minHeight: '80px' }}
+              />
+              <Button onClick={handleSendMessage} disabled={sendingMessage || !newMessage.trim()} style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {sendingMessage ? 'Enviando...' : <><Send size={16} /> Enviar Mensagem</>}
+              </Button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto' }}>
+              {messages.length === 0 ? (
+                <p style={{ color: 'var(--text-secondary)', padding: '1rem', textAlign: 'center' }}>Nenhuma mensagem enviada ainda.</p>
+              ) : (
+                messages.map(msg => (
+                  <div key={msg.id} style={{ padding: '1rem', background: 'var(--bg-input)', borderRadius: 'var(--r-md)', borderLeft: `3px solid ${msg.is_read ? 'var(--success)' : 'var(--brand-primary)'}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.8rem' }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        {new Date(msg.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span style={{ color: msg.is_read ? 'var(--success)' : 'var(--brand-primary)', fontWeight: 600 }}>
+                        {msg.is_read ? 'Lida pelo cliente' : 'Não lida'}
+                      </span>
+                    </div>
+                    <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>{msg.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
           </Card>
         </div>
 
