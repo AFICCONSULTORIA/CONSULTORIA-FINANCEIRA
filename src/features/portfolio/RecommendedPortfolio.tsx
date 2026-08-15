@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { fetchMultipleQuotes } from '../../lib/brapi';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
@@ -153,6 +154,7 @@ export const RecommendedPortfolio: React.FC = () => {
   
   // Simulator modal state
   const [isSimulatorOpen, setIsSimulatorOpen] = useState<boolean>(false);
+  const [livePrices, setLivePrices] = useState<Record<string, number>>({});
   
   // Assets state
   const [selectedProfileId, setSelectedProfileId] = useState<'conservador' | 'moderado' | 'arrojado'>('moderado');
@@ -169,6 +171,30 @@ export const RecommendedPortfolio: React.FC = () => {
       toast.success(`Carteira carregada: ${profile.name}`);
     }
   };
+
+  // Fetch live prices for current assets
+  useEffect(() => {
+    const fetchPrices = async () => {
+      const tickersToFetch = assets
+        .filter(a => a.category !== 'Renda Fixa' && a.category !== 'Cripto')
+        .map(a => a.ticker);
+
+      if (tickersToFetch.length > 0) {
+        try {
+          const quotes = await fetchMultipleQuotes(tickersToFetch);
+          const priceMap: Record<string, number> = {};
+          quotes.forEach(q => {
+            priceMap[q.symbol.toUpperCase()] = q.regularMarketPrice;
+          });
+          setLivePrices(prev => ({ ...prev, ...priceMap }));
+        } catch (err) {
+          console.error('Failed to fetch live prices', err);
+        }
+      }
+    };
+
+    fetchPrices();
+  }, [assets]);
 
   // Modal State for Admin CRUD
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -683,9 +709,10 @@ export const RecommendedPortfolio: React.FC = () => {
           {/* Grid de Ativos Recomendados */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
             {filteredAssets.map(asset => {
+              const currentPrice = livePrices[asset.ticker.trim().toUpperCase()] || asset.currentPrice;
               const hasMaxPrice = asset.maxPrice > 0;
-              const isDiscounted = hasMaxPrice && asset.currentPrice <= asset.maxPrice;
-              const discountMargin = hasMaxPrice ? ((asset.maxPrice - asset.currentPrice) / asset.maxPrice) * 100 : 0;
+              const isDiscounted = hasMaxPrice && currentPrice <= asset.maxPrice;
+              const discountMargin = hasMaxPrice ? ((asset.maxPrice - currentPrice) / asset.maxPrice) * 100 : 0;
 
               return (
                 <Card key={asset.id} style={{ padding: '1.25rem', position: 'relative', borderTop: '4px solid var(--primary-color)' }}>
@@ -748,7 +775,7 @@ export const RecommendedPortfolio: React.FC = () => {
                     <div>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Preço Atual</span>
                       <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {asset.currentPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        {currentPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </span>
                     </div>
 
@@ -897,6 +924,7 @@ export const RecommendedPortfolio: React.FC = () => {
         isOpen={isSimulatorOpen}
         onClose={() => setIsSimulatorOpen(false)}
         initialProfileId={selectedProfileId}
+        livePrices={livePrices}
         onSuccess={() => {
           setActiveTab('client');
         }}

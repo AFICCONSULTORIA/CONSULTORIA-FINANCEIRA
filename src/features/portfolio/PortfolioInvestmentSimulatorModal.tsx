@@ -3,6 +3,7 @@ import {
   X, Calculator, Minus, Plus, Sparkles, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { fetchMultipleQuotes } from '../../lib/brapi';
 import { RECOMMENDED_PROFILES, type RecommendedAsset } from './RecommendedPortfolio';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
@@ -12,6 +13,7 @@ interface PortfolioInvestmentSimulatorModalProps {
   onClose: () => void;
   initialProfileId?: 'conservador' | 'moderado' | 'arrojado';
   targetUserId?: string;
+  livePrices?: Record<string, number>;
   onSuccess?: () => void;
 }
 
@@ -29,6 +31,7 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
   onClose,
   initialProfileId = 'moderado',
   targetUserId,
+  livePrices = {},
   onSuccess
 }) => {
   const [selectedProfileId, setSelectedProfileId] = useState<'conservador' | 'moderado' | 'arrojado'>(initialProfileId);
@@ -36,6 +39,7 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
   const [customQuantities, setCustomQuantities] = useState<Record<string, number>>({});
   const [selectedMap, setSelectedMap] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<boolean>(false);
+  const [internalLivePrices, setInternalLivePrices] = useState<Record<string, number>>({});
 
   // Sync profile when opened
   useEffect(() => {
@@ -64,12 +68,39 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
     setCustomQuantities({});
   }, [activeProfile]);
 
+  // Fetch prices internally
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const fetchPrices = async () => {
+      const tickersToFetch = activeProfile.assets
+        .filter(a => a.category !== 'Renda Fixa' && a.category !== 'Cripto')
+        .map(a => a.ticker);
+
+      if (tickersToFetch.length > 0) {
+        try {
+          const quotes = await fetchMultipleQuotes(tickersToFetch);
+          const priceMap: Record<string, number> = {};
+          quotes.forEach(q => {
+            priceMap[q.symbol.toUpperCase()] = q.regularMarketPrice;
+          });
+          setInternalLivePrices(priceMap);
+        } catch (err) {
+          console.error('Failed to fetch live prices in simulator', err);
+        }
+      }
+    };
+    fetchPrices();
+  }, [activeProfile, isOpen]);
+
   // Calculate allocations per asset
   const simulatedItems: SimulatedItem[] = useMemo(() => {
     return activeProfile.assets.map(asset => {
       const isSelected = selectedMap[asset.id] !== false;
       const targetBudget = (numericAmount * asset.targetWeight) / 100;
-      const unitPrice = asset.currentPrice > 0 ? asset.currentPrice : 100;
+      
+      const realTimePrice = livePrices[asset.ticker.trim().toUpperCase()] || internalLivePrices[asset.ticker.trim().toUpperCase()] || asset.currentPrice;
+      const unitPrice = realTimePrice > 0 ? realTimePrice : 100;
 
       let calculatedQuantity = 0;
       let allocatedAmount = 0;
@@ -97,7 +128,7 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
         unitPrice
       };
     });
-  }, [activeProfile, numericAmount, selectedMap, customQuantities]);
+  }, [activeProfile, numericAmount, selectedMap, customQuantities, livePrices, internalLivePrices]);
 
   const totalAllocated = useMemo(() => {
     return simulatedItems.reduce((sum, item) => sum + (item.selected ? item.allocatedAmount : 0), 0);
@@ -216,14 +247,14 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
             const weightedAvgPrice = totalQty > 0 
               ? ((currentQty * currentAvgPrice) + (buyQty * buyPrice)) / totalQty 
               : buyPrice;
-            const newTotalVal = totalQty * (item.asset.currentPrice || weightedAvgPrice);
+            const newTotalVal = totalQty * (livePrices[upperTicker] || internalLivePrices[upperTicker] || item.asset.currentPrice || weightedAvgPrice);
 
             await supabase
               .from('client_assets')
               .update({
                 quantity: totalQty,
                 average_price: parseFloat(weightedAvgPrice.toFixed(2)),
-                current_price: item.asset.currentPrice || weightedAvgPrice,
+                current_price: livePrices[upperTicker] || internalLivePrices[upperTicker] || item.asset.currentPrice || weightedAvgPrice,
                 total_value: parseFloat(newTotalVal.toFixed(2)),
                 updated_at: new Date().toISOString()
               })
@@ -238,7 +269,7 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
               category: item.asset.category,
               quantity: buyQty,
               average_price: parseFloat(buyPrice.toFixed(2)),
-              current_price: parseFloat(item.asset.currentPrice.toFixed(2)),
+              current_price: parseFloat((livePrices[upperTicker] || internalLivePrices[upperTicker] || item.asset.currentPrice).toFixed(2)),
               total_value: parseFloat(totalVal.toFixed(2)),
               institution: 'Carteira Recomendada AFIC',
               notes: `Alocação recomendada (${activeProfile.name})`,

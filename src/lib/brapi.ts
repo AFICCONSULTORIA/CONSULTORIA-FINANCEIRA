@@ -46,18 +46,13 @@ export const fetchMultipleQuotes = async (tickers: string[]): Promise<BrapiQuote
   }
 
   try {
-    const tickersString = tickers.map(t => t.toUpperCase()).join(',');
-    const response = await fetch(`${BASE_URL}/${tickersString}?token=${BRAPI_TOKEN}`);
-    if (!response.ok) {
-      return [];
-    }
+    // Brapi API may throw 400 Bad Request on comma-separated list of some tickers.
+    // To ensure reliability, we fetch them individually via Promise.all
+    const promises = tickers.map(t => fetchAssetQuote(t));
+    const results = await Promise.all(promises);
     
-    const data: BrapiResponse = await response.json();
-    if (data.error || !data.results) {
-      return [];
-    }
-
-    return data.results;
+    // Filter out nulls
+    return results.filter((q): q is BrapiQuote => q !== null);
   } catch (error) {
     console.error('Error fetching multiple quotes from Brapi:', error);
     return [];
