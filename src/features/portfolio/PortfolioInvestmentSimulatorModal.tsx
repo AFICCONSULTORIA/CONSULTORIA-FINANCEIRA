@@ -300,25 +300,36 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
   if (!isOpen) return null;
 
   return (
-    <div className="tx-modal-overlay" style={{ zIndex: 99999 }}>
+    <div style={{ 
+      zIndex: 999999,
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+      padding: '1rem',
+      background: 'rgba(0, 0, 0, 0.85)',
+      backdropFilter: 'blur(8px)',
+      overflowY: 'auto'
+    }}>
       <div 
-        className="tx-modal anim-fade-up" 
         style={{ 
-          maxWidth: '850px', 
-          width: '95%', 
-          maxHeight: '90vh', 
+          maxWidth: '1100px', 
+          width: '100%', 
+          maxHeight: 'calc(100vh - 2rem)', 
           display: 'flex', 
           flexDirection: 'column', 
-          padding: '0', 
+          borderRadius: '16px',
+          background: '#0f172a',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.9)',
           overflow: 'hidden',
-          borderRadius: 'var(--r-xl)',
-          background: 'var(--card-bg)',
-          border: '1px solid var(--border-color)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+          margin: 'auto 0'
         }}
       >
         {/* Modal Header */}
         <div style={{ 
+          flex: '0 0 auto',
           padding: '1.25rem 1.5rem', 
           borderBottom: '1px solid var(--border-color)', 
           display: 'flex', 
@@ -353,26 +364,46 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
             </div>
           </div>
 
-          <button 
-            onClick={onClose} 
-            style={{ 
-              background: 'transparent', 
-              border: 'none', 
-              color: 'var(--text-muted)', 
-              cursor: 'pointer', 
-              padding: '0.5rem',
-              borderRadius: 'var(--r-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <X size={22} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Button 
+              type="button" 
+              onClick={handleConfirmAndSave} 
+              disabled={saving || totalAllocated <= 0}
+              size="sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--success)', color: '#fff', fontWeight: 800 }}
+            >
+              {saving ? (
+                <>
+                  <RefreshCw className="anim-spin" size={14} /> Salvando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={16} /> Salvar Carteira
+                </>
+              )}
+            </Button>
+
+            <button 
+              onClick={onClose} 
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.1)', 
+                border: 'none', 
+                color: 'var(--text-muted)', 
+                cursor: 'pointer', 
+                padding: '0.5rem',
+                borderRadius: 'var(--r-sm)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div style={{ padding: '1.5rem', overflowY: 'auto', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
           {/* Top Controls: Profile Selection & Amount Input */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
@@ -382,7 +413,7 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
               <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 1. Selecione a Estratégia Desejada:
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.5rem' }}>
                 {RECOMMENDED_PROFILES.map(p => {
                   const isSelected = p.id === selectedProfileId;
                   return (
@@ -498,30 +529,31 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
             <div style={{ 
               borderRadius: 'var(--r-md)', 
               border: '1px solid var(--border-color)', 
-              overflow: 'hidden', 
+              overflowX: 'auto', 
               background: 'var(--bg-secondary)' 
             }}>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '40px 1.5fr 1fr 1fr 1.2fr 1.2fr', 
-                padding: '0.6rem 0.75rem', 
-                background: 'var(--card-bg)', 
-                borderBottom: '1px solid var(--border-color)',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em'
-              }}>
-                <div></div>
-                <div>Ativo / Ticker</div>
-                <div>Cotação</div>
-                <div>Peso Alvo</div>
-                <div style={{ textAlign: 'center' }}>Qtd Sugerida</div>
-                <div style={{ textAlign: 'right' }}>Total Alocado</div>
-              </div>
+              <div style={{ minWidth: '780px' }}>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '40px 2fr 1.2fr 1.2fr 1.5fr 1.5fr', 
+                  padding: '0.6rem 0.75rem', 
+                  background: 'var(--card-bg)', 
+                  borderBottom: '1px solid var(--border-color)',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em'
+                }}>
+                  <div></div>
+                  <div>Ativo / Ticker</div>
+                  <div>Cotação</div>
+                  <div>Peso Alvo</div>
+                  <div style={{ textAlign: 'center' }}>Qtd Sugerida</div>
+                  <div style={{ textAlign: 'right' }}>Total Alocado</div>
+                </div>
 
-              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                <div style={{ overflowY: 'visible' }}>
                 {simulatedItems.map(item => {
                   const isRF = item.asset.category === 'Renda Fixa';
                   const isChecked = item.selected;
@@ -531,7 +563,7 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
                       key={item.asset.id}
                       style={{ 
                         display: 'grid', 
-                        gridTemplateColumns: '40px 1.5fr 1fr 1fr 1.2fr 1.2fr', 
+                        gridTemplateColumns: '40px 2fr 1.2fr 1.2fr 1.5fr 1.5fr', 
                         padding: '0.65rem 0.75rem', 
                         alignItems: 'center',
                         borderBottom: '1px solid var(--border-color)',
@@ -651,6 +683,7 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
                 })}
               </div>
             </div>
+            </div>
           </div>
 
           {/* Financial Summary Box */}
@@ -695,14 +728,15 @@ export const PortfolioInvestmentSimulatorModal: React.FC<PortfolioInvestmentSimu
 
         {/* Modal Footer Actions */}
         <div style={{ 
+          flex: '0 0 auto',
           padding: '1.25rem 1.5rem', 
-          borderTop: '1px solid var(--border-color)', 
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           flexWrap: 'wrap', 
           gap: '1rem',
-          background: 'var(--card-bg)'
+          background: '#0b1120'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
             <Sparkles size={16} color="var(--primary-color)" />
