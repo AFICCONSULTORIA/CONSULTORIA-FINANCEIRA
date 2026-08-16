@@ -56,26 +56,122 @@ const DEFAULT_BUCKETS: Bucket[] = [
   { type: 'invest', label: 'Investimento', percentage: 10 },
 ];
 
-const MESSAGE_TEMPLATES = [
+interface MessageTemplate {
+  category: 'portfolio' | 'budget' | 'goals' | 'meetings';
+  title: string;
+  badge: string;
+  text: string;
+}
+
+const MESSAGE_TEMPLATES: MessageTemplate[] = [
+  // ─── APORTES & CARTEIRA ───
   {
+    category: 'portfolio',
     title: '💸 Aporte Mensal Disponível',
-    text: 'Olá! Analisei sua carteira e seu orçamento deste mês. Recomendo realizarmos os novos aportes seguindo a alocação recomendada na aba Carteira da sua plataforma AFIC. Qualquer dúvida nas compras, estou à disposição!'
+    badge: 'Aporte',
+    text: 'Olá [Nome]! Analisei sua carteira e seu orçamento deste mês. Recomendo realizarmos os novos aportes seguindo a alocação recomendada na aba Carteira da sua plataforma AFIC. Qualquer dúvida na execução das compras, estou à disposição!'
   },
   {
-    title: '🔄 Rebalanceamento de Carteira',
-    text: 'Olá! Identifiquei que podemos fazer um ajuste estratégico na sua carteira para otimizar os dividendos e a segurança dos seus ativos. Acesse a plataforma para visualizar a nova alocação sugerida!'
+    category: 'portfolio',
+    title: '🔄 Rebalanceamento Estratégico de Carteira',
+    badge: 'Rebalanceamento',
+    text: 'Olá [Nome]! Identifiquei que podemos fazer um rebalanceamento estratégico na sua carteira para otimizar os dividendos e a segurança dos seus ativos. Acesse a plataforma para visualizar a nova alocação recomendada!'
   },
   {
-    title: '🛡️ Reserva de Emergência',
-    text: 'Olá! Como alinhamos em nosso planejamento, o foco principal no momento é fortalecer sua reserva de liquidez com risco zero (Tesouro Selic / CDB 100% CDI) antes de aumentarmos a exposição em renda variável.'
+    category: 'portfolio',
+    title: '💰 Reinvestimento de Proventos e Dividendos',
+    badge: 'Dividendos',
+    text: 'Olá [Nome]! Notei que você recebeu proventos e dividendos na sua conta da corretora. O ideal é não deixar esse saldo parado: vamos reinvesti-lo no próximo aporte para potencializar os juros compostos!'
   },
   {
-    title: '🎯 Parabéns pela Meta!',
-    text: 'Parabéns pelo progresso! Você deu um passo gigantesco no seu planejamento financeiro. Vamos manter a consistência para alcançar a próxima meta do plano!'
+    category: 'portfolio',
+    title: '📈 Oportunidade em Quedas de Mercado',
+    badge: 'Oportunidade',
+    text: 'Olá [Nome]! Com a oscilação recente do mercado, alguns ativos excelentes da sua carteira ficaram com preços muito atrativos. Se tiver liquidez extra disponível, é um ótimo momento para antecipar parte do seu aporte.'
   },
   {
-    title: '📅 Lembrete de Reunião de Acompanhamento',
-    text: 'Olá! Está chegando a hora da nossa reunião mensal de alinhamento financeiro. Por favor, atualize seus lançamentos e saldo de investimentos na plataforma para que possamos traçar os próximos passos.'
+    category: 'portfolio',
+    title: '🛡️ Alocação em Renda Fixa e CDI',
+    badge: 'Renda Fixa',
+    text: 'Olá [Nome]! Aproveitando as taxas atrativas atuais, recomendo direcionarmos parte do seu capital para títulos pós-fixados e indexados à inflação (IPCA+), garantindo rendimento real com total previsibilidade.'
+  },
+
+  // ─── ORÇAMENTO & RESERVA ───
+  {
+    category: 'budget',
+    title: '🛡️ Construção da Reserva de Emergência',
+    badge: 'Reserva',
+    text: 'Olá [Nome]! Como alinhamos em nosso planejamento, o foco principal no momento é fortalecer sua reserva de liquidez com risco zero (Tesouro Selic / CDB 100% CDI) antes de aumentarmos a exposição em renda variável.'
+  },
+  {
+    category: 'budget',
+    title: '⚠️ Alerta de Custos Fixos Elevados',
+    badge: 'Orçamento',
+    text: 'Olá [Nome]! Ao analisar seu diagnóstico financeiro, notei que seus custos fixos estão consumindo uma fatia alta da sua renda. Sugiro fazermos uma revisão pontual das despesas recorrentes para abrir mais fôlego para aportes.'
+  },
+  {
+    category: 'budget',
+    title: '💳 Estratégia de Quitação de Dívidas',
+    badge: 'Dívidas',
+    text: 'Olá [Nome]! Para acelerar seu patrimônio, estruturamos uma estratégia prioritária para eliminar as dívidas mais caras (juros altos). Vamos focar nisso antes de qualquer investimento de risco.'
+  },
+  {
+    category: 'budget',
+    title: '📝 Lembrete de Atualização de Lançamentos',
+    badge: 'Controle',
+    text: 'Olá [Nome]! Para que nosso acompanhamento continue 100% preciso, não esqueça de atualizar seus gastos e receitas do mês na plataforma AFIC. Isso leva menos de 2 minutos e faz toda a diferença!'
+  },
+
+  // ─── METAS & COMPORTAMENTO ───
+  {
+    category: 'goals',
+    title: '🎯 Parabéns pela Conquista da Meta!',
+    badge: 'Conquista',
+    text: 'Parabéns pelo progresso, [Nome]! Você deu um passo gigantesco no seu planejamento financeiro e bateu sua meta. Vamos manter a consistência para alcançar o próximo objetivo do plano!'
+  },
+  {
+    category: 'goals',
+    title: '🧘 Controle Emocional em Volatilidade',
+    badge: 'Comportamental',
+    text: 'Olá [Nome]! Lembre-se: oscilações de curto prazo são normais no mercado e não alteram os fundamentos das empresas que selecionamos para você. Nosso foco é no longo prazo e nos dividendos consistentes. Mantenha o plano!'
+  },
+  {
+    category: 'goals',
+    title: '🏖️ Planejamento para Grandes Projetos / Férias',
+    badge: 'Projetos',
+    text: 'Olá [Nome]! Para viabilizar seu próximo projeto sem comprometer seus investimentos de longo prazo, criamos um pote específico de curto prazo na sua estratégia de baldes. Vamos direcionar os recursos com tranquilidade!'
+  },
+  {
+    category: 'goals',
+    title: '🌟 Revisão do Sonho de Longo Prazo',
+    badge: 'Liberdade',
+    text: 'Olá [Nome]! Que tal revisitarmos seus objetivos de longo prazo? Com o crescimento do seu patrimônio, podemos recalibrar os prazos e antecipar sua independência financeira.'
+  },
+
+  // ─── ACOMPANHAMENTO & REUNIÕES ───
+  {
+    category: 'meetings',
+    title: '📅 Agendamento de Reunião Mensal',
+    badge: 'Reunião',
+    text: 'Olá [Nome]! Está chegando a hora da nossa reunião mensal de alinhamento financeiro. Por favor, atualize seus dados na plataforma e me informe os melhores dias e horários para nossa conversa.'
+  },
+  {
+    category: 'meetings',
+    title: '📋 Envio de Ata e Próximos Passos',
+    badge: 'Ata de Reunião',
+    text: 'Olá [Nome]! Acabei de registrar a ata da nossa última reunião e as tarefas recomendadas no seu Plano de Ação dentro da plataforma AFIC. Dá uma olhada lá para começarmos a execução!'
+  },
+  {
+    category: 'meetings',
+    title: '🚀 Boas-Vindas à Consultoria AFIC',
+    badge: 'Onboarding',
+    text: 'Seja muito bem-vindo(a) à AFIC Consultoria, [Nome]! A partir de agora, caminharemos juntos na gestão do seu patrimônio. Seu primeiro passo é preencher o diagnóstico inicial na plataforma para estruturarmos seu plano personalizado!'
+  },
+  {
+    category: 'meetings',
+    title: '📑 Orientação para Imposto de Renda (IR)',
+    badge: 'Imposto de Renda',
+    text: 'Olá [Nome]! Com o período de Declaração de Imposto de Renda se aproximando, já deixamos organizado na plataforma o relatório com o informe de rendimentos e posições dos seus ativos para facilitar sua declaração.'
   }
 ];
 
@@ -138,6 +234,10 @@ export const ClientDiagnostic: React.FC = () => {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [editPhoneValue, setEditPhoneValue] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
+
+  // Template Filter & Search state
+  const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<'all' | 'portfolio' | 'budget' | 'goals' | 'meetings'>('all');
+  const [templateSearchTerm, setTemplateSearchTerm] = useState('');
 
   useEffect(() => {
     if (id) fetchClientData(id);
@@ -984,39 +1084,162 @@ export const ClientDiagnostic: React.FC = () => {
 
           {/* Modelos / Templates Rápidos com 1 Clique */}
           <Card>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
-              <Sparkles size={18} color="var(--brand-primary)" /> Modelos Prontos de Orientação
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-              Clique para usar o modelo no formulário ou copiar direto para o WhatsApp.
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
+                  <Sparkles size={18} color="var(--brand-primary)" /> Biblioteca de Modelos Prontos ({MESSAGE_TEMPLATES.length})
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Copie, envie direto pelo WhatsApp ou insira no chat da plataforma com 1 clique.
+                </p>
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {MESSAGE_TEMPLATES.map((tmpl, idx) => (
-                <div key={idx} style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{tmpl.title}</strong>
-                    <div style={{ display: 'flex', gap: '0.35rem' }}>
-                      <button
-                        onClick={() => copyTemplateToClipboard(tmpl.text, idx)}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}
-                        title="Copiar texto"
-                      >
-                        {copiedTemplate === idx ? <Check size={16} color="var(--success)" /> : <Copy size={16} />}
-                      </button>
-                      <button
-                        onClick={() => setNewMessage(tmpl.text.replace(/\[Nome\]/g, firstName))}
-                        style={{ background: 'rgba(234, 179, 8, 0.12)', border: 'none', color: 'var(--brand-primary)', cursor: 'pointer', padding: '0.2rem 0.5rem', borderRadius: 'var(--r-sm)', fontSize: '0.75rem', fontWeight: 700 }}
-                      >
-                        Inserir
-                      </button>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                    {tmpl.text.replace(/\[Nome\]/g, firstName)}
-                  </p>
-                </div>
+              {/* Template Search */}
+              <div style={{ position: 'relative', width: '220px' }}>
+                <input 
+                  type="text"
+                  placeholder="Buscar modelo..."
+                  value={templateSearchTerm}
+                  onChange={e => setTemplateSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.4rem 0.6rem 0.4rem 2rem',
+                    borderRadius: 'var(--r-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.8rem'
+                  }}
+                />
+                <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  🔍
+                </span>
+              </div>
+            </div>
+
+            {/* Category Filter Chips */}
+            <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+              {[
+                { id: 'all', label: 'Todos' },
+                { id: 'portfolio', label: '💼 Aportes & Carteira' },
+                { id: 'budget', label: '📊 Orçamento & Reserva' },
+                { id: 'goals', label: '🎯 Metas & Mentalidade' },
+                { id: 'meetings', label: '📅 Reuniões & CRM' },
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedTemplateCategory(cat.id as any)}
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: 'var(--r-full)',
+                    border: selectedTemplateCategory === cat.id ? '1px solid var(--brand-primary)' : '1px solid var(--border-color)',
+                    background: selectedTemplateCategory === cat.id ? 'rgba(234, 179, 8, 0.15)' : 'transparent',
+                    color: selectedTemplateCategory === cat.id ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {cat.label}
+                </button>
               ))}
+            </div>
+
+            {/* Template Cards List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', maxHeight: '550px', overflowY: 'auto' }}>
+              {MESSAGE_TEMPLATES
+                .filter(tmpl => {
+                  const matchesCat = selectedTemplateCategory === 'all' || tmpl.category === selectedTemplateCategory;
+                  const matchesSearch = tmpl.title.toLowerCase().includes(templateSearchTerm.toLowerCase()) || 
+                                        tmpl.text.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
+                                        tmpl.badge.toLowerCase().includes(templateSearchTerm.toLowerCase());
+                  return matchesCat && matchesSearch;
+                })
+                .map((tmpl, idx) => {
+                  const personalizedText = tmpl.text.replace(/\[Nome\]/g, firstName);
+                  
+                  // Generate direct WhatsApp link
+                  const cleanPhone = clientInfo?.phone ? clientInfo.phone.replace(/\D/g, '') : '';
+                  const fullPhone = cleanPhone ? (cleanPhone.length <= 11 && !cleanPhone.startsWith('55') ? `55${cleanPhone}` : cleanPhone) : '';
+                  const encodedMsg = encodeURIComponent(personalizedText);
+                  const waHref = fullPhone 
+                    ? `https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodedMsg}`
+                    : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+
+                  const getBadgeColor = (cat: string) => {
+                    switch (cat) {
+                      case 'portfolio': return { bg: 'rgba(59, 130, 246, 0.12)', text: '#60a5fa' };
+                      case 'budget': return { bg: 'rgba(234, 179, 8, 0.12)', text: 'var(--brand-primary)' };
+                      case 'goals': return { bg: 'rgba(16, 185, 129, 0.12)', text: 'var(--success)' };
+                      case 'meetings': return { bg: 'rgba(168, 85, 247, 0.12)', text: '#c084fc' };
+                      default: return { bg: 'rgba(255, 255, 255, 0.1)', text: 'var(--text-primary)' };
+                    }
+                  };
+                  const badgeStyle = getBadgeColor(tmpl.category);
+
+                  return (
+                    <div key={idx} style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', transition: 'border-color 0.15s ease' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{tmpl.title}</strong>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 800, padding: '0.15rem 0.45rem', borderRadius: 'var(--r-full)', background: badgeStyle.bg, color: badgeStyle.text }}>
+                            {tmpl.badge}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          {/* Copiar */}
+                          <button
+                            onClick={() => copyTemplateToClipboard(tmpl.text, idx)}
+                            style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.25rem 0.5rem', borderRadius: 'var(--r-sm)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                            title="Copiar texto para área de transferência"
+                          >
+                            {copiedTemplate === idx ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
+                            <span>{copiedTemplate === idx ? 'Copiado!' : 'Copiar'}</span>
+                          </button>
+
+                          {/* Inserir no Chat */}
+                          <button
+                            onClick={() => setNewMessage(personalizedText)}
+                            style={{ background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.3)', color: 'var(--brand-primary)', cursor: 'pointer', padding: '0.25rem 0.5rem', borderRadius: 'var(--r-sm)', fontSize: '0.75rem', fontWeight: 700 }}
+                            title="Inserir na caixa de texto da plataforma"
+                          >
+                            Inserir no Chat
+                          </button>
+
+                          {/* WhatsApp Direto */}
+                          <a
+                            href={waHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              background: 'rgba(34, 197, 94, 0.15)',
+                              border: '1px solid rgba(34, 197, 94, 0.35)',
+                              color: 'var(--success)',
+                              padding: '0.25rem 0.55rem',
+                              borderRadius: 'var(--r-sm)',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                            title="Abrir no WhatsApp com mensagem preenchida"
+                          >
+                            <MessageCircle size={13} /> WhatsApp
+                          </a>
+                        </div>
+                      </div>
+
+                      <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: 0 }}>
+                        {personalizedText}
+                      </p>
+                    </div>
+                  );
+                })}
             </div>
           </Card>
 
