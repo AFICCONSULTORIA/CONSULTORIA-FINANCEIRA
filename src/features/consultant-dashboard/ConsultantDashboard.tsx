@@ -58,7 +58,6 @@ export const ConsultantDashboard: React.FC = () => {
           .select(`
             id, 
             full_name,
-            email,
             created_at,
             financial_profiles (
               health_score,
@@ -78,14 +77,19 @@ export const ConsultantDashboard: React.FC = () => {
         
       if (usersRes.data && !usersRes.error) {
         setClients(usersRes.data);
+      } else if (usersRes.error) {
+        console.error("Erro no Supabase (users):", usersRes.error);
+        toast.error(`Erro ao buscar clientes: ${usersRes.error.message}`);
       }
 
-      if (assetsRes.data) {
+      if (assetsRes.data && !assetsRes.error) {
         const map: Record<string, number> = {};
         assetsRes.data.forEach((item: any) => {
           map[item.user_id] = (map[item.user_id] || 0) + (Number(item.total_value) || 0);
         });
         setClientAssetsMap(map);
+      } else if (assetsRes.error) {
+        console.error("Erro no Supabase (assets):", assetsRes.error);
       }
     } catch (err) {
       console.error('Erro ao buscar clientes', err);
