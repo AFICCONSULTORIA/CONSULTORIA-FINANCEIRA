@@ -134,6 +134,11 @@ export const ClientDiagnostic: React.FC = () => {
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
   const [copiedTemplate, setCopiedTemplate] = useState<number | null>(null);
 
+  // Phone Edit state
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [editPhoneValue, setEditPhoneValue] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+
   useEffect(() => {
     if (id) fetchClientData(id);
   }, [id]);
@@ -416,6 +421,28 @@ export const ClientDiagnostic: React.FC = () => {
     setTimeout(() => setCopiedTemplate(null), 2000);
   };
 
+  const handleSavePhone = async () => {
+    if (!id) return;
+    setSavingPhone(true);
+    try {
+      const { error } = await supabase.from('users').update({ phone: editPhoneValue }).eq('id', id);
+      if (error) throw error;
+      setClientInfo({ ...clientInfo, phone: editPhoneValue });
+      setIsEditingPhone(false);
+      toast.success('Telefone atualizado com sucesso!');
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao atualizar telefone. O usuário pode não ter permissão.');
+    } finally {
+      setSavingPhone(false);
+    }
+  };
+
+  const startEditingPhone = () => {
+    setEditPhoneValue(clientInfo?.phone || '');
+    setIsEditingPhone(true);
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', height: '100dvh', alignItems: 'center', justifyContent: 'center' }}>
@@ -439,7 +466,16 @@ export const ClientDiagnostic: React.FC = () => {
 
   // WhatsApp quick url
   const firstName = clientInfo.full_name?.split(' ')[0] || 'Cliente';
-  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`Olá ${firstName}, tudo bem? Aqui é o seu consultor financeiro da AFIC. Atualizei as orientações e análises do seu plano financeiro na plataforma!`)}`;
+  const waMessage = encodeURIComponent(`Olá ${firstName}, tudo bem? Aqui é o seu consultor financeiro da AFIC. Atualizei as orientações e análises do seu plano financeiro na plataforma!`);
+  let waUrl = `https://api.whatsapp.com/send?text=${waMessage}`;
+  
+  if (clientInfo.phone) {
+    const cleanPhone = clientInfo.phone.replace(/\D/g, '');
+    if (cleanPhone) {
+      const fullPhone = cleanPhone.length <= 11 && !cleanPhone.startsWith('55') ? `55${cleanPhone}` : cleanPhone;
+      waUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${waMessage}`;
+    }
+  }
 
   return (
     <div style={{ padding: '1.5rem 1.25rem 5.5rem', maxWidth: '1280px', margin: '0 auto' }}>
@@ -466,9 +502,36 @@ export const ClientDiagnostic: React.FC = () => {
                 Health Score: {profile.health_score || 0}
               </span>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-              {clientInfo.email} • Diagnóstico 360° do Cliente
-            </p>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+              {clientInfo.email} • Diagnóstico 360° • 
+              {isEditingPhone ? (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <input 
+                    type="tel" 
+                    value={editPhoneValue} 
+                    onChange={e => setEditPhoneValue(e.target.value)} 
+                    placeholder="(11) 99999-9999" 
+                    style={{ padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)', fontSize: '0.8rem', width: '120px' }}
+                    autoFocus
+                  />
+                  <button onClick={handleSavePhone} disabled={savingPhone} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--success)' }} title="Salvar">
+                    <Check size={14} />
+                  </button>
+                  <button onClick={() => setIsEditingPhone(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)' }} title="Cancelar">
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span style={{ color: clientInfo.phone ? 'inherit' : 'var(--warning)', fontWeight: clientInfo.phone ? 'normal' : 600 }}>
+                    {clientInfo.phone || 'Telefone pendente'}
+                  </span>
+                  <button onClick={startEditingPhone} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--brand-primary)', opacity: 0.8, padding: 0, display: 'flex' }} title="Editar Telefone">
+                    <Edit2 size={12} />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

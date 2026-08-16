@@ -38,6 +38,7 @@ export const ConsultantDashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientPassword, setNewClientPassword] = useState('');
   const [creating, setCreating] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -58,6 +59,7 @@ export const ConsultantDashboard: React.FC = () => {
           .select(`
             id, 
             full_name,
+            phone,
             created_at,
             financial_profiles (
               health_score,
@@ -104,17 +106,23 @@ export const ConsultantDashboard: React.FC = () => {
     setModalMessage('');
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: newClientEmail,
         password: newClientPassword,
         options: {
           data: {
             full_name: newClientName,
+            phone: newClientPhone
           }
         }
       });
 
       if (error) throw error;
+      
+      if (data?.user) {
+        // Atualiza a tabela public.users localmente usando o token do novo usuário logado
+        await supabase.from('users').update({ phone: newClientPhone }).eq('id', data.user.id);
+      }
 
       setModalMessage('Cliente criado com sucesso! Devido a regras de segurança, o sistema deslogou você. Você será redirecionado para o login em 3 segundos.');
       
@@ -549,7 +557,16 @@ export const ConsultantDashboard: React.FC = () => {
                 // Format WhatsApp message link
                 const firstName = client.full_name?.split(' ')[0] || 'Cliente';
                 const waMessage = encodeURIComponent(`Olá ${firstName}, tudo bem? Aqui é o seu consultor financeiro da AFIC. Gostaria de alinhar nossos próximos passos do seu planejamento financeiro.`);
-                const waUrl = `https://api.whatsapp.com/send?text=${waMessage}`;
+                let waUrl = `https://api.whatsapp.com/send?text=${waMessage}`;
+                
+                if (client.phone) {
+                  const cleanPhone = client.phone.replace(/\D/g, '');
+                  if (cleanPhone) {
+                    // Assuming Brazilian numbers, prepend 55 if length <= 11
+                    const fullPhone = cleanPhone.length <= 11 && !cleanPhone.startsWith('55') ? `55${cleanPhone}` : cleanPhone;
+                    waUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${waMessage}`;
+                  }
+                }
 
                 return (
                   <tr key={client.id} style={{ borderTop: '1px solid var(--border-color)', transition: 'background var(--ease-fast)' }} className="table-row-hover">
@@ -713,6 +730,10 @@ export const ConsultantDashboard: React.FC = () => {
               <div>
                 <label className="afic-label">E-mail</label>
                 <input type="email" required value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label className="afic-label">WhatsApp (com DDD)</label>
+                <input type="tel" required value={newClientPhone} onChange={e => setNewClientPhone(e.target.value)} placeholder="(11) 99999-9999" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--r-md)', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-primary)' }} />
               </div>
               <div>
                 <label className="afic-label">Senha Inicial</label>
