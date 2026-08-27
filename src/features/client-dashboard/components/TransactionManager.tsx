@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, 
-  Calendar, X, AlertCircle, Tag, ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal, FileText 
+  Calendar, X, AlertCircle, Tag, ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal, FileText,
+  Search, RotateCcw
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
@@ -78,6 +79,14 @@ const PAYMENT_METHODS = [
   'Transferência'
 ];
 
+const normalizeText = (text: string) => {
+  return (text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+};
+
 export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUserId, readOnly = false }) => {
   const { user } = useAuth();
   const effectiveUserId = targetUserId || user?.id;
@@ -99,6 +108,31 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomRange, setShowCustomRange] = useState(false);
+
+  // New Advanced Filters
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
+  const [filterMinValue, setFilterMinValue] = useState<string>('');
+  const [filterMaxValue, setFilterMaxValue] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'value_desc' | 'value_asc' | 'alpha_asc' | 'alpha_desc'>('date_desc');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  const activeFiltersCount = (filterCategory !== 'all' ? 1 : 0) + 
+    (filterPaymentMethod !== 'all' ? 1 : 0) + 
+    (filterMinValue !== '' ? 1 : 0) + 
+    (filterMaxValue !== '' ? 1 : 0);
+  
+  const hasAnyFilter = filterType !== 'all' || filterStatus !== 'all' || searchQuery.trim() !== '' || activeFiltersCount > 0;
+
+  const clearAllFilters = () => {
+    setFilterType('all');
+    setFilterStatus('all');
+    setSearchQuery('');
+    setFilterCategory('all');
+    setFilterPaymentMethod('all');
+    setFilterMinValue('');
+    setFilterMaxValue('');
+  };
 
   // Helper to format YYYY-MM into friendly Portuguese label
   const formatMonthLabel = (yyyyMm: string, short = false) => {
@@ -457,18 +491,78 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
 
   // Filtered Transactions
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(t => {
+    let result = transactions.filter(t => {
+      // Basic match
       if (filterType !== 'all' && t.type !== filterType) return false;
       if (filterStatus !== 'all' && t.status !== filterStatus) return false;
+      
+      // Advanced match
+      if (filterCategory !== 'all' && t.category !== filterCategory) return false;
+      if (filterPaymentMethod !== 'all' && (t.payment_method || 'Pix') !== filterPaymentMethod) return false;
+      
+      if (filterMinValue) {
+        const min = parseFloat(filterMinValue.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(min) && t.amount < min) return false;
+      }
+      if (filterMaxValue) {
+        const max = parseFloat(filterMaxValue.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(max) && t.amount > max) return false;
+      }
+
+      // Smart Search
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchDesc = t.description.toLowerCase().includes(q);
-        const matchCategory = t.category.toLowerCase().includes(q);
-        if (!matchDesc && !matchCategory) return false;
+        const queryTerms = normalizeText(searchQuery).split(/\s+/).filter(Boolean);
+        
+        const txDesc = normalizeText(t.description);
+        const txCat = normalizeText(t.category);
+        const txMethod = normalizeText(t.payment_method);
+        const txNotes = normalizeText(t.notes || '');
+        
+        const amountStr = t.amount.toString();
+        const amountFixed = t.amount.toFixed(2);
+        const amountPtBr = t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        const amountInt = String(Math.trunc(t.amount));
+
+        const matchesAll = queryTerms.every(term => {
+          // Remove currency symbols for value search
+          const termClean = term.replace(/^(r\$|rs|\$)/, '').trim();
+          const matchesText = txDesc.includes(term) || txCat.includes(term) || txMethod.includes(term) || txNotes.includes(term);
+          
+          let matchesAmount = false;
+          if (termClean && /^[0-9.,]+$/.test(termClean)) {
+             matchesAmount = amountFixed.includes(termClean) || 
+                             amountStr.includes(termClean) || 
+                             amountPtBr.includes(termClean) || 
+                             amountInt === termClean;
+          }
+          return matchesText || matchesAmount;
+        });
+
+        if (!matchesAll) return false;
       }
       return true;
     });
-  }, [transactions, filterType, filterStatus, searchQuery]);
+
+    // Sorting
+    result.sort((a, b) => {
+      if (sortBy === 'date_desc') {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      } else if (sortBy === 'date_asc') {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      } else if (sortBy === 'value_desc') {
+        return b.amount - a.amount;
+      } else if (sortBy === 'value_asc') {
+        return a.amount - b.amount;
+      } else if (sortBy === 'alpha_asc') {
+        return a.description.localeCompare(b.description);
+      } else if (sortBy === 'alpha_desc') {
+        return b.description.localeCompare(a.description);
+      }
+      return 0;
+    });
+
+    return result;
+  }, [transactions, filterType, filterStatus, filterCategory, filterPaymentMethod, filterMinValue, filterMaxValue, searchQuery, sortBy]);
 
   const totals = useMemo(() => {
     let income = 0;
@@ -604,60 +698,164 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
           </div>
 
           {/* Busca por Texto */}
-          <div style={{ position: 'relative' }}>
+          <div className="tx-search-container">
+            <Search size={16} className="tx-search-icon" />
             <input 
               type="text"
-              placeholder="Buscar lançamento..."
+              placeholder="Buscar por nome, valor (ex: 150 ou 50,00), categoria..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="tx-search-input"
+              className="tx-search-input tx-search-input--with-icon"
             />
+            {searchQuery && (
+              <button className="tx-search-clear" onClick={() => setSearchQuery('')}>
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          {/* Filtros Tipo (Entrada/Saída) */}
-          <div className="tx-pills">
-            <button 
-              className={`tx-pill-btn ${filterType === 'all' ? 'tx-pill-btn--active' : ''}`}
-              onClick={() => setFilterType('all')}
-            >
-              Todos
-            </button>
-            <button 
-              className={`tx-pill-btn ${filterType === 'income' ? 'tx-pill-btn--active' : ''}`}
-              onClick={() => setFilterType('income')}
-            >
-              Entradas
-            </button>
-            <button 
-              className={`tx-pill-btn ${filterType === 'expense' ? 'tx-pill-btn--active' : ''}`}
-              onClick={() => setFilterType('expense')}
-            >
-              Saídas
-            </button>
-          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {/* Filtros Tipo (Entrada/Saída) */}
+            <div className="tx-pills">
+              <button 
+                className={`tx-pill-btn ${filterType === 'all' ? 'tx-pill-btn--active' : ''}`}
+                onClick={() => setFilterType('all')}
+              >
+                Todos
+              </button>
+              <button 
+                className={`tx-pill-btn ${filterType === 'income' ? 'tx-pill-btn--active' : ''}`}
+                onClick={() => setFilterType('income')}
+              >
+                Entradas
+              </button>
+              <button 
+                className={`tx-pill-btn ${filterType === 'expense' ? 'tx-pill-btn--active' : ''}`}
+                onClick={() => setFilterType('expense')}
+              >
+                Saídas
+              </button>
+            </div>
 
-          {/* Filtros Status */}
-          <div className="tx-pills">
+            {/* Filtros Status */}
+            <div className="tx-pills">
+              <button 
+                className={`tx-pill-btn ${filterStatus === 'all' ? 'tx-pill-btn--active' : ''}`}
+                onClick={() => setFilterStatus('all')}
+              >
+                Todos
+              </button>
+              <button 
+                className={`tx-pill-btn ${filterStatus === 'completed' ? 'tx-pill-btn--active' : ''}`}
+                onClick={() => setFilterStatus('completed')}
+              >
+                Pago
+              </button>
+              <button 
+                className={`tx-pill-btn ${filterStatus === 'pending' ? 'tx-pill-btn--active' : ''}`}
+                onClick={() => setFilterStatus('pending')}
+              >
+                Pendente
+              </button>
+            </div>
+
+            {/* Botão de Filtros Avançados */}
             <button 
-              className={`tx-pill-btn ${filterStatus === 'all' ? 'tx-pill-btn--active' : ''}`}
-              onClick={() => setFilterStatus('all')}
+              className={`tx-adv-filters-btn ${activeFiltersCount > 0 ? 'tx-adv-filters-btn--active' : ''}`}
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             >
-              Qualquer Status
-            </button>
-            <button 
-              className={`tx-pill-btn ${filterStatus === 'completed' ? 'tx-pill-btn--active' : ''}`}
-              onClick={() => setFilterStatus('completed')}
-            >
-              Pago
-            </button>
-            <button 
-              className={`tx-pill-btn ${filterStatus === 'pending' ? 'tx-pill-btn--active' : ''}`}
-              onClick={() => setFilterStatus('pending')}
-            >
-              Pendente
+              <SlidersHorizontal size={14} /> 
+              Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}
             </button>
           </div>
         </div>
+
+        {/* Advanced Filters Panel */}
+        {showAdvancedFilters && (
+          <div className="tx-advanced-filters-panel anim-fade-up">
+            <div className="tx-adv-filter-group">
+              <label className="afic-label">Categoria</label>
+              <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="tx-search-input">
+                <option value="all">Todas as categorias</option>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            
+            <div className="tx-adv-filter-group">
+              <label className="afic-label">Forma de Pagamento</label>
+              <select value={filterPaymentMethod} onChange={e => setFilterPaymentMethod(e.target.value)} className="tx-search-input">
+                <option value="all">Todas as formas</option>
+                {PAYMENT_METHODS.map(pm => <option key={pm} value={pm}>{pm}</option>)}
+              </select>
+            </div>
+            
+            <div className="tx-adv-filter-group">
+              <label className="afic-label">Valor Mín (R$)</label>
+              <input type="text" placeholder="Ex: 50,00" value={filterMinValue} onChange={e => setFilterMinValue(e.target.value)} className="tx-search-input" />
+            </div>
+            
+            <div className="tx-adv-filter-group">
+              <label className="afic-label">Valor Máx (R$)</label>
+              <input type="text" placeholder="Ex: 200,00" value={filterMaxValue} onChange={e => setFilterMaxValue(e.target.value)} className="tx-search-input" />
+            </div>
+
+            <div className="tx-adv-filter-group">
+              <label className="afic-label">Ordenar por</label>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="tx-search-input">
+                <option value="date_desc">Data (Mais recente)</option>
+                <option value="date_asc">Data (Mais antiga)</option>
+                <option value="value_desc">Maior valor</option>
+                <option value="value_asc">Menor valor</option>
+                <option value="alpha_asc">Nome (A - Z)</option>
+                <option value="alpha_desc">Nome (Z - A)</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Active Filters Bar */}
+        {hasAnyFilter && (
+          <div className="tx-active-filters-bar anim-fade-up">
+            <div className="tx-active-filters-text">
+              Exibindo <strong>{filteredTransactions.length}</strong> de <strong>{transactions.length}</strong> lançamentos
+            </div>
+            <div className="tx-active-filter-tags">
+              {filterType !== 'all' && (
+                <span className="tx-active-filter-tag" onClick={() => setFilterType('all')}>
+                  Tipo: {filterType === 'income' ? 'Entradas' : 'Saídas'} <X size={12} />
+                </span>
+              )}
+              {filterStatus !== 'all' && (
+                <span className="tx-active-filter-tag" onClick={() => setFilterStatus('all')}>
+                  Status: {filterStatus === 'completed' ? 'Pago' : 'Pendente'} <X size={12} />
+                </span>
+              )}
+              {filterCategory !== 'all' && (
+                <span className="tx-active-filter-tag" onClick={() => setFilterCategory('all')}>
+                  Categoria: {filterCategory} <X size={12} />
+                </span>
+              )}
+              {filterPaymentMethod !== 'all' && (
+                <span className="tx-active-filter-tag" onClick={() => setFilterPaymentMethod('all')}>
+                  Forma: {filterPaymentMethod} <X size={12} />
+                </span>
+              )}
+              {(filterMinValue || filterMaxValue) && (
+                <span className="tx-active-filter-tag" onClick={() => { setFilterMinValue(''); setFilterMaxValue(''); }}>
+                  Valor: {filterMinValue || '0'} a {filterMaxValue || '∞'} <X size={12} />
+                </span>
+              )}
+              {searchQuery && (
+                <span className="tx-active-filter-tag" onClick={() => setSearchQuery('')}>
+                  Busca: "{searchQuery}" <X size={12} />
+                </span>
+              )}
+            </div>
+            <button className="tx-clear-all-btn" onClick={clearAllFilters}>
+              <RotateCcw size={12} /> Limpar Filtros
+            </button>
+          </div>
+        )}
 
         {!readOnly && (
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -678,15 +876,26 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
             Carregando seus lançamentos...
           </Card>
         ) : filteredTransactions.length === 0 ? (
-          <Card style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <AlertCircle size={36} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-            <p style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-primary)' }}>
-              Nenhum lançamento encontrado para este período.
-            </p>
-            <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              Clique em "Novo Lançamento" para registrar suas entradas ou despesas do dia!
-            </p>
-          </Card>
+            <Card style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              <AlertCircle size={36} color="var(--text-muted)" style={{ marginBottom: '0.5rem', margin: '0 auto' }} />
+              <p style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                Nenhum lançamento encontrado para este período.
+              </p>
+              {hasAnyFilter ? (
+                <>
+                  <p style={{ fontSize: '0.875rem', marginTop: '0.25rem', marginBottom: '1rem' }}>
+                    Tente ajustar os filtros ou remover os termos de busca.
+                  </p>
+                  <Button onClick={clearAllFilters} variant="outline" style={{ margin: '0 auto' }}>
+                    Limpar Filtros
+                  </Button>
+                </>
+              ) : (
+                <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  Clique em "Novo Lançamento" para registrar suas entradas ou despesas do dia!
+                </p>
+              )}
+            </Card>
         ) : (
           <>
             {!readOnly && (
