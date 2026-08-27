@@ -242,8 +242,8 @@
 
 /* Ensure dropdown options are readable regardless of browser defaults */
 select.tx-search-input option {
-  background-color: var(--bg-card-solid, #1e293b);
-  color: #f8fafc;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .tx-pills {
@@ -859,8 +859,8 @@ select.tx-search-input option {
 }
 
 .ofx-cat-select option {
-  background-color: var(--bg-card-solid, #1e293b);
-  color: #f8fafc;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .spin {

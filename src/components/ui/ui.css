@@ -155,10 +155,10 @@ input, select, textarea, button {
   color: inherit;
 }
 
-/* Ensure all select options have good contrast in dark mode */
+/* Ensure all select options have good contrast in both themes */
 select option {
-  background-color: var(--bg-card-solid, #1e293b);
-  color: #f8fafc;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
 
 /* ---- Stat Metric ---- */
