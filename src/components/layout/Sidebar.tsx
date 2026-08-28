@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock, GraduationCap, FileText, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, LogOut, Clock, GraduationCap, FileText, Compass, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../ui/Logo';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -8,6 +8,7 @@ import './Sidebar.css';
 
 const SIDEBAR_LINKS = [
   { to: '/client', icon: LayoutDashboard, label: 'Meu Painel', exact: true },
+  { to: '/client/the-plan', icon: Compass, label: 'O PLANO 🧭' },
   { to: '/client/education', icon: GraduationCap, label: 'Academia AFIC 🔒' },
   { to: '/client/portfolio', icon: TrendingUp, label: 'Carteira AFIC 🔒' },
   { to: '/client/income-tax', icon: FileText, label: 'Imposto de Renda 📄' },

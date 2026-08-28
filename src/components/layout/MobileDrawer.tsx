@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, GraduationCap, TrendingUp, FileText, 
   Calculator, Clock, ShoppingBag, Target, Activity, 
-  Users, PieChart, Settings, Shield, LogOut, X, Sparkles 
+  Users, PieChart, Settings, Shield, LogOut, X, Sparkles, Compass 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../ui/Logo';
@@ -17,6 +17,7 @@ interface MobileDrawerProps {
 
 const CLIENT_LINKS = [
   { to: '/client', icon: LayoutDashboard, label: 'Meu Painel', exact: true },
+  { to: '/client/the-plan', icon: Compass, label: 'O PLANO 🧭' },
   { to: '/client/education', icon: GraduationCap, label: 'Academia AFIC 🔒' },
   { to: '/client/portfolio', icon: TrendingUp, label: 'Carteira AFIC 🔒' },
   { to: '/client/income-tax', icon: FileText, label: 'Imposto de Renda 📄' },

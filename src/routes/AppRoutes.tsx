@@ -26,6 +26,7 @@ import { TransactionManager } from '../features/client-dashboard/components/Tran
 import { AcademyDashboard } from '../features/education/AcademyDashboard';
 import { IncomeTaxDashboard } from '../features/income-tax/IncomeTaxDashboard';
 import { ClientSettings } from '../features/client-dashboard/ClientSettings';
+import { ThePlanDashboard } from '../features/the-plan/ThePlanDashboard';
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
@@ -95,6 +96,7 @@ export const AppRoutes: React.FC = () => (
         <Route path="expenses" element={<div className="container" style={{ padding: '2rem 1.5rem' }}><TransactionManager /></div>} />
         <Route path="goals" element={<ToolWrapper><GoalTracker /></ToolWrapper>} />
         <Route path="simulator" element={<ToolWrapper><InvestmentSimulator /></ToolWrapper>} />
+        <Route path="the-plan" element={<ToolWrapper><ThePlanDashboard /></ToolWrapper>} />
         <Route path="settings" element={<ClientSettings />} />
       </Route>
       
