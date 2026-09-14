@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Migration 18: Admin Password Reset & Mandatory Force Password Change
+-- Migration 18: Admin Password Reset & Mandatory Force Password Change (Corrigido)
 -- Permite que o Administrador redefina senhas para um valor padrão (ex: Afic@123)
 -- e exige que o usuário redefina sua senha pessoal no próximo login.
 -- ==============================================================================
@@ -7,6 +7,7 @@
 -- 1. Adicionar colunas se não existirem na tabela public.users
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
 -- 2. Sincronizar emails existentes de auth.users para public.users caso estejam nulos
 DO $$
@@ -16,7 +17,6 @@ BEGIN
   FROM auth.users a
   WHERE u.id = a.id AND (u.email IS NULL OR u.email = '');
 EXCEPTION WHEN OTHERS THEN
-  -- Fallback silencioso caso haja restrição de contexto
   NULL;
 END $$;
 
@@ -39,7 +39,7 @@ DECLARE
 BEGIN
   -- 4.1 Verificar se quem está chamando é Administrador
   SELECT role INTO caller_role FROM public.users WHERE id = auth.uid();
-  IF caller_role != 'admin' THEN
+  IF COALESCE(caller_role, '') != 'admin' THEN
     RAISE EXCEPTION 'Acesso negado: apenas administradores podem redefinir senhas de usuários.';
   END IF;
 
@@ -59,8 +59,7 @@ BEGIN
   -- 4.4 Marcar flag must_change_password = true no perfil do usuário
   UPDATE public.users
   SET 
-    must_change_password = true,
-    updated_at = now()
+    must_change_password = true
   WHERE id = target_user_id;
 
   RETURN jsonb_build_object(
@@ -87,7 +86,7 @@ SET search_path = public, auth
 AS $$
 BEGIN
   -- Validação de segurança
-  IF (SELECT public.get_user_role()) != 'admin' THEN
+  IF COALESCE((SELECT public.get_user_role()), '') != 'admin' THEN
     RAISE EXCEPTION 'Acesso negado: apenas administradores podem acessar a listagem global.';
   END IF;
 
@@ -120,8 +119,7 @@ BEGIN
 
   UPDATE public.users
   SET 
-    must_change_password = false,
-    updated_at = now()
+    must_change_password = false
   WHERE id = auth.uid();
 
   RETURN jsonb_build_object('success', true);
@@ -141,5 +139,5 @@ CREATE POLICY "Clientes podem atualizar proprio perfil" ON public.users
 DROP POLICY IF EXISTS "Administradores podem gerenciar todos usuarios" ON public.users;
 CREATE POLICY "Administradores podem gerenciar todos usuarios" ON public.users
   FOR ALL USING (
-    public.get_user_role() = 'admin'
+    COALESCE(public.get_user_role(), '') = 'admin'
   );

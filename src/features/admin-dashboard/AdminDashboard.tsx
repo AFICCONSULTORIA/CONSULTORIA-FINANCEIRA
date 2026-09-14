@@ -167,10 +167,10 @@ export const AdminDashboard: React.FC = () => {
       if (error) {
         console.error('Erro na RPC admin_reset_user_password:', error);
         
-        if (error.message?.includes('does not exist')) {
+        if (error.message?.toLowerCase().includes('function') && error.message?.toLowerCase().includes('does not exist')) {
           setRpcErrorHelper('A função "admin_reset_user_password" precisa ser criada no banco de dados. Execute o arquivo "supabase/migrations/18_admin_password_reset.sql" no SQL Editor do Supabase.');
         } else {
-          setRpcErrorHelper(`Erro retornado pelo banco: ${error.message}`);
+          setRpcErrorHelper(`Erro: ${error.message}`);
         }
         toast.error('Não foi possível redefinir a senha.');
         return;
