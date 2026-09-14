@@ -12,6 +12,9 @@ interface AuthContextType {
   setMockedRole?: (role: 'client' | 'consultant' | 'admin' | null) => void;
   hasCompletedOnboarding: boolean;
   hasPortfolioAccess: boolean;
+  mustChangePassword: boolean;
+  setMustChangePassword: (val: boolean) => void;
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -26,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [hasPortfolioAccess, setHasPortfolioAccess] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
   const setMockedRole = (newRole: 'client' | 'consultant' | 'admin' | null) => {
     if (newRole) {
@@ -60,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRealRole(null);
         setHasCompletedOnboarding(false);
         setHasPortfolioAccess(false);
+        setMustChangePassword(false);
         setLoading(false);
       }
     });
@@ -71,14 +76,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('role, has_completed_onboarding, has_portfolio_access')
+        .select('role, has_completed_onboarding, has_portfolio_access, must_change_password')
         .eq('id', userId)
         .single();
         
-      if (data && !error) {
+      if (error && error.message?.includes('must_change_password')) {
+        // Fallback caso a migração ainda não tenha sido aplicada no Supabase
+        const { data: fallbackData } = await supabase
+          .from('users')
+          .select('role, has_completed_onboarding, has_portfolio_access')
+          .eq('id', userId)
+          .single();
+          
+        if (fallbackData) {
+          setRealRole(fallbackData.role);
+          setHasCompletedOnboarding(fallbackData.has_completed_onboarding || false);
+          setHasPortfolioAccess(fallbackData.has_portfolio_access || false);
+        }
+      } else if (data && !error) {
         setRealRole(data.role);
         setHasCompletedOnboarding(data.has_completed_onboarding || false);
         setHasPortfolioAccess(data.has_portfolio_access || false);
+        setMustChangePassword(Boolean(data.must_change_password));
       }
     } catch (err) {
       console.error("Erro ao buscar papel do usuário", err);
@@ -87,12 +106,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshUserData = async () => {
+    if (user) {
+      await fetchUserData(user.id);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, role, realRole, setMockedRole, hasCompletedOnboarding, hasPortfolioAccess }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      signOut, 
+      role, 
+      realRole, 
+      setMockedRole, 
+      hasCompletedOnboarding, 
+      hasPortfolioAccess,
+      mustChangePassword,
+      setMustChangePassword,
+      refreshUserData
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -101,3 +139,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+

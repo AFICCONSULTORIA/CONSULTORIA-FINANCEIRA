@@ -39,7 +39,9 @@ export const Register: React.FC = () => {
         .insert({
           id: authData.user.id,
           full_name: name,
-          role: 'client'
+          email: email,
+          role: 'client',
+          must_change_password: false
         });
 
       if (dbError) {
