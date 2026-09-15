@@ -12,6 +12,8 @@ interface AuthContextType {
   setMockedRole?: (role: 'client' | 'consultant' | 'admin' | null) => void;
   hasCompletedOnboarding: boolean;
   hasPortfolioAccess: boolean;
+  subscriptionStatus: 'active' | 'cancelled' | 'inactive';
+  subscriptionCanceledAt?: string | null;
   mustChangePassword: boolean;
   setMustChangePassword: (val: boolean) => void;
   refreshUserData: () => Promise<void>;
@@ -29,6 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [hasPortfolioAccess, setHasPortfolioAccess] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'cancelled' | 'inactive'>('inactive');
+  const [subscriptionCanceledAt, setSubscriptionCanceledAt] = useState<string | null>(null);
   const [mustChangePassword, setMustChangePassword] = useState(false);
 
   const setMockedRole = (newRole: 'client' | 'consultant' | 'admin' | null) => {
@@ -64,6 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRealRole(null);
         setHasCompletedOnboarding(false);
         setHasPortfolioAccess(false);
+        setSubscriptionStatus('inactive');
+        setSubscriptionCanceledAt(null);
         setMustChangePassword(false);
         setLoading(false);
       }
@@ -76,12 +82,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('role, has_completed_onboarding, has_portfolio_access, must_change_password')
+        .select('role, has_completed_onboarding, has_portfolio_access, must_change_password, subscription_status, subscription_canceled_at')
         .eq('id', userId)
         .single();
         
-      if (error && error.message?.includes('must_change_password')) {
-        // Fallback caso a migração ainda não tenha sido aplicada no Supabase
+      if (error) {
+        // Fallback caso colunas novas ainda não existam no banco
         const { data: fallbackData } = await supabase
           .from('users')
           .select('role, has_completed_onboarding, has_portfolio_access')
@@ -91,12 +97,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (fallbackData) {
           setRealRole(fallbackData.role);
           setHasCompletedOnboarding(fallbackData.has_completed_onboarding || false);
-          setHasPortfolioAccess(fallbackData.has_portfolio_access || false);
+          const hasAccess = fallbackData.has_portfolio_access || false;
+          setHasPortfolioAccess(hasAccess);
+          setSubscriptionStatus(hasAccess ? 'active' : 'inactive');
         }
-      } else if (data && !error) {
+      } else if (data) {
         setRealRole(data.role);
         setHasCompletedOnboarding(data.has_completed_onboarding || false);
-        setHasPortfolioAccess(data.has_portfolio_access || false);
+        const hasAccess = data.has_portfolio_access || false;
+        setHasPortfolioAccess(hasAccess);
+        setSubscriptionStatus(data.subscription_status || (hasAccess ? 'active' : 'inactive'));
+        setSubscriptionCanceledAt(data.subscription_canceled_at || null);
         setMustChangePassword(Boolean(data.must_change_password));
       }
     } catch (err) {
@@ -127,6 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setMockedRole, 
       hasCompletedOnboarding, 
       hasPortfolioAccess,
+      subscriptionStatus,
+      subscriptionCanceledAt,
       mustChangePassword,
       setMustChangePassword,
       refreshUserData

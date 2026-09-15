@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Shield, Plus, Users, Search, Loader2, LayoutDashboard, Briefcase, 
-  Key, RefreshCw, Copy, Check, AlertTriangle, CheckCircle2, X, Lock, Eye, EyeOff
+  Key, RefreshCw, Copy, Check, AlertTriangle, CheckCircle2, X, Lock, Eye, EyeOff,
+  CreditCard, Sparkles, UserMinus, UserCheck, AlertOctagon
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { Card } from '../../components/ui/Card';
@@ -18,6 +19,10 @@ interface ManagedUser {
   role: 'client' | 'consultant' | 'admin';
   phone?: string | null;
   must_change_password?: boolean;
+  has_portfolio_access?: boolean;
+  subscription_status?: 'active' | 'cancelled' | 'inactive' | string;
+  subscription_canceled_at?: string | null;
+  subscription_cancel_reason?: string | null;
   created_at?: string;
 }
 
@@ -30,6 +35,7 @@ export const AdminDashboard: React.FC = () => {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'client' | 'consultant' | 'admin'>('all');
+  const [subscriptionFilter, setSubscriptionFilter] = useState<'all' | 'active' | 'cancelled' | 'inactive'>('all');
   const [onlyPendingReset, setOnlyPendingReset] = useState(false);
 
   // Cadastro de Novo Consultor
@@ -49,6 +55,12 @@ export const AdminDashboard: React.FC = () => {
   const [copiedMessage, setCopiedMessage] = useState(false);
   const [rpcErrorHelper, setRpcErrorHelper] = useState<string | null>(null);
 
+  // Modal / Ação de Gerenciamento de Assinatura
+  const [subscriptionModalUser, setSubscriptionModalUser] = useState<{ user: ManagedUser; targetStatus: boolean } | null>(null);
+  const [subscriptionChangeReason, setSubscriptionChangeReason] = useState('');
+  const [updatingSubscription, setUpdatingSubscription] = useState(false);
+  const [cancellingViniciusErik, setCancellingViniciusErik] = useState(false);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -58,7 +70,7 @@ export const AdminDashboard: React.FC = () => {
     setRpcErrorHelper(null);
 
     try {
-      // 1. Tenta buscar via RPC completa admin_get_all_users (se a migration 18 estiver aplicada)
+      // 1. Tenta buscar via RPC completa admin_get_all_users (se a migration 18/19 estiver aplicada)
       const { data: rpcData, error: rpcErr } = await supabase.rpc('admin_get_all_users');
 
       if (!rpcErr && rpcData) {
@@ -141,7 +153,7 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Abertura do modal de reset
+  // Abertura do modal de reset de senha
   const handleOpenResetModal = (targetUser: ManagedUser) => {
     setSelectedUser(targetUser);
     setTempPassword('Afic@123');
@@ -202,6 +214,111 @@ export const AdminDashboard: React.FC = () => {
     setTimeout(() => setCopiedMessage(false), 3000);
   };
 
+  // Abertura do modal de alteração de assinatura (cancelamento ou ativação)
+  const handleOpenSubscriptionModal = (user: ManagedUser, targetStatus: boolean) => {
+    setSubscriptionModalUser({ user, targetStatus });
+    setSubscriptionChangeReason(targetStatus ? '' : 'Cancelamento solicitado pela administração');
+  };
+
+  // Confirmação de alteração de assinatura
+  const handleConfirmSubscriptionChange = async () => {
+    if (!subscriptionModalUser) return;
+    const { user, targetStatus } = subscriptionModalUser;
+    setUpdatingSubscription(true);
+
+    try {
+      // 1. Tenta RPC admin_update_user_subscription
+      const { error: rpcErr } = await supabase.rpc('admin_update_user_subscription', {
+        target_user_id: user.id,
+        access_status: targetStatus,
+        reason: targetStatus ? null : (subscriptionChangeReason || 'Cancelado pelo administrador')
+      });
+
+      if (rpcErr) {
+        console.warn('RPC admin_update_user_subscription falhou, usando fallback direto:', rpcErr);
+        // 2. Fallback direto
+        const updatePayload: any = {
+          has_portfolio_access: targetStatus,
+          subscription_status: targetStatus ? 'active' : 'cancelled'
+        };
+        if (!targetStatus) {
+          updatePayload.subscription_canceled_at = new Date().toISOString();
+          updatePayload.subscription_cancel_reason = subscriptionChangeReason || 'Cancelado pelo administrador';
+        }
+
+        const { error: dbErr } = await supabase
+          .from('users')
+          .update(updatePayload)
+          .eq('id', user.id);
+
+        if (dbErr) {
+          // Fallback básico somente com has_portfolio_access
+          const { error: basicErr } = await supabase
+            .from('users')
+            .update({ has_portfolio_access: targetStatus })
+            .eq('id', user.id);
+
+          if (basicErr) throw basicErr;
+        }
+      }
+
+      toast.success(
+        targetStatus 
+          ? `Assinatura de ${user.full_name || 'cliente'} ativada com sucesso!` 
+          : `Assinatura de ${user.full_name || 'cliente'} cancelada com sucesso!`
+      );
+
+      // Atualiza localmente o estado da lista
+      setUsersList(prev => prev.map(u => u.id === user.id ? {
+        ...u,
+        has_portfolio_access: targetStatus,
+        subscription_status: targetStatus ? 'active' : 'cancelled',
+        subscription_canceled_at: targetStatus ? null : new Date().toISOString(),
+        subscription_cancel_reason: targetStatus ? null : subscriptionChangeReason
+      } : u));
+
+      setSubscriptionModalUser(null);
+    } catch (err: any) {
+      console.error('Erro ao atualizar assinatura:', err);
+      toast.error(`Erro ao atualizar assinatura: ${err.message}`);
+    } finally {
+      setUpdatingSubscription(false);
+    }
+  };
+
+  // Cancelamento rápido e em massa para os clientes Vinicius e Erik
+  const handleQuickCancelViniciusAndErik = async () => {
+    setCancellingViniciusErik(true);
+    try {
+      // 1. Atualização via filtro OR no Supabase
+      const { error } = await supabase
+        .from('users')
+        .update({
+          has_portfolio_access: false,
+          subscription_status: 'cancelled',
+          subscription_canceled_at: new Date().toISOString(),
+          subscription_cancel_reason: 'Cancelamento administrativo solicitado (Vinicius e Erik)'
+        })
+        .or('full_name.ilike.%vinicius%,full_name.ilike.%erik%,email.ilike.%vinicius%,email.ilike.%erik%');
+
+      if (error) {
+        // Fallback básico
+        await supabase
+          .from('users')
+          .update({ has_portfolio_access: false })
+          .or('full_name.ilike.%vinicius%,full_name.ilike.%erik%,email.ilike.%vinicius%,email.ilike.%erik%');
+      }
+
+      toast.success('Cancelamento de Vinicius e Erik processado com sucesso!');
+      await fetchUsers();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Erro ao cancelar: ${err.message}`);
+    } finally {
+      setCancellingViniciusErik(false);
+    }
+  };
+
   // Filtros aplicados
   const filteredUsers = usersList.filter(u => {
     const matchesSearch = 
@@ -212,7 +329,17 @@ export const AdminDashboard: React.FC = () => {
     const matchesRole = roleFilter === 'all' || u.role === roleFilter;
     const matchesPending = !onlyPendingReset || u.must_change_password === true;
 
-    return matchesSearch && matchesRole && matchesPending;
+    const isSubActive = u.has_portfolio_access === true || u.subscription_status === 'active';
+    const isSubCancelled = !isSubActive && (u.subscription_status === 'cancelled' || Boolean(u.subscription_canceled_at));
+    const isSubInactive = !isSubActive && !isSubCancelled;
+
+    const matchesSubscription = 
+      subscriptionFilter === 'all' ||
+      (subscriptionFilter === 'active' && isSubActive) ||
+      (subscriptionFilter === 'cancelled' && isSubCancelled) ||
+      (subscriptionFilter === 'inactive' && isSubInactive);
+
+    return matchesSearch && matchesRole && matchesPending && matchesSubscription;
   });
 
   // Estatísticas rápidas
@@ -220,6 +347,21 @@ export const AdminDashboard: React.FC = () => {
   const totalClients = usersList.filter(u => u.role === 'client').length;
   const totalConsultants = usersList.filter(u => u.role === 'consultant').length;
   const totalPendingReset = usersList.filter(u => u.must_change_password).length;
+
+  const totalActiveSubscribers = usersList.filter(u => 
+    u.role === 'client' && (u.has_portfolio_access === true || u.subscription_status === 'active')
+  ).length;
+
+  const totalCancelledSubscribers = usersList.filter(u => 
+    u.role === 'client' && (!u.has_portfolio_access && (u.subscription_status === 'cancelled' || Boolean(u.subscription_canceled_at)))
+  ).length;
+
+  // Localizar Vinicius e Erik na lista
+  const specialClients = usersList.filter(u => {
+    const name = (u.full_name || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    return name.includes('vinicius') || name.includes('erik') || email.includes('vinicius') || email.includes('erik');
+  });
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg-app)', padding: '1.25rem 1rem 5rem' }}>
@@ -239,7 +381,7 @@ export const AdminDashboard: React.FC = () => {
                 </span>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>
-                Gestão Global de Acessos, Usuários e Credenciais
+                Gestão Global de Acessos, Assinaturas, Usuários e Credenciais
               </p>
             </div>
           </div>
@@ -254,14 +396,14 @@ export const AdminDashboard: React.FC = () => {
         </header>
 
         {/* Atalhos e Estatísticas */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <Card style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => navigate('/consultor')}>
             <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: '50%' }}>
               <Briefcase size={24} color="var(--brand-primary)" />
             </div>
             <div>
               <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Acesso Direto</span>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Painel do Consultor</h3>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Painel do Consultor</h3>
             </div>
           </Card>
 
@@ -271,21 +413,47 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <div>
               <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Visão do Cliente</span>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Dashboard do Cliente</h3>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Dashboard do Cliente</h3>
             </div>
           </Card>
 
+          {/* Assinantes Ativos */}
+          <Card style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Assinantes Ativos (Carteiras)</span>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-primary)' }}>{totalActiveSubscribers}</h3>
+            </div>
+            <div style={{ background: 'rgba(16, 185, 129, 0.12)', padding: '0.75rem', borderRadius: '50%' }}>
+              <CreditCard size={24} color="var(--brand-primary)" />
+            </div>
+          </Card>
+
+          {/* Assinaturas Canceladas */}
+          <Card style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Assinaturas Canceladas</span>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: totalCancelledSubscribers > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
+                {totalCancelledSubscribers}
+              </h3>
+            </div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.12)', padding: '0.75rem', borderRadius: '50%' }}>
+              <UserMinus size={24} color="var(--danger)" />
+            </div>
+          </Card>
+
+          {/* Total de Contas */}
           <Card style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Total de Contas</span>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{totalUsers}</h3>
             </div>
-            <div style={{ display: 'flex', gap: '0.375rem', fontSize: '0.75rem' }}>
-              <span style={{ background: 'var(--bg-input)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>{totalClients} Clientes</span>
-              <span style={{ background: 'var(--bg-input)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>{totalConsultants} Consultores</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', fontSize: '0.75rem' }}>
+              <span style={{ background: 'var(--bg-input)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{totalClients} Clientes</span>
+              <span style={{ background: 'var(--bg-input)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{totalConsultants} Consultores</span>
             </div>
           </Card>
 
+          {/* Senhas Temporárias */}
           <Card style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -295,7 +463,7 @@ export const AdminDashboard: React.FC = () => {
           }}>
             <div>
               <span style={{ fontSize: '0.8125rem', color: totalPendingReset > 0 ? '#facc15' : 'var(--text-secondary)' }}>
-                Senhas Temporárias Ativas
+                Senhas Temporárias
               </span>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: totalPendingReset > 0 ? '#facc15' : 'var(--text-primary)' }}>
                 {totalPendingReset}
@@ -307,18 +475,112 @@ export const AdminDashboard: React.FC = () => {
           </Card>
         </div>
 
+        {/* Card Especial de Ação: Cancelamento de Vinicius e Erik */}
+        <Card style={{ marginBottom: '1.75rem', border: '1px solid rgba(234, 179, 8, 0.3)', background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.04) 0%, rgba(239, 68, 68, 0.03) 100%)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+              <div style={{ background: 'rgba(234, 179, 8, 0.15)', padding: '0.75rem', borderRadius: 'var(--r-md)', color: '#facc15' }}>
+                <AlertOctagon size={24} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  Ação Solicitada: Cancelamento de Assinaturas (Vinicius & Erik)
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                  Suspender o acesso às Carteiras Recomendadas e marcar status como cancelado.
+                </p>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleQuickCancelViniciusAndErik}
+              disabled={cancellingViniciusErik}
+              style={{
+                background: 'rgba(239, 68, 68, 0.85)',
+                color: '#ffffff',
+                border: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              {cancellingViniciusErik ? (
+                <>
+                  <Loader2 size={16} className="anim-spin" /> Processando Cancelamento...
+                </>
+              ) : (
+                <>
+                  <UserMinus size={16} /> Executar Cancelamento (Vinicius & Erik)
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Exibição dos clientes Vinicius e Erik encontrados */}
+          {specialClients.length > 0 && (
+            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
+              {specialClients.map(client => {
+                const isActive = client.has_portfolio_access === true || client.subscription_status === 'active';
+                return (
+                  <div 
+                    key={client.id}
+                    style={{
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border-color)',
+                      padding: '0.75rem 1rem',
+                      borderRadius: 'var(--r-md)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem'
+                    }}
+                  >
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', display: 'block' }}>{client.full_name || 'Sem nome'}</strong>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{client.email}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {isActive ? (
+                        <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--brand-primary)', fontWeight: 700 }}>
+                          Ativa
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', fontWeight: 700 }}>
+                          Cancelada
+                        </span>
+                      )}
+
+                      {isActive && (
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenSubscriptionModal(client, false)}
+                          style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: 'var(--danger)', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                        >
+                          Cancelar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+
         {/* Layout Principal: Gestão de Usuários + Cadastro de Consultores */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
           
-          {/* Seção 1: Tabela / Lista de Gestão de Usuários e Senhas */}
+          {/* Seção 1: Tabela / Lista de Gestão de Usuários e Assinaturas */}
           <Card style={{ gridColumn: 'span 2' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
               <div>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Users size={20} color="var(--brand-primary)" /> Gestão de Usuários & Senhas
+                  <Users size={20} color="var(--brand-primary)" /> Gestão de Usuários & Assinaturas
                 </h2>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                  Visualize clientes e consultores cadastrados e redefina senhas com 1 clique.
+                  Gerencie acessos às carteiras, redefina senhas e controle o status das assinaturas.
                 </p>
               </div>
 
@@ -340,41 +602,77 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Filtros rápidos */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+            {/* Filtros rápidos: Papel e Assinatura */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+              
+              {/* Filtro por Papel */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginRight: '0.25rem' }}>
+                    Papel:
+                  </span>
+                  {(['all', 'client', 'consultant', 'admin'] as const).map(role => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => setRoleFilter(role)}
+                      style={{
+                        padding: '0.3rem 0.75rem',
+                        borderRadius: 'var(--r-full, 9999px)',
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        border: '1px solid',
+                        borderColor: roleFilter === role ? 'var(--brand-primary)' : 'var(--border-color)',
+                        background: roleFilter === role ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-input)',
+                        color: roleFilter === role ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {role === 'all' ? 'Todos' : role === 'client' ? 'Clientes' : role === 'consultant' ? 'Consultores' : 'Admins'}
+                    </button>
+                  ))}
+                </div>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={onlyPendingReset} 
+                    onChange={e => setOnlyPendingReset(e.target.checked)} 
+                    style={{ width: 'auto', cursor: 'pointer' }}
+                  />
+                  Apenas com senha temporária ativa
+                </label>
+              </div>
+
+              {/* Filtro por Assinatura */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {(['all', 'client', 'consultant', 'admin'] as const).map(role => (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginRight: '0.25rem' }}>
+                  Assinatura:
+                </span>
+                {(['all', 'active', 'cancelled', 'inactive'] as const).map(status => (
                   <button
-                    key={role}
+                    key={status}
                     type="button"
-                    onClick={() => setRoleFilter(role)}
+                    onClick={() => setSubscriptionFilter(status)}
                     style={{
-                      padding: '0.375rem 0.875rem',
+                      padding: '0.25rem 0.65rem',
                       borderRadius: 'var(--r-full, 9999px)',
-                      fontSize: '0.8125rem',
+                      fontSize: '0.78rem',
                       fontWeight: 600,
                       border: '1px solid',
-                      borderColor: roleFilter === role ? 'var(--brand-primary)' : 'var(--border-color)',
-                      background: roleFilter === role ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-input)',
-                      color: roleFilter === role ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                      borderColor: subscriptionFilter === status ? '#facc15' : 'var(--border-color)',
+                      background: subscriptionFilter === status ? 'rgba(234, 179, 8, 0.12)' : 'var(--bg-input)',
+                      color: subscriptionFilter === status ? '#facc15' : 'var(--text-secondary)',
                       cursor: 'pointer',
                       transition: 'all 0.15s'
                     }}
                   >
-                    {role === 'all' ? 'Todos' : role === 'client' ? 'Clientes' : role === 'consultant' ? 'Consultores' : 'Admins'}
+                    {status === 'all' ? 'Todas Assinaturas' : status === 'active' ? 'Ativas (Premium)' : status === 'cancelled' ? 'Canceladas' : 'Inativas'}
                   </button>
                 ))}
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  checked={onlyPendingReset} 
-                  onChange={e => setOnlyPendingReset(e.target.checked)} 
-                  style={{ width: 'auto', cursor: 'pointer' }}
-                />
-                Apenas com senha temporária ativa
-              </label>
             </div>
 
             {/* Lista de Usuários */}
@@ -394,6 +692,8 @@ export const AdminDashboard: React.FC = () => {
                 {filteredUsers.map(u => {
                   const isCurrentAdmin = u.id === currentUser?.id;
                   const isPending = Boolean(u.must_change_password);
+                  const isSubActive = u.has_portfolio_access === true || u.subscription_status === 'active';
+                  const isSubCancelled = !isSubActive && (u.subscription_status === 'cancelled' || Boolean(u.subscription_canceled_at));
 
                   return (
                     <div 
@@ -453,8 +753,9 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Badges de Papel e Status de Senha + Ação */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                      {/* Badges de Papel, Assinatura e Ações */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        
                         {/* Badge de Papel */}
                         <div 
                           style={{
@@ -474,6 +775,65 @@ export const AdminDashboard: React.FC = () => {
                           {u.role === 'admin' ? 'Administrador' : u.role === 'consultant' ? 'Consultor AFIC' : 'Cliente'}
                         </div>
 
+                        {/* Badge de Assinatura (Apenas para Clientes) */}
+                        {u.role === 'client' && (
+                          isSubActive ? (
+                            <div 
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                color: 'var(--brand-primary)',
+                                background: 'rgba(16, 185, 129, 0.12)',
+                                padding: '0.25rem 0.625rem',
+                                borderRadius: '1rem',
+                                border: '1px solid rgba(16, 185, 129, 0.3)'
+                              }}
+                              title="Cliente possui acesso liberado às Carteiras Recomendadas"
+                            >
+                              <Sparkles size={12} />
+                              Assinante Ativo
+                            </div>
+                          ) : isSubCancelled ? (
+                            <div 
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                color: 'var(--danger)',
+                                background: 'rgba(239, 68, 68, 0.12)',
+                                padding: '0.25rem 0.625rem',
+                                borderRadius: '1rem',
+                                border: '1px solid rgba(239, 68, 68, 0.3)'
+                              }}
+                              title="Assinatura cancelada"
+                            >
+                              <UserMinus size={12} />
+                              Cancelada
+                            </div>
+                          ) : (
+                            <div 
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                fontSize: '0.75rem',
+                                color: 'var(--text-muted)',
+                                background: 'rgba(255, 255, 255, 0.04)',
+                                padding: '0.25rem 0.625rem',
+                                borderRadius: '1rem',
+                                border: '1px solid var(--border-color)'
+                              }}
+                            >
+                              Sem Assinatura
+                            </div>
+                          )
+                        )}
+
                         {/* Status da Senha */}
                         {isPending ? (
                           <div 
@@ -492,7 +852,7 @@ export const AdminDashboard: React.FC = () => {
                             title="O usuário possui uma senha temporária ativa e será obrigado a redefinir ao fazer login"
                           >
                             <AlertTriangle size={13} />
-                            Senha Temporária Ativa
+                            Senha Temporária
                           </div>
                         ) : (
                           <div 
@@ -523,8 +883,44 @@ export const AdminDashboard: React.FC = () => {
                           }}
                         >
                           <Key size={14} />
-                          Redefinir Senha
+                          Senha
                         </Button>
+
+                        {/* Botão de Cancelar / Ativar Assinatura (Para Clientes) */}
+                        {u.role === 'client' && (
+                          isSubActive ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenSubscriptionModal(u, false)}
+                              style={{
+                                gap: '0.375rem',
+                                fontSize: '0.8125rem',
+                                borderColor: 'rgba(239, 68, 68, 0.4)',
+                                color: 'var(--danger)'
+                              }}
+                            >
+                              <UserMinus size={14} />
+                              Cancelar Assinatura
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenSubscriptionModal(u, true)}
+                              style={{
+                                gap: '0.375rem',
+                                fontSize: '0.8125rem',
+                                borderColor: 'rgba(16, 185, 129, 0.4)',
+                                color: 'var(--brand-primary)'
+                              }}
+                            >
+                              <UserCheck size={14} />
+                              Ativar Assinatura
+                            </Button>
+                          )
+                        )}
+
                       </div>
                     </div>
                   );
@@ -598,104 +994,51 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Modal de Redefinição de Senha */}
       {selectedUser && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-            backgroundColor: 'rgba(5, 10, 18, 0.8)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-        >
-          <div 
-            style={{
-              width: '100%',
-              maxWidth: '520px',
-              background: 'var(--bg-card, #121826)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--r-xl, 16px)',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
-              padding: '2rem',
-              color: 'var(--text-primary)',
-              position: 'relative'
-            }}
-          >
-            {/* Fechar */}
-            <button
-              onClick={() => setSelectedUser(null)}
-              style={{
-                position: 'absolute',
-                top: '1.25rem',
-                right: '1.25rem',
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={20} />
-            </button>
+        <div className="tx-modal-overlay">
+          <div className="tx-modal anim-fade-up" style={{ maxWidth: '520px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.15)', padding: '0.625rem', borderRadius: '50%', color: 'var(--brand-primary)' }}>
+                  <Key size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Redefinir Senha de Acesso</h3>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                    {selectedUser.full_name || selectedUser.email}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => !resetting && setSelectedUser(null)} 
+                disabled={resetting}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
             {!resetSuccess ? (
               <>
-                {/* Cabeçalho */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', marginBottom: '1.5rem' }}>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.12)', padding: '0.75rem', borderRadius: '50%', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                    <Key size={24} color="var(--brand-primary)" />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Redefinir Senha do Usuário</h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                      Atribua uma senha padrão temporária para este usuário.
-                    </p>
-                  </div>
-                </div>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                  Defina a senha temporária para <strong>{selectedUser.full_name || 'o usuário'}</strong>. Ele(a) será obrigado(a) a cadastrar uma nova senha logo no primeiro login.
+                </p>
 
-                {/* Info do Usuário */}
-                <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--r-md)', marginBottom: '1.5rem', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Usuário selecionado:</div>
-                  <strong style={{ fontSize: '1rem', display: 'block', color: 'var(--text-primary)' }}>{selectedUser.full_name || 'Sem nome'}</strong>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--brand-primary)', marginTop: '0.125rem' }}>
-                    {selectedUser.email || 'E-mail não registrado'}
-                  </div>
-                </div>
-
-                {/* Campo de Senha Temporária */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label className="afic-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
-                    <span>Senha Temporária Padrão</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--brand-primary)' }}>Sugerida: Afic@123</span>
-                  </label>
+                {/* Campo da Senha Temporária */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label className="afic-label">Senha Temporária</label>
                   <div style={{ position: 'relative' }}>
                     <input 
-                      type={showTempPassword ? 'text' : 'password'}
-                      value={tempPassword}
-                      onChange={e => setTempPassword(e.target.value)}
-                      required
+                      type={showTempPassword ? 'text' : 'password'} 
+                      value={tempPassword} 
+                      onChange={e => setTempPassword(e.target.value)} 
+                      required 
                       minLength={6}
                       style={{ paddingRight: '2.5rem' }}
                     />
-                    <button
-                      type="button"
+                    <button 
+                      type="button" 
                       onClick={() => setShowTempPassword(!showTempPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '0.75rem',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--text-muted)',
-                        padding: 0,
-                        cursor: 'pointer'
-                      }}
-                      title={showTempPassword ? 'Ocultar' : 'Exibir'}
+                      style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                     >
                       {showTempPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -753,7 +1096,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </>
             ) : (
-              /* Tela de Sucesso com Botão de Copiar Mensagem para WhatsApp/Email */
+              /* Tela de Sucesso */
               <div>
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                   <div 
@@ -827,6 +1170,93 @@ export const AdminDashboard: React.FC = () => {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Alteração de Assinatura */}
+      {subscriptionModalUser && (
+        <div className="tx-modal-overlay">
+          <div className="tx-modal anim-fade-up" style={{ maxWidth: '500px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ 
+                  background: subscriptionModalUser.targetStatus ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', 
+                  padding: '0.625rem', 
+                  borderRadius: '50%', 
+                  color: subscriptionModalUser.targetStatus ? 'var(--brand-primary)' : 'var(--danger)' 
+                }}>
+                  {subscriptionModalUser.targetStatus ? <UserCheck size={22} /> : <UserMinus size={22} />}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+                    {subscriptionModalUser.targetStatus ? 'Ativar Assinatura' : 'Cancelar Assinatura'}
+                  </h3>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                    {subscriptionModalUser.user.full_name || subscriptionModalUser.user.email}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => !updatingSubscription && setSubscriptionModalUser(null)} 
+                disabled={updatingSubscription}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              {subscriptionModalUser.targetStatus ? (
+                <>
+                  Deseja liberar o acesso premium às <strong>Carteiras Recomendadas AFIC</strong> para o cliente <strong>{subscriptionModalUser.user.full_name || 'selecionado'}</strong>?
+                </>
+              ) : (
+                <>
+                  Tem certeza que deseja cancelar a assinatura de <strong>{subscriptionModalUser.user.full_name || 'cliente'}</strong>? O cliente perderá acesso imediato às carteiras recomendadas.
+                </>
+              )}
+            </p>
+
+            {!subscriptionModalUser.targetStatus && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="afic-label">Motivo do Cancelamento (opcional)</label>
+                <input 
+                  type="text"
+                  value={subscriptionChangeReason}
+                  onChange={e => setSubscriptionChangeReason(e.target.value)}
+                  placeholder="Ex: Cancelamento solicitado pelo cliente via WhatsApp"
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <Button 
+                variant="outline" 
+                onClick={() => setSubscriptionModalUser(null)} 
+                disabled={updatingSubscription}
+              >
+                Voltar
+              </Button>
+              <Button 
+                onClick={handleConfirmSubscriptionChange} 
+                disabled={updatingSubscription}
+                style={{
+                  background: subscriptionModalUser.targetStatus ? undefined : 'var(--danger)',
+                  borderColor: subscriptionModalUser.targetStatus ? undefined : 'var(--danger)'
+                }}
+              >
+                {updatingSubscription ? (
+                  <>
+                    <Loader2 className="anim-spin" size={16} /> Processando...
+                  </>
+                ) : subscriptionModalUser.targetStatus ? (
+                  'Confirmar Ativação'
+                ) : (
+                  'Confirmar Cancelamento'
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}
