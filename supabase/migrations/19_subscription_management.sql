@@ -33,6 +33,8 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS has_portfolio_access BOOLEAN D
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'inactive';
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS subscription_canceled_at TIMESTAMPTZ DEFAULT NULL;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS subscription_cancel_reason TEXT DEFAULT NULL;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 

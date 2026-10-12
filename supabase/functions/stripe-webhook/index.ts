@@ -64,14 +64,22 @@ serve(async (req) => {
           });
         }
 
+        const updateData: any = {
+          has_portfolio_access: true,
+          subscription_status: 'active'
+        };
+        if (session.customer) updateData.stripe_customer_id = session.customer as string;
+        if (session.subscription) updateData.stripe_subscription_id = session.subscription as string;
+
         const { error } = await supabase
           .from('users')
-          .update({ has_portfolio_access: true })
+          .update(updateData)
           .eq('id', userId)
           
         if (error) {
           console.error('[Supabase Error]', error)
-          throw error
+          // Fallback básico caso as colunas extras não existam
+          await supabase.from('users').update({ has_portfolio_access: true }).eq('id', userId)
         }
       } else {
         console.warn('[Stripe Webhook] Checkout concluído, mas SEM client_reference_id. Usuário não identificado.')
@@ -89,12 +97,17 @@ serve(async (req) => {
         console.log(`[Stripe Webhook] Assinatura cancelada. Bloqueando acesso para o usuário: ${userId}`)
         const { error } = await supabase
           .from('users')
-          .update({ has_portfolio_access: false })
+          .update({ 
+            has_portfolio_access: false,
+            subscription_status: 'cancelled',
+            subscription_canceled_at: new Date().toISOString(),
+            subscription_cancel_reason: 'Cancelamento processado pelo Stripe'
+          })
           .eq('id', userId)
 
         if (error) {
           console.error('[Supabase Error]', error)
-          throw error
+          await supabase.from('users').update({ has_portfolio_access: false }).eq('id', userId)
         }
       } else {
         console.warn('[Stripe Webhook] Assinatura deletada, mas não encontramos o user_id nos metadados.')
