@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit2, Trash2, TrendingUp, TrendingDown, 
   Search, AlertCircle, Building2, DollarSign, Wallet, X, RefreshCw,
-  Calculator, Sparkles
+  Calculator, Sparkles, Zap
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { fetchAssetQuote, fetchMultipleQuotes } from '../../lib/brapi';
@@ -10,6 +10,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 import { PortfolioInvestmentSimulatorModal } from './PortfolioInvestmentSimulatorModal';
+import { OpenFinanceModal } from '../client-dashboard/components/OpenFinanceModal';
 
 export interface ClientAsset {
   id: string;
@@ -49,6 +50,8 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [isOpenFinanceOpen, setIsOpenFinanceOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   const [editingAsset, setEditingAsset] = useState<ClientAsset | null>(null);
 
   // Form State
@@ -63,6 +66,7 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
   const [saving, setSaving] = useState(false);
   const [fetchingQuote, setFetchingQuote] = useState(false);
   const [updatingAllQuotes, setUpdatingAllQuotes] = useState(false);
+
   useEffect(() => {
     fetchAssets();
   }, [targetUserId]);
@@ -77,6 +81,7 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
       } else {
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user) {
+          setCurrentUserId(userData.user.id);
           query = query.eq('user_id', userData.user.id);
         }
       }
@@ -448,7 +453,21 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
         </div>
 
         {!readOnly && (
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button 
+              onClick={() => setIsOpenFinanceOpen(true)}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                background: 'rgba(234, 179, 8, 0.12)',
+                border: '1px solid var(--brand-primary)',
+                color: 'var(--brand-primary)',
+                fontWeight: 700
+              }}
+            >
+              <Zap size={16} /> Open Finance (Auto)
+            </Button>
             <Button 
               variant="outline" 
               onClick={handleUpdateAllQuotes}
@@ -530,6 +549,22 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
                     }}>
                       {asset.category}
                     </span>
+                    {(asset.notes?.includes('Open Finance') || asset.notes?.includes('Pluggy')) && (
+                      <span style={{ 
+                        marginLeft: '0.4rem',
+                        fontSize: '0.68rem', 
+                        fontWeight: 800, 
+                        padding: '0.15rem 0.45rem', 
+                        borderRadius: 'var(--r-sm)', 
+                        background: 'rgba(234, 179, 8, 0.15)', 
+                        color: 'var(--brand-primary)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.2rem'
+                      }}>
+                        <Zap size={10} /> Auto
+                      </span>
+                    )}
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.35rem' }}>
                       {asset.ticker}
                     </h3>
@@ -750,6 +785,16 @@ export const ClientPortfolioManager: React.FC<ClientPortfolioManagerProps> = ({
         isOpen={isSimulatorOpen}
         onClose={() => setIsSimulatorOpen(false)}
         targetUserId={targetUserId}
+        onSuccess={() => {
+          fetchAssets();
+        }}
+      />
+
+      {/* Modal Open Finance Brasil (Sincronização de Investimentos e Bancos) */}
+      <OpenFinanceModal
+        userId={targetUserId || currentUserId}
+        isOpen={isOpenFinanceOpen}
+        onClose={() => setIsOpenFinanceOpen(false)}
         onSuccess={() => {
           fetchAssets();
         }}

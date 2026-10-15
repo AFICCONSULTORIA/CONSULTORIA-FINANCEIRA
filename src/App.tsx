@@ -1,3 +1,5 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 import { AppRoutes } from './routes/AppRoutes';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -8,17 +10,19 @@ import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   return (
-    <div className="app-container">
-      <ThemeProvider>
-        <AuthProvider>
-          <AppRoutes />
-          <AdminRoleSwitcher />
-          <ForcePasswordResetModal />
-          <Toaster position="top-right" toastOptions={{ style: { background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' } }} />
-          <Analytics />
-        </AuthProvider>
-      </ThemeProvider>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <div className="app-container">
+        <ThemeProvider>
+          <AuthProvider>
+            <AppRoutes />
+            <AdminRoleSwitcher />
+            <ForcePasswordResetModal />
+            <Toaster position="top-right" toastOptions={{ style: { background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' } }} />
+            <Analytics />
+          </AuthProvider>
+        </ThemeProvider>
+      </div>
+    </QueryClientProvider>
   );
 }
 

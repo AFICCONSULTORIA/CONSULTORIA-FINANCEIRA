@@ -1,0 +1,375 @@
+/* DebtManager.css - Gestão Moderna de Dívidas & Financiamentos AFIC */
+
+.debt-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Header */
+.debt-manager__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.debt-manager__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.debt-manager__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.debt-manager__subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.debt-manager__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Overview KPIs */
+.debt-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.debt-kpi-card {
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.debt-kpi-card--danger {
+  border-top: 3px solid var(--danger);
+}
+
+.debt-kpi-card--warning {
+  border-top: 3px solid var(--warning);
+}
+
+.debt-kpi-card--info {
+  border-top: 3px solid var(--info);
+}
+
+.debt-kpi-card--success {
+  border-top: 3px solid var(--success);
+}
+
+.debt-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+
+.debt-kpi-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 0.25rem;
+}
+
+.debt-kpi-sub {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+}
+
+/* Amortization Strategy Banner */
+.debt-strategy-banner {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.debt-strategy-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.debt-strategy-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  background: var(--danger);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.debt-strategy-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.debt-strategy-desc {
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Filter bar */
+.debt-filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  max-width: 100%;
+}
+
+.debt-filter-btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--r-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.debt-filter-btn--active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #000000;
+}
+
+/* Debts Grid */
+.debt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.debt-card {
+  padding: 1.35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.debt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.debt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.debt-badge-type {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--r-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.debt-badge--imovel { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
+.debt-badge--veiculo { background: rgba(16, 185, 129, 0.15); color: #34D399; }
+.debt-badge--cartao { background: rgba(239, 68, 68, 0.15); color: #F87171; }
+.debt-badge--consignado { background: rgba(139, 92, 246, 0.15); color: #A78BFA; }
+.debt-badge--cheque_especial { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
+.debt-badge--pessoal { background: rgba(236, 72, 153, 0.15); color: #F472B6; }
+.debt-badge--outros { background: rgba(107, 114, 128, 0.15); color: #9CA3AF; }
+
+.debt-badge-auto {
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--brand-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.debt-card-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0.35rem 0 0.15rem 0;
+}
+
+.debt-card-inst {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Metric boxes */
+.debt-metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  background: var(--bg-app);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-color);
+}
+
+.debt-metric-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.debt-metric-lbl {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+}
+
+.debt-metric-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 0.15rem;
+}
+
+/* Progress of installments */
+.debt-installments-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.debt-installments-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+}
+
+.debt-progress-bar {
+  height: 6px;
+  background: var(--border-color);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+
+.debt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #3B82F6 100%);
+  border-radius: var(--r-full);
+  transition: width 0.3s ease;
+}
+
+/* Card footer actions */
+.debt-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.775rem;
+}
+
+.debt-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.debt-action-btn {
+  background: none;
+  border: none;
+  padding: 0.3rem;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.debt-action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.debt-action-btn--delete:hover {
+  color: var(--danger);
+}
+
+/* Empty state */
+.debt-empty-state {
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.debt-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}

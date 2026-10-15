@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, Target, Shield, User, Loader2, Plus, CheckCircle, 
   Circle, Trash2, X, Edit2, MessageSquare, Send, Calendar, 
-  FileText, Printer, Copy, Check, MessageCircle, Sparkles, Activity
+  FileText, Copy, Check, MessageCircle, Sparkles, Activity
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -14,6 +14,7 @@ import { PortfolioInvestmentSimulatorModal } from '../portfolio/PortfolioInvestm
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { calculateHealthScore, getScoreStatus } from '../../utils/scoreCalculator';
+import { ClientExecutiveReportView } from './reports/ClientExecutiveReportView';
 
 interface ActionPlan {
   id: string;
@@ -1374,106 +1375,39 @@ export const ClientDiagnostic: React.FC = () => {
       {/* TAB 6: RELATÓRIO EXECUTIVO / PDF */}
       {/* ────────────────────────────────────────────────────────── */}
       {activeTab === 'report' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} className="anim-fade-up">
-          
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-            <Button variant="primary" onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Printer size={18} /> Imprimir / Salvar em PDF
-            </Button>
-          </div>
-
-          <Card style={{ padding: '2.5rem', background: '#fff', color: '#1e293b', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
-            
-            {/* Header do Relatório */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e2e8f0', paddingBottom: '1.5rem', marginBottom: '2rem' }}>
-              <div>
-                <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>AFIC CONSULTORIA</h2>
-                <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0.25rem 0 0' }}>Relatório Executivo de Planejamento & Diagnóstico Financeiro</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>Cliente: {clientInfo.full_name}</strong>
-                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Data: {new Date().toLocaleDateString('pt-BR')}</span>
-              </div>
-            </div>
-
-            {/* Score & Resumo Geral */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-              <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Health Score</span>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0284c7', margin: '0.25rem 0 0' }}>{profile.health_score || 0}/100</h3>
-              </div>
-              <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Renda Mensal</span>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', margin: '0.25rem 0 0' }}>
-                  {Number(profile.monthly_income).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </h3>
-              </div>
-              <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Custos Fixos</span>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', margin: '0.25rem 0 0' }}>
-                  {Number(profile.fixed_costs).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ({fixedCostPct}%)
-                </h3>
-              </div>
-              <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Patrimônio Líquido</span>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#16a34a', margin: '0.25rem 0 0' }}>
-                  {Number(profile.total_equity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </h3>
-              </div>
-            </div>
-
-            {/* Estratégia de Baldes Recomendada */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                1. Estratégia de Alocação de Potes (Orçamento Ideal)
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem' }}>
-                {buckets.map(b => (
-                  <div key={b.type} style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '6px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                    <strong style={{ fontSize: '0.85rem', color: '#334155', display: 'block' }}>{b.label}</strong>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0284c7', display: 'block', margin: '0.25rem 0' }}>{b.percentage}%</span>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                      {((profile.monthly_income * b.percentage) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Plano de Ação Estratégico */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                2. Plano de Ação & Próximos Passos
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {actionPlans.map((task, i) => (
-                  <div key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.75rem', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 800, color: '#0284c7', fontSize: '0.85rem' }}>{i + 1}.</span>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>{task.title}</span>
-                    </div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '4px', background: task.status === 'completed' ? '#dcfce7' : '#fef3c7', color: task.status === 'completed' ? '#166534' : '#92400e' }}>
-                      {task.status === 'completed' ? 'Concluída' : 'Em andamento'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Assinatura do Consultor */}
-            <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>AFIC Consultoria Financeira • Gestão Patrimonial</p>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>Documento emitido para fins de consultoria estratégica.</p>
-              </div>
-              <div style={{ textAlign: 'center', minWidth: '200px' }}>
-                <div style={{ borderBottom: '1px solid #334155', marginBottom: '0.25rem', height: '30px' }} />
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>Consultor Financeiro AFIC</span>
-              </div>
-            </div>
-
-          </Card>
-        </div>
+        <ClientExecutiveReportView
+          reportData={{
+            clientName: clientInfo.full_name || 'Cliente',
+            clientEmail: clientInfo.email,
+            clientPhone: clientInfo.phone,
+            consultantName: 'Consultor Financeiro AFIC',
+            date: new Date().toLocaleDateString('pt-BR'),
+            healthScore: profile.health_score || 0,
+            healthStatus: profile.status || 'good',
+            monthlyIncome: Number(profile.monthly_income || 0),
+            fixedCosts: Number(profile.fixed_costs || 0),
+            totalDebt: Number(profile.total_debt || 0),
+            totalEquity: Number(profile.total_equity || 0),
+            savingRate: profile.monthly_income > 0 ? Math.round(((profile.monthly_income - profile.fixed_costs) / profile.monthly_income) * 100) : 0,
+            emergencyFundMonths: profile.fixed_costs > 0 ? Number((profile.total_equity / profile.fixed_costs).toFixed(1)) : 0,
+            riskProfile: profile.risk_profile || 'moderado',
+            buckets: buckets.map(b => ({
+              type: b.type,
+              label: b.label,
+              percentage: b.percentage,
+              amount: (Number(profile.monthly_income || 0) * b.percentage) / 100,
+              description: DEFAULT_BUCKETS.find(d => d.type === b.type)?.label || 'Alocação planejada'
+            })),
+            actionPlans: actionPlans.map(a => ({
+              id: a.id,
+              title: a.title,
+              description: a.description,
+              category: a.category,
+              status: a.status,
+              due_date: a.due_date,
+            })),
+          }}
+        />
       )}
 
       {/* ────────────────────────────────────────────────────────── */}

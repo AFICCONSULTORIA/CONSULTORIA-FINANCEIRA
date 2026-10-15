@@ -8,6 +8,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB para suportar o gerador de PDF
+      },
       manifest: {
         name: 'Consultoria Financeira',
         short_name: 'Consultoria',

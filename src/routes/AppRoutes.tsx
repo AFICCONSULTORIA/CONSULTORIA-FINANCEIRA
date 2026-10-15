@@ -23,6 +23,7 @@ import { GoalTracker } from '../features/client-dashboard/components/GoalTracker
 import { InvestmentSimulator } from '../features/client-dashboard/components/InvestmentSimulator';
 import { TimeCalculator } from '../features/client-dashboard/components/TimeCalculator';
 import { TransactionManager } from '../features/client-dashboard/components/TransactionManager';
+import { DebtManager } from '../features/client-dashboard/components/DebtManager';
 import { AcademyDashboard } from '../features/education/AcademyDashboard';
 import { IncomeTaxDashboard } from '../features/income-tax/IncomeTaxDashboard';
 import { ClientSettings } from '../features/client-dashboard/ClientSettings';
@@ -93,7 +94,8 @@ export const AppRoutes: React.FC = () => (
         <Route path="portfolio" element={<ToolWrapper><RecommendedPortfolio /></ToolWrapper>} />
         <Route path="calculator" element={<ToolWrapper><BucketCalculator /></ToolWrapper>} />
         <Route path="time-calculator" element={<ToolWrapper><TimeCalculator /></ToolWrapper>} />
-        <Route path="expenses" element={<div className="container" style={{ padding: '2rem 1.5rem' }}><TransactionManager /></div>} />
+        <Route path="expenses" element={<ToolWrapper><TransactionManager /></ToolWrapper>} />
+        <Route path="debts" element={<ToolWrapper><DebtManager /></ToolWrapper>} />
         <Route path="goals" element={<ToolWrapper><GoalTracker /></ToolWrapper>} />
         <Route path="simulator" element={<ToolWrapper><InvestmentSimulator /></ToolWrapper>} />
         <Route path="the-plan" element={<ToolWrapper><ThePlanDashboard /></ToolWrapper>} />

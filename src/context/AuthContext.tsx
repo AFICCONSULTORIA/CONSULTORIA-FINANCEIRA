@@ -80,35 +80,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserData = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('role, has_completed_onboarding, has_portfolio_access, must_change_password, subscription_status, subscription_canceled_at')
+        .select('*')
         .eq('id', userId)
         .single();
         
-      if (error) {
-        // Fallback caso colunas novas ainda não existam no banco
-        const { data: fallbackData } = await supabase
-          .from('users')
-          .select('role, has_completed_onboarding, has_portfolio_access')
-          .eq('id', userId)
-          .single();
-          
-        if (fallbackData) {
-          setRealRole(fallbackData.role);
-          setHasCompletedOnboarding(fallbackData.has_completed_onboarding || false);
-          const hasAccess = fallbackData.has_portfolio_access || false;
-          setHasPortfolioAccess(hasAccess);
-          setSubscriptionStatus(hasAccess ? 'active' : 'inactive');
-        }
-      } else if (data) {
-        setRealRole(data.role);
-        setHasCompletedOnboarding(data.has_completed_onboarding || false);
-        const hasAccess = data.has_portfolio_access || false;
+      if (userData) {
+        setRealRole(userData.role);
+        setHasCompletedOnboarding(userData.has_completed_onboarding || false);
+        const hasAccess = userData.has_portfolio_access || false;
         setHasPortfolioAccess(hasAccess);
-        setSubscriptionStatus(data.subscription_status || (hasAccess ? 'active' : 'inactive'));
-        setSubscriptionCanceledAt(data.subscription_canceled_at || null);
-        setMustChangePassword(Boolean(data.must_change_password));
+        setSubscriptionStatus(userData.subscription_status || (hasAccess ? 'active' : 'inactive'));
+
+        if (userData.subscription_canceled_at) {
+          setSubscriptionCanceledAt(userData.subscription_canceled_at);
+        }
+        if (userData.must_change_password !== undefined) {
+          setMustChangePassword(Boolean(userData.must_change_password));
+        }
+      } else if (userError) {
+        console.warn("Erro ao buscar dados do usuário:", userError.message);
       }
     } catch (err) {
       console.error("Erro ao buscar papel do usuário", err);

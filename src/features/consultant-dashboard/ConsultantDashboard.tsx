@@ -10,6 +10,8 @@ import { Card } from '../../components/ui/Card';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { calculateHealthScore, getScoreStatus } from '../../utils/scoreCalculator';
+import { useConsultantAlerts } from './hooks/useConsultantAlerts';
+import { ProactiveAlertsPanel } from './components/ProactiveAlertsPanel';
 
 const statusColors: Record<string, string> = {
   excellent: 'var(--success)',
@@ -33,6 +35,9 @@ export const ConsultantDashboard: React.FC = () => {
   const [clientAssetsMap, setClientAssetsMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+
+  // Alertas Proativos da Carteira (TanStack Query v5)
+  const { alerts, counts, isLoading: alertsLoading } = useConsultantAlerts(clients);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,7 +73,8 @@ export const ConsultantDashboard: React.FC = () => {
               fixed_costs,
               total_debt,
               total_equity,
-              goal_long
+              goal_long,
+              buckets
             )
           `)
           .eq('role', 'client'),
@@ -192,12 +198,11 @@ export const ConsultantDashboard: React.FC = () => {
   };
 
   // Helper metrics
-  const { totalAUM, avgScore, attentionCount, totalMonthlySurplus, criticalClients } = useMemo(() => {
+  const { totalAUM, avgScore, attentionCount, totalMonthlySurplus } = useMemo(() => {
     let totalEquitySum = 0;
     let totalScoreSum = 0;
     let attention = 0;
     let surplus = 0;
-    const criticalList: any[] = [];
 
     clients.forEach(c => {
       const profile = Array.isArray(c.financial_profiles) ? c.financial_profiles[0] : c.financial_profiles;
@@ -216,13 +221,6 @@ export const ConsultantDashboard: React.FC = () => {
 
       if (['attention', 'critical'].includes(profile?.status) || score < 50) {
         attention++;
-        criticalList.push({
-          id: c.id,
-          name: c.full_name,
-          score,
-          status: profile?.status,
-          fixedCostRatio: income > 0 ? (fixed / income) * 100 : 0
-        });
       }
     });
 
@@ -231,7 +229,6 @@ export const ConsultantDashboard: React.FC = () => {
       avgScore: clients.length > 0 ? Math.round(totalScoreSum / clients.length) : 0,
       attentionCount: attention,
       totalMonthlySurplus: surplus,
-      criticalClients: criticalList
     };
   }, [clients, clientAssetsMap]);
 
@@ -394,43 +391,8 @@ export const ConsultantDashboard: React.FC = () => {
 
       </div>
 
-      {/* Radar de Ações do Dia (Se houver clientes críticos) */}
-      {criticalClients.length > 0 && (
-        <Card style={{ padding: '1.25rem', marginBottom: '2rem', background: 'rgba(239, 68, 68, 0.04)', borderColor: 'rgba(239, 68, 68, 0.25)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <AlertTriangle size={18} color="var(--danger)" />
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--danger)' }}>
-              Radar de Prioridades do Dia ({criticalClients.length} clientes requerem ação rápida)
-            </h4>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-            {criticalClients.map(c => (
-              <div 
-                key={c.id}
-                onClick={() => navigate(`/consultor/client/${c.id}`)}
-                style={{ 
-                  background: 'var(--bg-card)', 
-                  border: '1px solid var(--border-color)', 
-                  padding: '0.75rem 1rem', 
-                  borderRadius: 'var(--r-md)',
-                  minWidth: '240px',
-                  cursor: 'pointer',
-                  transition: 'transform 0.15s ease, border-color 0.15s ease'
-                }}
-                className="hover-card"
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                  <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{c.name}</strong>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--danger)' }}>Score {c.score}</span>
-                </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  {c.fixedCostRatio > 70 ? `Custos Fixos Altos (${c.fixedCostRatio.toFixed(0)}% da renda)` : 'Necessita plano de ação'}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      {/* Painel de Alertas Proativos da Carteira */}
+      <ProactiveAlertsPanel alerts={alerts} counts={counts} isLoading={alertsLoading} />
 
       {/* Main Table Container */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--r-xl)', overflow: 'hidden' }}>
