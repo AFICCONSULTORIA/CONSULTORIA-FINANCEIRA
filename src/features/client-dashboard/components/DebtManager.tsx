@@ -3,7 +3,7 @@ import {
   CreditCard, Plus, Zap, RefreshCw, Trash2, Edit2, 
   Home, Car, Briefcase, AlertTriangle, ShieldCheck, 
   Calculator, CheckCircle, TrendingDown, DollarSign, 
-  Calendar, Building2, Info, ArrowRight, X
+  Calendar, Building2, ArrowRight, X
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { openFinanceService } from '../../../services/openFinanceService';

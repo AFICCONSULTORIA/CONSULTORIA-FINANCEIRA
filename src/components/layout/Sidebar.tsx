@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Calculator, ShoppingBag, Target, TrendingUp, 
   LogOut, Clock, GraduationCap, FileText, Compass, Settings as SettingsIcon,
-  Sparkles, CreditCard
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../ui/Logo';

@@ -152,7 +152,7 @@ export const ClientDashboard: React.FC = () => {
 
   const { 
     name, healthScore, status, monthlyIncome, totalEquity, totalDebt,
-    emergencyFundMonths, savingRate, riskProfile, buckets, isCustomBuckets 
+    emergencyFundMonths, riskProfile, buckets, isCustomBuckets 
   } = clientData;
   const statusInfo = statusConfig[status] || statusConfig['good'];
 

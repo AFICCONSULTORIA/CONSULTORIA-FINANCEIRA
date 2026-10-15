@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShieldCheck, X, RefreshCw, Plus, Trash2, Landmark, 
-  Search, CheckCircle2, AlertCircle, ArrowRight, Zap, 
-  ExternalLink, Lock, Check
+  Search, CheckCircle2, Zap, Lock, Check
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { 

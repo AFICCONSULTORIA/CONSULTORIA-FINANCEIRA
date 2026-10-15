@@ -1,8 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { 
-  Upload, X, Check, FileText, TrendingUp, TrendingDown, 
-  RefreshCw, Landmark, Filter, Search, Tag, AlertTriangle, 
-  CheckSquare, Square, Layers, ArrowRight
+  Upload, X, Check, TrendingUp, TrendingDown, 
+  RefreshCw, Landmark, Search, Tag, AlertTriangle
 } from 'lucide-react';
 import { 
   parseOfx, 
@@ -170,13 +169,6 @@ export const OfxImporterModal: React.FC<OfxImporterModalProps> = ({
     setParsedItems(prev => prev.map(item => ({
       ...item,
       selected: item.type === type ? true : item.selected
-    })));
-  };
-
-  const handleDeselectByType = (type: 'income' | 'expense') => {
-    setParsedItems(prev => prev.map(item => ({
-      ...item,
-      selected: item.type === type ? false : item.selected
     })));
   };
 

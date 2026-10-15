@@ -1,18 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
-  Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, 
+  Plus, Trash2, Edit2, TrendingUp, TrendingDown, 
   Calendar, X, AlertCircle, Tag, ChevronLeft, ChevronRight,
-  Search, RotateCcw, FileText, CheckCircle2, Clock, Check,
-  CreditCard, ArrowDownRight, Layers, SlidersHorizontal,
+  Search, RotateCcw, CheckCircle2, Clock, Check,
+  Layers,
   Wallet, Utensils, Car, Home, HeartPulse, Gamepad2, PiggyBank,
   Sparkles, GraduationCap, Briefcase, Coins, LayoutList, Table,
-  Filter, CheckSquare, Square, Landmark, ArrowUpRight, Zap
+  Landmark, Zap
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { MoneyInput } from '../../../components/ui/MoneyInput';
 import { OfxImporterModal } from './OfxImporterModal';
@@ -223,7 +222,6 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ targetUs
   const { monthStart, monthEnd, monthLabel, isCurrentMonth } = useMemo(() => {
     const year = currentMonthDate.getFullYear();
     const month = currentMonthDate.getMonth();
-    const start = new Date(year, month, 1);
     const end = new Date(year, month + 1, 0);
 
     const pad = (n: number) => String(n).padStart(2, '0');

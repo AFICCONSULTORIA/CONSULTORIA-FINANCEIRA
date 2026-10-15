@@ -139,7 +139,6 @@ export function useRecentTransactions(userId?: string, limit: number = 5) {
  */
 export function useTransactionMutations() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: transactionKeys.all });

@@ -402,7 +402,12 @@ export const openFinanceService = {
             .upsert(recordsToInsert, { onConflict: 'user_id,external_id', ignoreDuplicates: true });
 
           if (insErr) {
-            const standardRecords = recordsToInsert.map(({ external_id, connection_id, ...rest }) => rest);
+            const standardRecords = recordsToInsert.map((item: any) => {
+              const copy = { ...item };
+              delete copy.external_id;
+              delete copy.connection_id;
+              return copy;
+            });
             await supabase.from('transactions').insert(standardRecords);
           }
 
@@ -452,7 +457,12 @@ export const openFinanceService = {
 
         if (invErr) {
           // Se colunas novas external_id ainda não existirem, insere padrão
-          const standardAssets = assetsToInsert.map(({ external_id, connection_id, ...rest }) => rest);
+          const standardAssets = assetsToInsert.map((item: any) => {
+            const copy = { ...item };
+            delete copy.external_id;
+            delete copy.connection_id;
+            return copy;
+          });
           await supabase.from('client_assets').insert(standardAssets);
         }
 

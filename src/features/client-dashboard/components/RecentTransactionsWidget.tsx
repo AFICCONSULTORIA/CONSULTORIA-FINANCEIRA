@@ -7,8 +7,7 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 import { 
   useRecentTransactions, 
-  useTransactionMutations, 
-  type TransactionItem 
+  useTransactionMutations
 } from '../../../hooks/useTransactions';
 import { QuickTransactionModal } from './QuickTransactionModal';
 

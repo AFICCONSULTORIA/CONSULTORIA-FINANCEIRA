@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, 
-  X, Loader2, ArrowUpRight, Flame
+  X, Loader2, ArrowUpRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
@@ -12,7 +12,6 @@ interface DailyExpenseCalendarProps {
   userId?: string;
 }
 
-const WEEKDAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const WEEKDAYS_SHORT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 export const DailyExpenseCalendar: React.FC<DailyExpenseCalendarProps> = ({ userId }) => {
